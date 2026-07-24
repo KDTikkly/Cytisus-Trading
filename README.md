@@ -8,7 +8,7 @@ Cytisus-Trading is a local desktop front end for automated quantitative operatio
 
 ## v1.1 implementation status
 
-Version 1.1.0 is in progress. Prompt 1 establishes cross-platform contracts, native application boundaries, deterministic fixtures, and local persistence foundations.
+Version 1.1.0 is in progress. Prompt 2 adds the read-only Longbridge data and daily universe foundation while keeping Live execution unavailable.
 
 Currently available:
 
@@ -20,11 +20,16 @@ Currently available:
 - Local application-log and audit-event persistence.
 - Schema-version and migration foundations.
 - Shared JSON schemas, fixtures, and protocol documents.
+- Capability-aware Longbridge CLI discovery and read-only process controls.
+- Missing, Unauthenticated, Degraded, and Ready CLI states.
+- Deterministic historical bars, current quote, market status, security list, and position fixtures.
+- Point-in-time market metadata and idempotent local JSON caching.
+- Daily universe inclusion, exclusion, and Reduce Only decisions.
+- Native Data and Universe, Settings, and structured Logs screens.
 - English-only ASCII repository validation.
 
 Not yet available:
 
-- Longbridge CLI integration or market collection.
 - Local strategy-process execution.
 - Factor DSL execution or factor search.
 - Portfolio allocation.
@@ -40,6 +45,7 @@ Not yet available:
 - Windows 11 x64: self-contained WPF app distributed as `Cytisus-Trading-1.1.0-win11-x64.exe`.
 
 Both applications start without Longbridge CLI, a network connection, an account, or credentials.
+Fixture mode is the default. When fixture mode is disabled, Cytisus may invoke only a separately installed, user-authorized Longbridge CLI through its restricted read-only adapter.
 
 ## Architecture
 
@@ -136,25 +142,26 @@ Output:
 dist/Cytisus-Trading-1.1.0-win11-x64.exe
 ```
 
-## Focused foundation checks
+## Focused checks
 
 Run:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_ascii.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_json.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_prompt2.ps1
 ```
 
-The Windows application supports a targeted persistence and audit-event smoke mode through `--foundation-smoke`.
+The Windows application supports `--foundation-smoke` and a targeted Prompt 2 mode through `--prompt2-smoke`. The Prompt 2 smoke covers argument arrays, timeout and non-zero handling, redaction, market fixture parsing, idempotent cache behavior, and universe decisions.
 
 ## Privacy and security
 
-- No network requests in Prompt 1.
-- No Longbridge process invocation in Prompt 1.
-- No identity, account, position, order, or profit-and-loss data.
+- Fixture mode makes no network request and invokes no CLI.
+- Local CLI mode never reads or stores Longbridge token files.
+- Optional broker-position snapshots are used only for Reduce Only universe behavior and are not cached.
 - No tokens, credentials, certificates, or authorization output.
 - No Live execution.
-- Non-sensitive settings, operational logs, and audit events are stored locally.
+- Non-sensitive settings, market cache records, universe snapshots, operational logs, and audit events are stored locally.
 - Factor demo state resets deterministically from repository fixtures.
 
 See [PRIVACY.md](PRIVACY.md) and [SANITIZATION.json](SANITIZATION.json).

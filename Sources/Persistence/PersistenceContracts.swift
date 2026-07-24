@@ -1,7 +1,7 @@
 import Foundation
 
 struct StoreSchemaVersion: Codable, Equatable {
-    static let current = StoreSchemaVersion(version: 1)
+    static let current = StoreSchemaVersion(version: 2)
 
     let version: Int
 }
@@ -27,6 +27,7 @@ protocol SettingsStore {
 
 protocol ApplicationLogStore {
     func appendLog(_ entry: ApplicationLogEntry) throws
+    func loadLogs(limit: Int) throws -> [ApplicationLogEntry]
 }
 
 protocol AuditEventStore {
@@ -44,4 +45,18 @@ protocol FactorRepository: AnyObject {
     func loadFactors() throws -> [FactorItem]
     func saveFactors(_ factors: [FactorItem]) throws
     func resetToFixtures() throws -> [FactorItem]
+}
+
+protocol MarketDataCache {
+    func storeHistoricalBars(_ series: HistoricalBarSeries) throws -> CacheWriteResult
+    func storeCurrentSnapshot(_ snapshot: CurrentMarketSnapshot) throws -> CacheWriteResult
+    func storeUniverseSnapshot(_ snapshot: UniverseSnapshot) throws -> CacheWriteResult
+    func loadHistoricalBars(
+        symbol: String,
+        interval: String,
+        start: Date,
+        end: Date
+    ) throws -> HistoricalBarSeries?
+    func loadUniverseSnapshot(date: String) throws -> UniverseSnapshot?
+    func cacheSizeBytes() throws -> Int64
 }

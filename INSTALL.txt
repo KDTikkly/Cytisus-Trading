@@ -3,8 +3,9 @@ Cytisus-Trading 1.1.0
 IMPLEMENTATION STATUS
 
 v1.1 implementation is in progress. This build starts in offline fixture mode.
-Longbridge integration, strategy execution, portfolio allocation, broker orders,
-and Live execution are not available.
+Read-only Longbridge CLI discovery, market fixtures, local caching, and daily
+universe snapshots are available. Strategy execution, portfolio allocation,
+broker orders, and Live execution are not available.
 
 MACOS
 
@@ -22,6 +23,8 @@ NOTES
 - The minimum macOS version is macOS 14.
 - The Windows build supports 64-bit Windows 11.
 - Public builds may be unsigned. Only run artifacts from a source you trust.
-- Prompt 1 makes no network requests and stores no credentials.
-- Non-sensitive settings, application logs, and audit events are stored locally.
+- Fixture mode makes no network requests and stores no credentials.
+- Local CLI mode uses only a separately installed, user-authorized Longbridge CLI.
+- Non-sensitive settings, market cache records, universe snapshots, application
+  logs, and audit events are stored locally.
 - The app contains fictional fixtures and cannot execute trades.

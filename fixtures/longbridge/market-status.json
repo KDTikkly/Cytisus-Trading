@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "market": "US",
+  "session": "Closed",
+  "event_time": "2026-07-24T20:00:00Z",
+  "available_time": "2026-07-24T20:00:01Z",
+  "collected_at": "2026-07-24T21:00:00Z",
+  "source_version": "fixture-longbridge-1.1.0",
+  "adjustment_mode": "None",
+  "data_hash": "7cc7000000000000000000000000000000000000000000000000000000000001",
+  "next_open": "2026-07-25T13:30:00Z"
+}

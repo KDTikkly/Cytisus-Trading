@@ -14,7 +14,7 @@
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <NeutralLanguage>en-US</NeutralLanguage>
     <Product>Cytisus-Trading</Product>
-    <Description>Offline factor-governance desktop demonstration for Windows 11.</Description>
+    <Description>Local quantitative operations and read-only market-data console for Windows 11.</Description>
     <Authors>Cytisus-Trading</Authors>
     <Copyright>Copyright Cytisus-Trading contributors</Copyright>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
@@ -28,6 +28,9 @@
     <EmbeddedResource Include="..\fixtures\factors\demo-factors.json">
       <Link>fixtures\factors\demo-factors.json</Link>
       <LogicalName>CytisusTrading.fixtures.factors.demo-factors.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\fixtures\longbridge\*.json">
+      <Link>fixtures\longbridge\%(Filename)%(Extension)</Link>
     </EmbeddedResource>
   </ItemGroup>
 </Project>

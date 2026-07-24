@@ -2,7 +2,7 @@ namespace CytisusTrading.Windows;
 
 public sealed record StoreSchemaVersion(int Version)
 {
-    public static StoreSchemaVersion Current { get; } = new(1);
+    public static StoreSchemaVersion Current { get; } = new(2);
 }
 
 public sealed record MigrationRecord(
@@ -20,6 +20,7 @@ public interface ISettingsStore
 public interface IApplicationLogStore
 {
     void AppendLog(ApplicationLogEntry entry);
+    IReadOnlyList<ApplicationLogEntry> LoadLogs(int limit);
 }
 
 public interface IAuditEventStore
@@ -40,4 +41,18 @@ public interface IFactorRepository
     IReadOnlyList<FactorItem> LoadFactors();
     void SaveFactors(IReadOnlyList<FactorItem> factors);
     IReadOnlyList<FactorItem> ResetToFixtures();
+}
+
+public interface IMarketDataCache
+{
+    CacheWriteResult StoreHistoricalBars(HistoricalBarSeries series);
+    CacheWriteResult StoreCurrentSnapshot(CurrentMarketSnapshot snapshot);
+    CacheWriteResult StoreUniverseSnapshot(UniverseSnapshot snapshot);
+    HistoricalBarSeries? LoadHistoricalBars(
+        string symbol,
+        string interval,
+        DateTimeOffset start,
+        DateTimeOffset end);
+    UniverseSnapshot? LoadUniverseSnapshot(string date);
+    long CacheSizeBytes();
 }

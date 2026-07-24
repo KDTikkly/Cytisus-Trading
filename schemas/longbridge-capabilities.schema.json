@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cytisus.example/schemas/longbridge-capabilities.schema.json",
+  "title": "Longbridge CLI Capabilities",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "fixture_mode",
+    "cli_version",
+    "source_version",
+    "status_state",
+    "supports_json",
+    "commands",
+    "data_permissions",
+    "discovered_at",
+    "live_execution_available"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "fixture_mode": {
+      "type": "boolean"
+    },
+    "cli_version": {
+      "type": "string"
+    },
+    "source_version": {
+      "type": "string"
+    },
+    "status_state": {
+      "enum": [
+        "Missing",
+        "Unauthenticated",
+        "Degraded",
+        "Ready"
+      ]
+    },
+    "supports_json": {
+      "type": "boolean"
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "operation",
+          "arguments"
+        ],
+        "properties": {
+          "operation": {
+            "enum": [
+              "Status",
+              "Connectivity",
+              "HistoricalBars",
+              "CurrentSnapshot",
+              "MarketStatus",
+              "SecurityList",
+              "BrokerPositions"
+            ]
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "data_permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "discovered_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "live_execution_available": {
+      "const": false
+    },
+    "message": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

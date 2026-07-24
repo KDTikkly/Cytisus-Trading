@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "fixture_mode": true,
+  "cli_version": "fixture-1.1.0",
+  "source_version": "fixture-longbridge-1.1.0",
+  "status_state": "Ready",
+  "supports_json": true,
+  "commands": [
+    {
+      "operation": "Status",
+      "arguments": [
+        "status",
+        "--output",
+        "json"
+      ]
+    },
+    {
+      "operation": "Connectivity",
+      "arguments": [
+        "doctor",
+        "--output",
+        "json"
+      ]
+    },
+    {
+      "operation": "HistoricalBars",
+      "arguments": [
+        "market",
+        "bars",
+        "--symbol",
+        "{symbol}",
+        "--interval",
+        "{interval}",
+        "--start",
+        "{start}",
+        "--end",
+        "{end}",
+        "--output",
+        "json"
+      ]
+    },
+    {
+      "operation": "CurrentSnapshot",
+      "arguments": [
+        "market",
+        "snapshot",
+        "--symbol",
+        "{symbol}",
+        "--output",
+        "json"
+      ]
+    },
+    {
+      "operation": "MarketStatus",
+      "arguments": [
+        "market",
+        "status",
+        "--market",
+        "{market}",
+        "--output",
+        "json"
+      ]
+    },
+    {
+      "operation": "SecurityList",
+      "arguments": [
+        "market",
+        "securities",
+        "--market",
+        "{market}",
+        "--output",
+        "json"
+      ]
+    },
+    {
+      "operation": "BrokerPositions",
+      "arguments": [
+        "account",
+        "positions",
+        "--output",
+        "json"
+      ]
+    }
+  ],
+  "data_permissions": [
+    "daily_bars",
+    "realtime_quote",
+    "market_status",
+    "security_list",
+    "position_snapshot"
+  ],
+  "discovered_at": "2026-07-24T00:00:00Z",
+  "live_execution_available": false,
+  "message": "Deterministic read-only fixture capabilities are ready."
+}

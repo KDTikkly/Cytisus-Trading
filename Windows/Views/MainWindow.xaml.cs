@@ -33,14 +33,31 @@ public partial class MainWindow : Window
         _model.ResetDemo();
     }
 
+    private async void RefreshData_Click(object sender, RoutedEventArgs e)
+    {
+        await _model.RefreshLongbridgeAsync();
+    }
+
     private void ShowSection(string section)
     {
         OverviewPanel.Visibility = section == "Overview" ? Visibility.Visible : Visibility.Collapsed;
         FactorsPanel.Visibility = section == "Factors" ? Visibility.Visible : Visibility.Collapsed;
         LabPanel.Visibility = section == "Lab" ? Visibility.Visible : Visibility.Collapsed;
+        DataPanel.Visibility = section == "Data" ? Visibility.Visible : Visibility.Collapsed;
+        SettingsPanel.Visibility = section == "Settings" ? Visibility.Visible : Visibility.Collapsed;
+        LogsPanel.Visibility = section == "Logs" ? Visibility.Visible : Visibility.Collapsed;
         PrivacyPanel.Visibility = section == "Privacy" ? Visibility.Visible : Visibility.Collapsed;
 
-        foreach (var button in new[] { OverviewNav, FactorsNav, LabNav, PrivacyNav })
+        foreach (var button in new[]
+                 {
+                     OverviewNav,
+                     FactorsNav,
+                     LabNav,
+                     DataNav,
+                     SettingsNav,
+                     LogsNav,
+                     PrivacyNav
+                 })
         {
             var active = Equals(button.Tag, section);
             button.Background = active

@@ -114,6 +114,24 @@ public sealed class JsonFilePersistentStore :
         AppendLine(LogsPath, entry);
     }
 
+    public IReadOnlyList<ApplicationLogEntry> LoadLogs(int limit)
+    {
+        lock (_gate)
+        {
+            if (!File.Exists(LogsPath))
+            {
+                return Array.Empty<ApplicationLogEntry>();
+            }
+
+            return File.ReadLines(LogsPath, Encoding.UTF8)
+                .Where(line => !string.IsNullOrWhiteSpace(line))
+                .TakeLast(Math.Max(0, limit))
+                .Select(line => JsonSerializer.Deserialize<ApplicationLogEntry>(line, _lineOptions)
+                    ?? throw new InvalidDataException("Invalid application-log JSON line."))
+                .ToArray();
+        }
+    }
+
     public void AppendAuditEvent(AuditEvent auditEvent)
     {
         AppendLine(AuditPath, auditEvent);

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "symbol": "AAPL.US",
+  "event_time": "2026-07-24T20:00:00Z",
+  "available_time": "2026-07-24T20:00:02Z",
+  "collected_at": "2026-07-24T21:00:00Z",
+  "source_version": "fixture-longbridge-1.1.0",
+  "adjustment_mode": "None",
+  "data_hash": "6bb6000000000000000000000000000000000000000000000000000000000001",
+  "last": 217.80,
+  "open": 216.60,
+  "high": 218.20,
+  "low": 215.90,
+  "previous_close": 216.40,
+  "volume": 52700000,
+  "currency": "USD"
+}

@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "market": "US",
+  "minimum_price": 5.0,
+  "minimum_average_daily_volume": 1000000,
+  "minimum_listing_age_days": 252,
+  "minimum_history_coverage_days": 252,
+  "rule_version": "universe-rules-1.1.0"
+}

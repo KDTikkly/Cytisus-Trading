@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "symbol": "AAPL.US",
+  "interval": "Daily",
+  "start": "2026-07-20T00:00:00Z",
+  "end": "2026-07-24T23:59:59Z",
+  "bars": [
+    {
+      "event_time": "2026-07-20T20:00:00Z",
+      "available_time": "2026-07-20T20:00:05Z",
+      "collected_at": "2026-07-24T21:00:00Z",
+      "source_version": "fixture-longbridge-1.1.0",
+      "adjustment_mode": "Forward",
+      "data_hash": "0a55000000000000000000000000000000000000000000000000000000000001",
+      "open": 210.50,
+      "high": 213.40,
+      "low": 209.80,
+      "close": 212.90,
+      "volume": 48200000
+    },
+    {
+      "event_time": "2026-07-21T20:00:00Z",
+      "available_time": "2026-07-21T20:00:05Z",
+      "collected_at": "2026-07-24T21:00:00Z",
+      "source_version": "fixture-longbridge-1.1.0",
+      "adjustment_mode": "Forward",
+      "data_hash": "0a55000000000000000000000000000000000000000000000000000000000002",
+      "open": 213.10,
+      "high": 214.20,
+      "low": 211.70,
+      "close": 213.70,
+      "volume": 45100000
+    },
+    {
+      "event_time": "2026-07-22T20:00:00Z",
+      "available_time": "2026-07-22T20:00:05Z",
+      "collected_at": "2026-07-24T21:00:00Z",
+      "source_version": "fixture-longbridge-1.1.0",
+      "adjustment_mode": "Forward",
+      "data_hash": "0a55000000000000000000000000000000000000000000000000000000000003",
+      "open": 213.80,
+      "high": 215.60,
+      "low": 212.90,
+      "close": 215.10,
+      "volume": 49600000
+    },
+    {
+      "event_time": "2026-07-23T20:00:00Z",
+      "available_time": "2026-07-23T20:00:05Z",
+      "collected_at": "2026-07-24T21:00:00Z",
+      "source_version": "fixture-longbridge-1.1.0",
+      "adjustment_mode": "Forward",
+      "data_hash": "0a55000000000000000000000000000000000000000000000000000000000004",
+      "open": 215.20,
+      "high": 217.00,
+      "low": 214.60,
+      "close": 216.40,
+      "volume": 50300000
+    },
+    {
+      "event_time": "2026-07-24T20:00:00Z",
+      "available_time": "2026-07-24T20:00:05Z",
+      "collected_at": "2026-07-24T21:00:00Z",
+      "source_version": "fixture-longbridge-1.1.0",
+      "adjustment_mode": "Forward",
+      "data_hash": "0a55000000000000000000000000000000000000000000000000000000000005",
+      "open": 216.60,
+      "high": 218.20,
+      "low": 215.90,
+      "close": 217.80,
+      "volume": 52700000
+    }
+  ],
+  "data_hash": "5aa5000000000000000000000000000000000000000000000000000000000001"
+}

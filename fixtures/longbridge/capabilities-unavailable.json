@@ -1,10 +1,13 @@
 {
   "schema_version": 1,
   "fixture_mode": true,
-  "health": "Degraded",
-  "cli_available": false,
-  "authorized": false,
+  "cli_version": "Unavailable",
+  "source_version": "fixture-longbridge-1.1.0",
+  "status_state": "Missing",
+  "supports_json": false,
+  "commands": [],
+  "data_permissions": [],
+  "discovered_at": "2026-07-24T00:00:00Z",
   "live_execution_available": false,
-  "capabilities": [],
-  "message": "Longbridge integration is deferred to Prompt 2."
+  "message": "No local CLI is required while fixture mode is enabled."
 }

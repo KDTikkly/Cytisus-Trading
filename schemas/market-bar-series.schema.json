@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cytisus.example/schemas/market-bar-series.schema.json",
+  "title": "Market Bar Series",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "symbol",
+    "interval",
+    "start",
+    "end",
+    "bars",
+    "data_hash"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "symbol": {
+      "type": "string"
+    },
+    "interval": {
+      "type": "string"
+    },
+    "start": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "end": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "bars": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/bar"
+      }
+    },
+    "data_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "$defs": {
+    "bar": {
+      "type": "object",
+      "required": [
+        "event_time",
+        "available_time",
+        "collected_at",
+        "source_version",
+        "adjustment_mode",
+        "data_hash",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume"
+      ],
+      "properties": {
+        "event_time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "available_time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "collected_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source_version": {
+          "type": "string"
+        },
+        "adjustment_mode": {
+          "type": "string"
+        },
+        "data_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "open": {
+          "type": "number"
+        },
+        "high": {
+          "type": "number"
+        },
+        "low": {
+          "type": "number"
+        },
+        "close": {
+          "type": "number"
+        },
+        "volume": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

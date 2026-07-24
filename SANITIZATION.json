@@ -1,7 +1,7 @@
 {
   "artifact": "Cytisus-Trading",
   "version": "1.1.0",
-  "implementation_stage": "Prompt 1 foundation",
+  "implementation_stage": "Prompt 2 Longbridge data and universe foundation",
   "implementation_in_progress": true,
   "language": "en",
   "platforms": [
@@ -9,22 +9,29 @@
     "Windows 11"
   ],
   "fixture_mode_default": true,
-  "network_access": false,
-  "longbridge_integration": false,
+  "direct_network_access": false,
+  "fixture_network_access": false,
+  "local_cli_process_access": true,
+  "longbridge_integration": "read-only data",
   "strategy_execution": false,
   "factor_search": false,
   "portfolio_allocation": false,
-  "broker_integrations": [],
+  "broker_integrations": [
+    "Longbridge CLI read-only data adapter"
+  ],
   "account_identifiers": false,
   "positions_or_orders": false,
   "tokens_or_api_keys": false,
   "personal_paths": false,
-  "sample_data_only": true,
+  "repository_sample_data_only": true,
+  "runtime_real_market_data_optional": true,
   "live_execution": false,
   "trade_execution": false,
   "local_persistence": [
     "non-sensitive settings",
     "schema and migration versions",
+    "market-data cache",
+    "universe snapshots",
     "application logs",
     "audit events"
   ]

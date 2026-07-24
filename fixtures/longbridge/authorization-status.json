@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "state": "Ready",
+  "authenticated": true,
+  "permissions": [
+    "US daily bars",
+    "US current quotes",
+    "US market status",
+    "US security reference data"
+  ],
+  "checked_at": "2026-07-24T21:05:00Z",
+  "message": "Fixture authorization is simulated and contains no account identifier."
+}

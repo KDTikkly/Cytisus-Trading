@@ -203,6 +203,13 @@ public sealed record AppSettings(
     double CoverageGate,
     double MaxFactorWeight)
 {
+    public string CliExecutablePath { get; init; } = string.Empty;
+    public string DefaultMarket { get; init; } = "US";
+    public string CacheDirectory { get; init; } = string.Empty;
+    public int ProcessTimeoutSeconds { get; init; } = 15;
+    public int DataRetentionDays { get; init; } = 90;
+    public int LogRetentionDays { get; init; } = 30;
+
     public static AppSettings Default { get; } = new(
         true,
         StrategyMode.PaperOnly,

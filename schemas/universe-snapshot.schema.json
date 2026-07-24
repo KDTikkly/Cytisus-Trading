@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cytisus.example/schemas/universe-snapshot.schema.json",
+  "title": "Daily Universe Snapshot",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "date",
+    "market",
+    "rule_version",
+    "source_version",
+    "created_at",
+    "entries"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "market": {
+      "type": "string"
+    },
+    "rule_version": {
+      "type": "string"
+    },
+    "source_version": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "date",
+          "symbol",
+          "included",
+          "disposition",
+          "reason",
+          "liquidity_metrics",
+          "data_coverage",
+          "industry",
+          "rule_version",
+          "source_version"
+        ],
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "included": {
+            "type": "boolean"
+          },
+          "disposition": {
+            "enum": [
+              "Included",
+              "Excluded",
+              "ReduceOnly"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "liquidity_metrics": {
+            "type": "object"
+          },
+          "data_coverage": {
+            "type": "object"
+          },
+          "industry": {
+            "type": "string"
+          },
+          "rule_version": {
+            "type": "string"
+          },
+          "source_version": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

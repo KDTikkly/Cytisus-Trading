@@ -95,6 +95,18 @@ final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEv
         try appendLine(entry, to: logsURL)
     }
 
+    func loadLogs(limit: Int) throws -> [ApplicationLogEntry] {
+        guard fileManager.fileExists(atPath: logsURL.path) else { return [] }
+        let content = try String(contentsOf: logsURL, encoding: .utf8)
+        let lines = content.split(separator: "\n").suffix(max(0, limit))
+        return try lines.map { line in
+            guard let data = String(line).data(using: .utf8) else {
+                throw PersistentStoreError.invalidJSONLine
+            }
+            return try decoder.decode(ApplicationLogEntry.self, from: data)
+        }
+    }
+
     func appendAuditEvent(_ event: AuditEvent) throws {
         try appendLine(event, to: auditURL)
     }

@@ -70,6 +70,12 @@ struct AppSettings: Codable, Equatable {
     var riskBudget: Double = 0.50
     var coverageGate: Double = 0.80
     var maxFactorWeight: Double = 0.35
+    var cliExecutablePath: String = ""
+    var defaultMarket: String = "US"
+    var cacheDirectory: String = ""
+    var processTimeoutSeconds: Int = 15
+    var dataRetentionDays: Int = 90
+    var logRetentionDays: Int = 30
 
     enum CodingKeys: String, CodingKey {
         case fixtureMode = "fixture_mode"
@@ -78,5 +84,79 @@ struct AppSettings: Codable, Equatable {
         case riskBudget = "risk_budget"
         case coverageGate = "coverage_gate"
         case maxFactorWeight = "max_factor_weight"
+        case cliExecutablePath = "cli_executable_path"
+        case defaultMarket = "default_market"
+        case cacheDirectory = "cache_directory"
+        case processTimeoutSeconds = "process_timeout_seconds"
+        case dataRetentionDays = "data_retention_days"
+        case logRetentionDays = "log_retention_days"
+    }
+
+    init(
+        fixtureMode: Bool = true,
+        strategyMode: StrategyMode = .paperOnly,
+        health: HealthState = .degraded,
+        riskBudget: Double = 0.50,
+        coverageGate: Double = 0.80,
+        maxFactorWeight: Double = 0.35,
+        cliExecutablePath: String = "",
+        defaultMarket: String = "US",
+        cacheDirectory: String = "",
+        processTimeoutSeconds: Int = 15,
+        dataRetentionDays: Int = 90,
+        logRetentionDays: Int = 30
+    ) {
+        self.fixtureMode = fixtureMode
+        self.strategyMode = strategyMode
+        self.health = health
+        self.riskBudget = riskBudget
+        self.coverageGate = coverageGate
+        self.maxFactorWeight = maxFactorWeight
+        self.cliExecutablePath = cliExecutablePath
+        self.defaultMarket = defaultMarket
+        self.cacheDirectory = cacheDirectory
+        self.processTimeoutSeconds = processTimeoutSeconds
+        self.dataRetentionDays = dataRetentionDays
+        self.logRetentionDays = logRetentionDays
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        fixtureMode = try values.decodeIfPresent(Bool.self, forKey: .fixtureMode) ?? true
+        strategyMode = try values.decodeIfPresent(
+            StrategyMode.self,
+            forKey: .strategyMode
+        ) ?? .paperOnly
+        health = try values.decodeIfPresent(HealthState.self, forKey: .health) ?? .degraded
+        riskBudget = try values.decodeIfPresent(Double.self, forKey: .riskBudget) ?? 0.50
+        coverageGate = try values.decodeIfPresent(Double.self, forKey: .coverageGate) ?? 0.80
+        maxFactorWeight = try values.decodeIfPresent(
+            Double.self,
+            forKey: .maxFactorWeight
+        ) ?? 0.35
+        cliExecutablePath = try values.decodeIfPresent(
+            String.self,
+            forKey: .cliExecutablePath
+        ) ?? ""
+        defaultMarket = try values.decodeIfPresent(
+            String.self,
+            forKey: .defaultMarket
+        ) ?? "US"
+        cacheDirectory = try values.decodeIfPresent(
+            String.self,
+            forKey: .cacheDirectory
+        ) ?? ""
+        processTimeoutSeconds = try values.decodeIfPresent(
+            Int.self,
+            forKey: .processTimeoutSeconds
+        ) ?? 15
+        dataRetentionDays = try values.decodeIfPresent(
+            Int.self,
+            forKey: .dataRetentionDays
+        ) ?? 90
+        logRetentionDays = try values.decodeIfPresent(
+            Int.self,
+            forKey: .logRetentionDays
+        ) ?? 30
     }
 }

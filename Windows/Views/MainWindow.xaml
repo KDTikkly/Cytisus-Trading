@@ -88,7 +88,7 @@
                             <TextBlock Text="Cytisus-Trading"
                                        FontWeight="SemiBold"
                                        FontSize="15" />
-                            <TextBlock Text="v1.1 Foundation"
+                            <TextBlock Text="v1.1 Data Foundation"
                                        Foreground="{StaticResource SecondaryTextBrush}"
                                        FontSize="11"
                                        Margin="0,3,0,0" />
@@ -180,6 +180,90 @@
                             </Grid>
                         </Button>
 
+                        <Button x:Name="DataNav"
+                                Tag="Data"
+                                Style="{StaticResource NavButton}"
+                                Click="NavButton_Click"
+                                Margin="0,0,0,5">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="34" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="24"
+                                        Height="24"
+                                        CornerRadius="7"
+                                        Background="#1855D7F1"
+                                        HorizontalAlignment="Left">
+                                    <TextBlock Text="04"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontSize="10"
+                                               FontWeight="Bold"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Grid.Column="1"
+                                           Text="Data and Universe"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+
+                        <Button x:Name="SettingsNav"
+                                Tag="Settings"
+                                Style="{StaticResource NavButton}"
+                                Click="NavButton_Click"
+                                Margin="0,0,0,5">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="34" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="24"
+                                        Height="24"
+                                        CornerRadius="7"
+                                        Background="#18F7B955"
+                                        HorizontalAlignment="Left">
+                                    <TextBlock Text="05"
+                                               Foreground="#FFF7B955"
+                                               FontSize="10"
+                                               FontWeight="Bold"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Grid.Column="1"
+                                           Text="Settings"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+
+                        <Button x:Name="LogsNav"
+                                Tag="Logs"
+                                Style="{StaticResource NavButton}"
+                                Click="NavButton_Click"
+                                Margin="0,0,0,5">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="34" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="24"
+                                        Height="24"
+                                        CornerRadius="7"
+                                        Background="#18A68BFA"
+                                        HorizontalAlignment="Left">
+                                    <TextBlock Text="06"
+                                               Foreground="{StaticResource PurpleBrush}"
+                                               FontSize="10"
+                                               FontWeight="Bold"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Grid.Column="1"
+                                           Text="Logs"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+
                         <Button x:Name="PrivacyNav"
                                 Tag="Privacy"
                                 Style="{StaticResource NavButton}"
@@ -194,7 +278,7 @@
                                         CornerRadius="7"
                                         Background="#1854D38A"
                                         HorizontalAlignment="Left">
-                                    <TextBlock Text="04"
+                                    <TextBlock Text="07"
                                                Foreground="#FF54D38A"
                                                FontSize="10"
                                                FontWeight="Bold"
@@ -222,14 +306,15 @@
                                          Fill="#FF54D38A"
                                          Margin="0,0,8,0"
                                          VerticalAlignment="Center" />
-                                <TextBlock Text="Offline Fixture Mode"
+                                <TextBlock Text="Data Mode"
                                            Foreground="#FF54D38A"
                                            FontSize="11"
                                            FontWeight="SemiBold" />
                             </StackPanel>
-                            <TextBlock Text="No network | Paper Only | Live unavailable"
+                            <TextBlock Text="{Binding FixtureModeStatus}"
                                        Style="{StaticResource BodySecondary}"
                                        FontSize="10"
+                                       TextWrapping="Wrap"
                                        Margin="0,8,0,0" />
                         </StackPanel>
                     </Border>
@@ -674,7 +759,7 @@
                             </StackPanel>
                         </Border>
 
-                        <TextBlock Text="Run the proposal twice to promote the shadow factor and retire the weak factor. Changes remain in local memory."
+                        <TextBlock Text="Run the proposal twice to promote the shadow factor and retire the weak factor. Fixture factor state remains local."
                                    Style="{StaticResource BodySecondary}"
                                    FontSize="11"
                                    Margin="4,15,0,0" />
@@ -859,6 +944,295 @@
                     </StackPanel>
                 </ScrollViewer>
 
+                <ScrollViewer x:Name="DataPanel"
+                              Visibility="Collapsed"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="34,30,34,38">
+                        <Grid Margin="0,0,0,22">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="READ-ONLY MARKET OPERATIONS"
+                                           Style="{StaticResource EyebrowText}" />
+                                <TextBlock Text="Data and Universe"
+                                           Style="{StaticResource PageTitle}" />
+                                <TextBlock Text="Capability-aware local CLI inspection, point-in-time fixtures, cache state, and daily universe decisions."
+                                           Style="{StaticResource BodySecondary}" />
+                            </StackPanel>
+                            <Button Grid.Column="1"
+                                    Content="Check Data"
+                                    Style="{StaticResource PrimaryButton}"
+                                    Click="RefreshData_Click"
+                                    VerticalAlignment="Bottom"
+                                    Margin="24,0,0,2" />
+                        </Grid>
+
+                        <UniformGrid Columns="4" Margin="0,0,0,18">
+                            <Border Style="{StaticResource CardBorder}" Margin="0,0,10,0">
+                                <StackPanel>
+                                    <TextBlock Text="CLI STATE"
+                                               Foreground="{StaticResource SecondaryTextBrush}"
+                                               FontSize="10"
+                                               FontWeight="Bold" />
+                                    <TextBlock Text="{Binding CliStatus}"
+                                               FontSize="22"
+                                               FontWeight="SemiBold"
+                                               Margin="0,11,0,4" />
+                                    <TextBlock Text="{Binding CliVersion}"
+                                               Style="{StaticResource BodySecondary}"
+                                               FontSize="10" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource CardBorder}" Margin="4,0,6,0">
+                                <StackPanel>
+                                    <TextBlock Text="LAST CHECK"
+                                               Foreground="{StaticResource SecondaryTextBrush}"
+                                               FontSize="10"
+                                               FontWeight="Bold" />
+                                    <TextBlock Text="{Binding LastCheckDisplay}"
+                                               FontSize="15"
+                                               FontWeight="SemiBold"
+                                               Margin="0,11,0,4" />
+                                    <TextBlock Text="{Binding CliStatusMessage}"
+                                               Style="{StaticResource BodySecondary}"
+                                               TextWrapping="Wrap"
+                                               FontSize="10" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource CardBorder}" Margin="6,0,4,0">
+                                <StackPanel>
+                                    <TextBlock Text="DATA FRESHNESS"
+                                               Foreground="{StaticResource SecondaryTextBrush}"
+                                               FontSize="10"
+                                               FontWeight="Bold" />
+                                    <TextBlock Text="{Binding DataFreshnessDisplay}"
+                                               FontSize="15"
+                                               FontWeight="SemiBold"
+                                               Margin="0,11,0,4" />
+                                    <TextBlock Text="{Binding MarketSession}"
+                                               Style="{StaticResource BodySecondary}"
+                                               FontSize="10" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource CardBorder}" Margin="10,0,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="LOCAL CACHE"
+                                               Foreground="{StaticResource SecondaryTextBrush}"
+                                               FontSize="10"
+                                               FontWeight="Bold" />
+                                    <TextBlock Text="{Binding CacheSizeDisplay}"
+                                               FontSize="22"
+                                               FontWeight="SemiBold"
+                                               Margin="0,11,0,4" />
+                                    <TextBlock Text="JSON records with stable cache keys"
+                                               Style="{StaticResource BodySecondary}"
+                                               FontSize="10" />
+                                </StackPanel>
+                            </Border>
+                        </UniformGrid>
+
+                        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,18">
+                            <StackPanel>
+                                <TextBlock Text="Available Data Permissions"
+                                           FontSize="14"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding DataPermissionsSummary}"
+                                           Style="{StaticResource BodySecondary}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,7,0,0" />
+                                <StackPanel Orientation="Horizontal"
+                                            Margin="0,5,0,0">
+                                    <TextBlock Text="CLI path: "
+                                               Style="{StaticResource BodySecondary}" />
+                                    <TextBlock Text="{Binding CliPathDisplay}"
+                                               Style="{StaticResource BodySecondary}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardBorder}" Padding="0">
+                            <StackPanel>
+                                <TextBlock Text="Current Daily Universe"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Margin="18,16,18,12" />
+                                <DataGrid ItemsSource="{Binding UniverseEntries}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          CanUserAddRows="False"
+                                          CanUserDeleteRows="False"
+                                          CanUserResizeRows="False"
+                                          HeadersVisibility="Column"
+                                          GridLinesVisibility="Horizontal"
+                                          Background="Transparent"
+                                          Foreground="{StaticResource PrimaryTextBrush}"
+                                          BorderThickness="0"
+                                          RowBackground="#09000000"
+                                          AlternatingRowBackground="#12FFFFFF"
+                                          HorizontalGridLinesBrush="#18FFFFFF"
+                                          MaxHeight="390">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Symbol"
+                                                            Binding="{Binding Symbol}"
+                                                            Width="105" />
+                                        <DataGridTextColumn Header="Decision"
+                                                            Binding="{Binding DispositionLabel}"
+                                                            Width="105" />
+                                        <DataGridTextColumn Header="Reason"
+                                                            Binding="{Binding Reason}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Industry"
+                                                            Binding="{Binding Industry}"
+                                                            Width="155" />
+                                        <DataGridTextColumn Header="Last"
+                                                            Binding="{Binding LiquidityMetrics.LastPrice}"
+                                                            Width="80" />
+                                        <DataGridTextColumn Header="History"
+                                                            Binding="{Binding DataCoverage.HistoryCoverageDays}"
+                                                            Width="75" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <ScrollViewer x:Name="SettingsPanel"
+                              Visibility="Collapsed"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="34,30,34,38">
+                        <TextBlock Text="LOCAL DATA CONFIGURATION"
+                                   Style="{StaticResource EyebrowText}" />
+                        <TextBlock Text="Settings"
+                                   Style="{StaticResource PageTitle}" />
+                        <TextBlock Text="Only non-sensitive CLI and cache preferences are stored. Authorization stays inside the user-installed CLI."
+                                   Style="{StaticResource BodySecondary}"
+                                   Margin="0,0,0,22" />
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0"
+                                    Style="{StaticResource CardBorder}"
+                                    Margin="0,0,9,0">
+                                <StackPanel>
+                                    <TextBlock Text="Longbridge CLI"
+                                               FontSize="15"
+                                               FontWeight="SemiBold"
+                                               Margin="0,0,0,16" />
+                                    <CheckBox Content="Use deterministic fixture mode"
+                                              IsChecked="{Binding FixtureMode, Mode=TwoWay}"
+                                              Margin="0,0,0,16" />
+                                    <TextBlock Text="Executable path"
+                                               FontSize="11"
+                                               FontWeight="SemiBold" />
+                                    <TextBox Text="{Binding CliExecutablePath, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                             Margin="0,6,0,14"
+                                             ToolTip="Leave blank to resolve Longbridge from the system PATH." />
+                                    <TextBlock Text="Default market"
+                                               FontSize="11"
+                                               FontWeight="SemiBold" />
+                                    <TextBox Text="{Binding DefaultMarket, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                             Margin="0,6,0,14" />
+                                    <TextBlock Text="No broker token, secret, or authorization code is requested or stored."
+                                               Foreground="#FF54D38A"
+                                               FontSize="11"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1"
+                                    Style="{StaticResource CardBorder}"
+                                    Margin="9,0,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Cache and Retention"
+                                               FontSize="15"
+                                               FontWeight="SemiBold"
+                                               Margin="0,0,0,16" />
+                                    <TextBlock Text="Cache directory"
+                                               FontSize="11"
+                                               FontWeight="SemiBold" />
+                                    <TextBox Text="{Binding CacheDirectory, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                             Margin="0,6,0,16" />
+                                    <TextBlock Text="{Binding ProcessTimeoutDisplay}"
+                                               FontSize="11"
+                                               FontWeight="SemiBold" />
+                                    <Slider Minimum="2"
+                                            Maximum="120"
+                                            Value="{Binding ProcessTimeoutSeconds, Mode=TwoWay}"
+                                            Margin="0,5,0,14" />
+                                    <TextBlock Text="{Binding DataRetentionDisplay}"
+                                               FontSize="11"
+                                               FontWeight="SemiBold" />
+                                    <Slider Minimum="7"
+                                            Maximum="365"
+                                            Value="{Binding DataRetentionDays, Mode=TwoWay}"
+                                            Margin="0,5,0,14" />
+                                    <TextBlock Text="{Binding LogRetentionDisplay}"
+                                               FontSize="11"
+                                               FontWeight="SemiBold" />
+                                    <Slider Minimum="7"
+                                            Maximum="180"
+                                            Value="{Binding LogRetentionDays, Mode=TwoWay}"
+                                            Margin="0,5,0,0" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <Border Style="{StaticResource CardBorder}" Margin="0,18,0,0">
+                            <TextBlock Text="{Binding FixtureModeStatus}"
+                                       Style="{StaticResource BodySecondary}"
+                                       TextWrapping="Wrap" />
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <ScrollViewer x:Name="LogsPanel"
+                              Visibility="Collapsed"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="34,30,34,38">
+                        <TextBlock Text="STRUCTURED OPERATIONS"
+                                   Style="{StaticResource EyebrowText}" />
+                        <TextBlock Text="Logs"
+                                   Style="{StaticResource PageTitle}" />
+                        <TextBlock Text="CLI logs contain bounded outcomes and read-only categories, never raw authentication output."
+                                   Style="{StaticResource BodySecondary}"
+                                   Margin="0,0,0,22" />
+                        <Border Style="{StaticResource CardBorder}" Padding="0">
+                            <ListView ItemsSource="{Binding ApplicationLogs}"
+                                      Background="Transparent"
+                                      BorderThickness="0"
+                                      Foreground="{StaticResource PrimaryTextBrush}"
+                                      MaxHeight="560">
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn Header="Time"
+                                                        DisplayMemberBinding="{Binding Timestamp}"
+                                                        Width="165" />
+                                        <GridViewColumn Header="Severity"
+                                                        DisplayMemberBinding="{Binding Severity}"
+                                                        Width="80" />
+                                        <GridViewColumn Header="Module"
+                                                        DisplayMemberBinding="{Binding Module}"
+                                                        Width="140" />
+                                        <GridViewColumn Header="Message"
+                                                        DisplayMemberBinding="{Binding Message}"
+                                                        Width="520" />
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
                 <ScrollViewer x:Name="PrivacyPanel"
                               Visibility="Collapsed"
                               VerticalScrollBarVisibility="Auto"
@@ -887,11 +1261,11 @@
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center" />
                                     </Border>
-                                    <TextBlock Text="No Network Requests"
+                                    <TextBlock Text="Fixture Mode Offline"
                                                FontSize="13"
                                                FontWeight="SemiBold"
                                                Margin="0,15,0,6" />
-                                    <TextBlock Text="No market-data, broker, or analytics service connections"
+                                    <TextBlock Text="Local CLI mode delegates read-only data access to the user-installed CLI"
                                                Style="{StaticResource BodySecondary}"
                                                FontSize="10" />
                                 </StackPanel>
@@ -963,7 +1337,7 @@
                                                FontSize="10"
                                                FontWeight="Bold" />
                                     <TextBlock Grid.Column="1"
-                                               Text="Native UI, demo factors, an offline state machine, and rule descriptions"
+                                               Text="Native UI, fixture data, a read-only CLI adapter, local cache, and daily universe decisions"
                                                Style="{StaticResource BodySecondary}" />
                                 </Grid>
 
@@ -977,7 +1351,7 @@
                                                FontSize="10"
                                                FontWeight="Bold" />
                                     <TextBlock Grid.Column="1"
-                                               Text="Production code, positions, orders, profit and loss, account bindings, and access tokens"
+                                               Text="Broker credentials, order submission, real orders, profit and loss, and account bindings"
                                                Style="{StaticResource BodySecondary}" />
                                 </Grid>
 
@@ -991,7 +1365,7 @@
                                                FontSize="10"
                                                FontWeight="Bold" />
                                     <TextBlock Grid.Column="1"
-                                               Text="No persistence by default; restart restores the built-in demo state"
+                                               Text="Non-sensitive settings, market cache, universe, logs, and audit data stay local"
                                                Style="{StaticResource BodySecondary}" />
                                 </Grid>
 
