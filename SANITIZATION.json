@@ -1,0 +1,12 @@
+{
+  "artifact": "Cytisus-Trading",
+  "version": "1.0.0",
+  "network_access": false,
+  "broker_integrations": [],
+  "account_identifiers": false,
+  "positions_or_orders": false,
+  "tokens_or_api_keys": false,
+  "personal_paths": false,
+  "sample_data_only": true,
+  "trade_execution": false
+}
