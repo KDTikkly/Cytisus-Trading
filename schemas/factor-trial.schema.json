@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/KDTikkly/Cytisus-Trading/schemas/factor-trial.schema.json",
+  "title": "Cytisus Factor Trial",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "trial_id",
+    "factor_family",
+    "expression",
+    "parameters",
+    "dataset_version",
+    "universe_version",
+    "search_algorithm",
+    "generation",
+    "oos_windows",
+    "metrics",
+    "result",
+    "rejection_reason",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "trial_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "factor_family": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "expression": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "parameters": {
+      "type": "object"
+    },
+    "dataset_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "universe_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "search_algorithm": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "oos_windows": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "result": {
+      "enum": [
+        "Candidate",
+        "Rejected",
+        "Quarantined"
+      ]
+    },
+    "rejection_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

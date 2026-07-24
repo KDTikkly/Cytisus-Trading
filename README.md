@@ -4,38 +4,88 @@
   <img src="Resources/ProductIcon-iOS27.png" width="220" alt="Cytisus-Trading product icon">
 </p>
 
-Cytisus-Trading is a fully offline desktop demonstration for quantitative research and factor-governance reviews. It presents a clear visual workflow for moving a factor from candidate evaluation through shadow review and activation, followed by probation, retirement, or quarantine when the evidence changes.
+Cytisus-Trading is a local desktop front end for automated quantitative operations. It is not a manual trading terminal.
 
-The app uses a dark glass visual system and contains only built-in sanitized sample data. It never connects to a broker, reads an account, requests live market data, or submits an order. It is suitable for product demonstrations, rule discussions, and interface reviews.
+## v1.1 implementation status
 
-## Desktop editions
+Version 1.1.0 is in progress. Prompt 1 establishes cross-platform contracts, native application boundaries, deterministic fixtures, and local persistence foundations.
 
-Two native desktop editions are maintained:
+Currently available:
 
-- macOS 14 or later: Universal 2 app distributed as `Cytisus-Trading-1.0.0-universal.dmg`.
-- Windows 11: 64-bit, self-contained WPF app distributed as `Cytisus-Trading-1.0.0-win11-x64.exe`.
+- Native macOS SwiftUI and Windows 11 WPF applications.
+- Offline fixture mode with deterministic factor data.
+- Fixture-backed factor-governance demonstrations.
+- Matching platform domain identifiers.
+- Local non-sensitive settings persistence.
+- Local application-log and audit-event persistence.
+- Schema-version and migration foundations.
+- Shared JSON schemas, fixtures, and protocol documents.
+- English-only ASCII repository validation.
 
-Both editions use the same English-only sample content and implement the same four work areas:
+Not yet available:
 
-- Overview
-- Factor Lifecycle
-- Strategy Lab
-- Privacy and Sanitization
+- Longbridge CLI integration or market collection.
+- Local strategy-process execution.
+- Factor DSL execution or factor search.
+- Portfolio allocation.
+- Paper or Live broker execution.
+- Broker order submission.
+- Manual order entry.
 
-## Features
+`Live` is defined as a contract identifier only. Live execution is unavailable and no UI path can submit an order.
 
-- Review active factors, weighted coverage, the shadow queue, and a sample strategy path.
-- Inspect IC, IR, coverage, weight, OOS evidence windows, and governance status.
-- Simulate factor promotion, probation, and retirement.
-- Adjust risk budget, minimum coverage, and factor-weight limits.
-- Review explicit privacy, sanitization, and release boundaries.
-- Reset all in-memory changes by restarting the app or selecting Reset.
+## Native desktop editions
 
-This project does not provide live trading capability, investment advice, or any promise of returns.
+- macOS 14 or later: SwiftUI Universal 2 app distributed as `Cytisus-Trading-1.1.0-universal.dmg`.
+- Windows 11 x64: self-contained WPF app distributed as `Cytisus-Trading-1.1.0-win11-x64.exe`.
+
+Both applications start without Longbridge CLI, a network connection, an account, or credentials.
+
+## Architecture
+
+Shared behavior contracts:
+
+```text
+docs/
+schemas/
+fixtures/
+```
+
+macOS boundaries:
+
+```text
+Sources/App/
+Sources/UI/
+Sources/Domain/
+Sources/Services/
+Sources/Persistence/
+Sources/Logging/
+```
+
+Windows boundaries:
+
+```text
+Windows/Domain/
+Windows/Services/
+Windows/Persistence/
+Windows/Logging/
+Windows/ViewModels/
+Windows/Views/
+```
+
+The platforms do not share a compiled runtime. They share schema definitions, fixture inputs, protocol documents, stable identifiers, and equivalent native implementations.
+
+## Shared contracts
+
+- [v1.1 PDM](docs/PDM-v1.1.md)
+- [Implementation prompt series](docs/CODEX-v1.1-PROMPT-SERIES.md)
+- [Strategy protocol](docs/STRATEGY-PROTOCOL.md)
+- [Factor DSL](docs/FACTOR-DSL.md)
+- [Longbridge integration boundary](docs/LONGBRIDGE-INTEGRATION.md)
 
 ## Install on macOS
 
-1. Download `Cytisus-Trading-1.0.0-universal.dmg`.
+1. Download `Cytisus-Trading-1.1.0-universal.dmg`.
 2. Open the DMG.
 3. Drag `Cytisus-Trading.app` into Applications.
 4. Open Cytisus-Trading from Applications.
@@ -44,10 +94,10 @@ The public DMG uses ad hoc signing unless release signing variables are supplied
 
 ## Install on Windows 11
 
-1. Download `Cytisus-Trading-1.0.0-win11-x64.exe`.
+1. Download `Cytisus-Trading-1.1.0-win11-x64.exe`.
 2. Run the executable directly.
 
-The Windows release is self-contained and does not require a separate .NET installation. Unsigned public builds can trigger Microsoft Defender SmartScreen. Verify the release source and checksum before choosing Run anyway.
+The Windows executable is self-contained and does not require a separate .NET installation. Unsigned builds can trigger Microsoft Defender SmartScreen. Verify the release source and checksum before running the file.
 
 ## Build the macOS DMG
 
@@ -61,7 +111,7 @@ tools/build_dmg.sh
 Output:
 
 ```text
-dist/Cytisus-Trading-1.0.0-universal.dmg
+dist/Cytisus-Trading-1.1.0-universal.dmg
 ```
 
 For Developer ID signing and Apple notarization:
@@ -72,41 +122,39 @@ NOTARY_PROFILE="cytisus-notary" \
 tools/build_dmg.sh
 ```
 
-Install a valid `Developer ID Application` certificate in the login keychain and save a `notarytool` profile before using these variables. Never commit passwords, tokens, certificates, or private keys.
-
 ## Build the Windows 11 executable
 
 Install the .NET 8 SDK on Windows 11, then run:
 
 ```powershell
-pwsh -File tools/build_win11.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/build_win11.ps1
 ```
 
 Output:
 
 ```text
-dist/Cytisus-Trading-1.0.0-win11-x64.exe
+dist/Cytisus-Trading-1.1.0-win11-x64.exe
 ```
 
-The build is published as a self-contained, single-file WPF executable for `win-x64`.
+## Focused foundation checks
 
-## English-only validation
-
-Run the repository text check before release:
+Run:
 
 ```powershell
-pwsh -File tools/check_ascii.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_ascii.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_json.ps1
 ```
 
-The check fails if a tracked project text file contains a character outside printable ASCII, tabs, or standard line endings.
+The Windows application supports a targeted persistence and audit-event smoke mode through `--foundation-smoke`.
 
 ## Privacy and security
 
-- No network requests
-- No identity data
-- No account, position, order, or profit-and-loss data
-- No tokens, certificates, or environment variables
-- No persisted demo state by default
-- No trade-execution capability
+- No network requests in Prompt 1.
+- No Longbridge process invocation in Prompt 1.
+- No identity, account, position, order, or profit-and-loss data.
+- No tokens, credentials, certificates, or authorization output.
+- No Live execution.
+- Non-sensitive settings, operational logs, and audit events are stored locally.
+- Factor demo state resets deterministically from repository fixtures.
 
-See [PRIVACY.md](PRIVACY.md) and [SANITIZATION.json](SANITIZATION.json) for the complete release boundary.
+See [PRIVACY.md](PRIVACY.md) and [SANITIZATION.json](SANITIZATION.json).

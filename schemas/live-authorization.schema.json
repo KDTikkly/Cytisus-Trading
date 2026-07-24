@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/KDTikkly/Cytisus-Trading/schemas/live-authorization.schema.json",
+  "title": "Cytisus Live Authorization",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "authorization_id",
+    "strategy_id",
+    "allowed_markets",
+    "allowed_symbols_or_universe",
+    "maximum_capital",
+    "maximum_strategy_allocation",
+    "maximum_single_position_exposure",
+    "maximum_daily_loss",
+    "maximum_drawdown",
+    "maximum_order_frequency",
+    "outside_regular_hours_permission",
+    "parameter_version",
+    "valid_from",
+    "expires_at",
+    "enabled"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "authorization_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "strategy_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "allowed_markets": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "allowed_symbols_or_universe": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "maximum_capital": {
+      "type": "number",
+      "minimum": 0
+    },
+    "maximum_strategy_allocation": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "maximum_single_position_exposure": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "maximum_daily_loss": {
+      "type": "number",
+      "minimum": 0
+    },
+    "maximum_drawdown": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "maximum_order_frequency": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "outside_regular_hours_permission": {
+      "type": "boolean"
+    },
+    "parameter_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "enabled": {
+      "type": "boolean"
+    }
+  }
+}

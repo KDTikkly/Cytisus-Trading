@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "event_id": "audit-fixture-0001",
+  "occurred_at": "2026-01-01T00:00:00Z",
+  "category": "Application",
+  "action": "FixtureModeStarted",
+  "result": "Completed",
+  "actor": "system",
+  "correlation_id": "corr-fixture-0001",
+  "context": {
+    "fixture_mode": true,
+    "live_available": false
+  }
+}

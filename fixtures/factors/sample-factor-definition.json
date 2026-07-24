@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "factor_id": "fixture-medium-term-momentum",
+  "factor_type": "Alpha",
+  "target": "forward_rank_return",
+  "horizon": "20d",
+  "universe": "fixture-liquid-equities",
+  "required_data": [
+    "close",
+    "returns"
+  ],
+  "update_frequency": "daily",
+  "version": 1,
+  "state": "Candidate",
+  "expression": "cross_section_rank(safe_divide(delta(close,20),rolling_std(returns,20)))"
+}

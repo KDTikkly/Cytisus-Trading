@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "trial_id": "trial-fixture-0001",
+  "factor_family": "medium-term-momentum",
+  "expression": "cross_section_rank(delta(close,20))",
+  "parameters": {
+    "horizon": "20d"
+  },
+  "dataset_version": "fixture-dataset-1",
+  "universe_version": "fixture-universe-1",
+  "search_algorithm": "seed",
+  "generation": 0,
+  "oos_windows": 2,
+  "metrics": {
+    "coverage": 0.94,
+    "rank_ic": 0.031
+  },
+  "result": "Candidate",
+  "rejection_reason": null,
+  "created_at": "2026-01-01T00:00:00Z"
+}

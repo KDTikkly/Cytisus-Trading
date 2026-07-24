@@ -1,8 +1,10 @@
 <Application x:Class="CytisusTrading.Windows.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             StartupUri="MainWindow.xaml">
+             xmlns:views="clr-namespace:CytisusTrading.Windows.Views">
     <Application.Resources>
+        <views:FactorStateBrushConverter x:Key="FactorStateBrushConverter" />
+
         <Color x:Key="WindowColor">#07101F</Color>
         <Color x:Key="PanelColor">#CC101A2D</Color>
         <Color x:Key="CardColor">#B31A263B</Color>

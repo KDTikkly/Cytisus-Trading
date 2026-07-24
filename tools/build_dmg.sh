@@ -5,7 +5,7 @@ PROJECT_DIR=${0:A:h:h}
 BUILD_DIR="$PROJECT_DIR/build"
 APP_NAME="Cytisus-Trading"
 EXECUTABLE_NAME="CytisusTrading"
-DMG_NAME="Cytisus-Trading-1.0.0-universal.dmg"
+DMG_NAME="Cytisus-Trading-1.1.0-universal.dmg"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 DMG_ROOT="$BUILD_DIR/dmg-root"
 DIST_DIR="$PROJECT_DIR/dist"
@@ -13,6 +13,12 @@ SDK_PATH=$(xcrun --sdk macosx --show-sdk-path)
 MODULE_CACHE="$BUILD_DIR/module-cache"
 SIGNING_IDENTITY=${DEVELOPER_ID_APPLICATION_IDENTITY:--}
 NOTARY_KEYCHAIN_PROFILE=${NOTARY_PROFILE:-}
+SOURCE_FILES=("$PROJECT_DIR"/Sources/**/*.swift(N))
+
+if (( ${#SOURCE_FILES[@]} == 0 )); then
+  print -u2 "No Swift source files were found"
+  exit 2
+fi
 
 mkdir -p "$BUILD_DIR" "$DIST_DIR"
 rm -rf "$APP_BUNDLE" "$DMG_ROOT" "$MODULE_CACHE"
@@ -24,7 +30,7 @@ swiftc -parse-as-library -O \
   -sdk "$SDK_PATH" \
   -module-cache-path "$MODULE_CACHE/arm64" \
   -framework SwiftUI -framework AppKit \
-  "$PROJECT_DIR"/Sources/*.swift \
+  "${SOURCE_FILES[@]}" \
   -o "$BUILD_DIR/$EXECUTABLE_NAME-arm64"
 
 swiftc -parse-as-library -O \
@@ -32,7 +38,7 @@ swiftc -parse-as-library -O \
   -sdk "$SDK_PATH" \
   -module-cache-path "$MODULE_CACHE/x86_64" \
   -framework SwiftUI -framework AppKit \
-  "$PROJECT_DIR"/Sources/*.swift \
+  "${SOURCE_FILES[@]}" \
   -o "$BUILD_DIR/$EXECUTABLE_NAME-x86_64"
 
 lipo -create "$BUILD_DIR/$EXECUTABLE_NAME-arm64" "$BUILD_DIR/$EXECUTABLE_NAME-x86_64" \
@@ -49,6 +55,8 @@ cp "$PROJECT_DIR/Resources/ProductLogo.png" "$APP_BUNDLE/Contents/Resources/Prod
 
 cp "$PROJECT_DIR/PRIVACY.md" "$APP_BUNDLE/Contents/Resources/PRIVACY.md"
 cp "$PROJECT_DIR/SANITIZATION.json" "$APP_BUNDLE/Contents/Resources/SANITIZATION.json"
+mkdir -p "$APP_BUNDLE/Contents/Resources/fixtures"
+cp -R "$PROJECT_DIR/fixtures/." "$APP_BUNDLE/Contents/Resources/fixtures/"
 chmod 755 "$APP_BUNDLE/Contents/MacOS/$EXECUTABLE_NAME"
 if [[ "$SIGNING_IDENTITY" == "-" ]]; then
   codesign --force --deep --sign - "$APP_BUNDLE"

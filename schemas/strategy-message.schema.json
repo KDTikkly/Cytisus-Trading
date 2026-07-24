@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/KDTikkly/Cytisus-Trading/schemas/strategy-message.schema.json",
+  "title": "Cytisus Strategy Message",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "event_id",
+    "correlation_id",
+    "strategy_id",
+    "strategy_version",
+    "cycle_id",
+    "timestamp",
+    "message_type",
+    "payload"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "event_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "strategy_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "strategy_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "cycle_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "message_type": {
+      "enum": [
+        "initialize",
+        "load_parameters",
+        "apply_parameters",
+        "market_snapshot",
+        "allocation_budget",
+        "start_cycle",
+        "pause",
+        "resume",
+        "shutdown",
+        "ready",
+        "heartbeat",
+        "log",
+        "health",
+        "signal",
+        "factor_observation",
+        "target_position",
+        "trade_intent",
+        "cycle_complete",
+        "error"
+      ]
+    },
+    "payload": {
+      "type": "object"
+    }
+  }
+}

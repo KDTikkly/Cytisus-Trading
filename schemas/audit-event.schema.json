@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/KDTikkly/Cytisus-Trading/schemas/audit-event.schema.json",
+  "title": "Cytisus Audit Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "event_id",
+    "occurred_at",
+    "category",
+    "action",
+    "result",
+    "actor",
+    "correlation_id",
+    "context"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "event_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "category": {
+      "enum": [
+        "Application",
+        "Settings",
+        "StrategyLifecycle",
+        "FactorLifecycle",
+        "RiskRejection",
+        "LiveAuthorization",
+        "StrategyIntent",
+        "RiskDecision",
+        "InternalTransfer",
+        "BrokerOrder",
+        "BrokerFill",
+        "VirtualAllocation",
+        "AllocationShortfall",
+        "Reconciliation"
+      ]
+    },
+    "action": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "result": {
+      "enum": [
+        "Accepted",
+        "Rejected",
+        "Completed",
+        "Failed"
+      ]
+    },
+    "actor": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "context": {
+      "type": "object"
+    }
+  }
+}

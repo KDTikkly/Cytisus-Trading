@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "strategy_id": "fixture-multifactor",
+  "name": "Fixture Multi-Factor",
+  "version": "1.1.0",
+  "entrypoint": "./fixture-strategy",
+  "supported_modes": [
+    "PaperOnly"
+  ],
+  "required_data": [
+    "daily_bars",
+    "market_status"
+  ],
+  "parameter_schema_version": 1
+}

@@ -64,7 +64,7 @@ struct SidebarView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Cytisus-Trading")
                         .font(.headline.weight(.semibold))
-                    Text("Offline Factor Lab")
+                    Text("v1.1 Foundation")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -103,10 +103,10 @@ struct SidebarView: View {
             Spacer()
 
             VStack(alignment: .leading, spacing: 9) {
-                Label("Local Demo Mode", systemImage: "checkmark.shield.fill")
+                Label("Offline Fixture Mode", systemImage: "checkmark.shield.fill")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.green)
-                Text("No network | No accounts | No real orders")
+                Text("No network | Paper Only | Live unavailable")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
@@ -149,9 +149,9 @@ struct OverviewView: View {
             VStack(alignment: .leading, spacing: 24) {
                 HStack(alignment: .bottom) {
                     PageHeader(
-                        eyebrow: "Research Workspace",
-                        title: "Strategy status at a glance",
-                        subtitle: "Sanitized sample data demonstrates the factor governance workflow."
+                        eyebrow: "Operations Foundation",
+                        title: "Paper-only operations foundation",
+                        subtitle: "v1.1 implementation is in progress. Live execution is unavailable."
                     )
                     Spacer()
                     Button("Run Sample Review") { model.runReview() }
@@ -159,7 +159,7 @@ struct OverviewView: View {
                 }
 
                 HStack(spacing: 16) {
-                    MetricCard(title: "Run Mode", value: "Offline", detail: "No account connections", symbol: "wifi.slash", tint: .cyan)
+                    MetricCard(title: "Run Mode", value: "Paper Only", detail: "Offline fixtures", symbol: "wifi.slash", tint: .cyan)
                     MetricCard(title: "Active Factors", value: "\(model.activeFactors)", detail: "Independent risk gates", symbol: "point.3.filled.connected.trianglepath.dotted", tint: .green)
                     MetricCard(title: "Weighted Coverage", value: model.weightedCoverage.formatted(.percent.precision(.fractionLength(0))), detail: "Minimum gate: 80%", symbol: "chart.dots.scatter", tint: .purple)
                     MetricCard(title: "Shadow Queue", value: "\(model.shadowFactors)", detail: "Awaiting OOS evidence", symbol: "eye.circle", tint: .orange)

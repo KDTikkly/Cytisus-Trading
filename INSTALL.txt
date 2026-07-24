@@ -1,18 +1,27 @@
-Cytisus-Trading 1.0.0
+Cytisus-Trading 1.1.0
 
-INSTALLATION
+IMPLEMENTATION STATUS
 
-macOS
+v1.1 implementation is in progress. This build starts in offline fixture mode.
+Longbridge integration, strategy execution, portfolio allocation, broker orders,
+and Live execution are not available.
+
+MACOS
+
 1. Drag "Cytisus-Trading.app" into Applications.
 2. Open Cytisus-Trading from Applications.
 
-Windows 11
-1. Download "Cytisus-Trading-1.0.0-win11-x64.exe".
-2. Run the executable directly. No separate runtime is required.
+WINDOWS 11
+
+1. Download "Cytisus-Trading-1.1.0-win11-x64.exe".
+2. Run the executable directly. No separate .NET runtime is required.
 
 NOTES
+
 - The macOS build supports Apple Silicon and Intel Mac computers.
 - The minimum macOS version is macOS 14.
 - The Windows build supports 64-bit Windows 11.
 - Public builds may be unsigned. Only run artifacts from a source you trust.
-- The app is fully offline, contains fictional demo data, and cannot execute trades.
+- Prompt 1 makes no network requests and stores no credentials.
+- Non-sensitive settings, application logs, and audit events are stored locally.
+- The app contains fictional fixtures and cannot execute trades.

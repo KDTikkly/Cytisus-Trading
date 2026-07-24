@@ -1,5 +1,19 @@
 import SwiftUI
 
+extension FactorState {
+    var tint: Color {
+        switch self {
+        case .candidate: return .cyan
+        case .shadow: return .indigo
+        case .active: return .green
+        case .reduced: return .yellow
+        case .probation: return .orange
+        case .retired: return .secondary
+        case .quarantined: return .red
+        }
+    }
+}
+
 struct LiquidBackdrop: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isAnimated = false

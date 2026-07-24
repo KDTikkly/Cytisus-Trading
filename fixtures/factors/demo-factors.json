@@ -1,0 +1,74 @@
+[
+  {
+    "factor_id": "medium-term-momentum",
+    "name": "Medium-Term Momentum",
+    "category": "Directional",
+    "state": "Active",
+    "ic": 0.041,
+    "ir": 0.61,
+    "coverage": 0.96,
+    "weight": 0.22,
+    "evidence_windows": 8,
+    "reason": "Cleared every out-of-sample gate"
+  },
+  {
+    "factor_id": "low-volatility-quality",
+    "name": "Low-Volatility Quality",
+    "category": "Defensive",
+    "state": "Active",
+    "ic": 0.036,
+    "ir": 0.54,
+    "coverage": 0.92,
+    "weight": 0.18,
+    "evidence_windows": 7,
+    "reason": "Stable contribution after costs"
+  },
+  {
+    "factor_id": "volatility-term-structure",
+    "name": "Volatility Term Structure",
+    "category": "Derivatives",
+    "state": "Shadow",
+    "ic": 0.029,
+    "ir": 0.41,
+    "coverage": 0.84,
+    "weight": 0.0,
+    "evidence_windows": 5,
+    "reason": "Waiting for the sixth out-of-sample window"
+  },
+  {
+    "factor_id": "volume-impact",
+    "name": "Volume Impact",
+    "category": "Market Microstructure",
+    "state": "Probation",
+    "ic": 0.014,
+    "ir": 0.21,
+    "coverage": 0.76,
+    "weight": 0.08,
+    "evidence_windows": 9,
+    "reason": "One review below the IC threshold"
+  },
+  {
+    "factor_id": "short-term-reversal",
+    "name": "Short-Term Reversal",
+    "category": "Directional",
+    "state": "Candidate",
+    "ic": 0.024,
+    "ir": 0.35,
+    "coverage": 0.82,
+    "weight": 0.0,
+    "evidence_windows": 2,
+    "reason": "Continue collecting frozen OOS evidence"
+  },
+  {
+    "factor_id": "legacy-sentiment-proxy",
+    "name": "Legacy Sentiment Proxy",
+    "category": "Alternative Data",
+    "state": "Retired",
+    "ic": -0.008,
+    "ir": -0.12,
+    "coverage": 0.67,
+    "weight": 0.0,
+    "evidence_windows": 11,
+    "reason": "Failed three reviews and entered cooldown"
+  }
+]
