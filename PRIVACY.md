@@ -1,13 +1,13 @@
-# Cytisus-Trading 隐私说明
+# Cytisus-Trading Privacy Statement
 
-Cytisus-Trading 1.0.0 是一个完全离线的因子治理界面演示。
+Cytisus-Trading 1.0.0 is a fully offline factor-governance interface demonstration.
 
-- 不发起网络请求。
-- 不连接券商、交易所、行情或分析服务。
-- 不读取或保存账户、持仓、订单、盈亏或身份信息。
-- 不包含令牌、API 密钥、证书或账户绑定。
-- 所有因子名称、指标、曲线和状态均为内置虚构样例。
-- 界面中的参数调整只存在于本次运行内存，重启后恢复默认值。
-- 应用不具备下单、撤单、资金或账户设置能力。
+- It does not make network requests.
+- It does not connect to brokers, exchanges, market-data providers, or analytics services.
+- It does not read or store accounts, positions, orders, profit and loss, or identity data.
+- It contains no tokens, API keys, certificates, or account bindings.
+- Every factor name, metric, curve, and state is a built-in fictional sample.
+- Parameter changes remain in memory for the current session and reset after restart.
+- The app has no order, cancellation, fund-management, or account-configuration capability.
 
-本应用仅用于产品演示、策略治理评审和界面原型，不构成投资建议。
+This app is intended only for product demonstrations, strategy-governance reviews, and interface prototyping. It is not investment advice.

@@ -2,10 +2,10 @@ import Foundation
 import SwiftUI
 
 enum StudioSection: String, CaseIterable, Identifiable {
-    case overview = "概览"
-    case factors = "因子生命周期"
-    case lab = "策略实验室"
-    case privacy = "隐私与脱敏"
+    case overview = "Overview"
+    case factors = "Factor Lifecycle"
+    case lab = "Strategy Lab"
+    case privacy = "Privacy and Sanitization"
 
     var id: String { rawValue }
 
@@ -20,12 +20,12 @@ enum StudioSection: String, CaseIterable, Identifiable {
 }
 
 enum FactorState: String, CaseIterable {
-    case candidate = "候选"
-    case shadow = "影子观察"
-    case active = "已启用"
-    case probation = "观察降级"
-    case retired = "已淘汰"
-    case quarantined = "已隔离"
+    case candidate = "Candidate"
+    case shadow = "Shadow"
+    case active = "Active"
+    case probation = "Probation"
+    case retired = "Retired"
+    case quarantined = "Quarantined"
 
     var tint: Color {
         switch self {
@@ -88,34 +88,34 @@ final class StudioModel: ObservableObject {
 
     static let sampleFactors: [FactorItem] = [
         FactorItem(
-            name: "中期动量", category: "方向", state: .active,
+            name: "Medium-Term Momentum", category: "Directional", state: .active,
             ic: 0.041, ir: 0.61, coverage: 0.96, weight: 0.22,
-            evidenceWindows: 8, reason: "连续通过全部样本外门槛"
+            evidenceWindows: 8, reason: "Cleared every out-of-sample gate"
         ),
         FactorItem(
-            name: "低波动质量", category: "防御", state: .active,
+            name: "Low-Volatility Quality", category: "Defensive", state: .active,
             ic: 0.036, ir: 0.54, coverage: 0.92, weight: 0.18,
-            evidenceWindows: 7, reason: "成本后贡献稳定"
+            evidenceWindows: 7, reason: "Stable contribution after costs"
         ),
         FactorItem(
-            name: "波动率期限结构", category: "衍生品", state: .shadow,
+            name: "Volatility Term Structure", category: "Derivatives", state: .shadow,
             ic: 0.029, ir: 0.41, coverage: 0.84, weight: 0.00,
-            evidenceWindows: 5, reason: "等待第 6 个样本外窗口"
+            evidenceWindows: 5, reason: "Waiting for the sixth out-of-sample window"
         ),
         FactorItem(
-            name: "成交量冲击", category: "微观结构", state: .probation,
+            name: "Volume Impact", category: "Market Microstructure", state: .probation,
             ic: 0.014, ir: 0.21, coverage: 0.76, weight: 0.08,
-            evidenceWindows: 9, reason: "连续一次低于 IC 门槛"
+            evidenceWindows: 9, reason: "One review below the IC threshold"
         ),
         FactorItem(
-            name: "短期反转", category: "方向", state: .candidate,
+            name: "Short-Term Reversal", category: "Directional", state: .candidate,
             ic: 0.024, ir: 0.35, coverage: 0.82, weight: 0.00,
-            evidenceWindows: 2, reason: "继续积累冻结样本外证据"
+            evidenceWindows: 2, reason: "Continue collecting frozen OOS evidence"
         ),
         FactorItem(
-            name: "旧版情绪代理", category: "替代数据", state: .retired,
+            name: "Legacy Sentiment Proxy", category: "Alternative Data", state: .retired,
             ic: -0.008, ir: -0.12, coverage: 0.67, weight: 0.00,
-            evidenceWindows: 11, reason: "连续三次失败，进入冷却期"
+            evidenceWindows: 11, reason: "Failed three reviews and entered cooldown"
         )
     ]
 
@@ -134,28 +134,28 @@ final class StudioModel: ObservableObject {
         withAnimation(.spring(response: 0.55, dampingFraction: 0.82)) {
             for index in factors.indices {
                 switch factors[index].name {
-                case "波动率期限结构":
+                case "Volatility Term Structure":
                     factors[index].evidenceWindows += 1
                     if factors[index].evidenceWindows >= 6 && reviewCount >= 2 {
                         factors[index].state = .active
                         factors[index].weight = min(0.05, maxFactorWeight)
-                        factors[index].reason = "连续两次通过，建议以 5% 上限启用"
+                        factors[index].reason = "Passed twice; enable with a 5% cap"
                     } else {
-                        factors[index].reason = "首轮通过，等待连续复核"
+                        factors[index].reason = "First pass complete; awaiting confirmation"
                     }
-                case "成交量冲击":
+                case "Volume Impact":
                     factors[index].ic -= 0.003
                     if reviewCount >= 2 {
                         factors[index].state = .retired
                         factors[index].weight = 0
-                        factors[index].reason = "连续三次失败，冷却 126 天"
+                        factors[index].reason = "Failed three reviews; 126-day cooldown"
                     } else {
-                        factors[index].reason = "第二次失败，维持观察降级"
+                        factors[index].reason = "Second failure; probation continues"
                     }
-                case "短期反转":
+                case "Short-Term Reversal":
                     factors[index].evidenceWindows += 1
                     factors[index].state = .shadow
-                    factors[index].reason = "候选数据门槛通过，进入影子观察"
+                    factors[index].reason = "Candidate data gate passed; moved to shadow review"
                 default:
                     break
                 }

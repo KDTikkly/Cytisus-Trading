@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>CytisusTrading</AssemblyName>
+    <RootNamespace>CytisusTrading.Windows</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <Product>Cytisus-Trading</Product>
+    <Description>Offline factor-governance desktop demonstration for Windows 11.</Description>
+    <Authors>Cytisus-Trading</Authors>
+    <Copyright>Copyright Cytisus-Trading contributors</Copyright>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <ApplicationIcon>..\Resources\ProductIcon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="..\Resources\ProductLogo.png" Link="Resources\ProductLogo.png" />
+    <Resource Include="..\Resources\ProductIcon.ico" Link="Resources\ProductIcon.ico" />
+  </ItemGroup>
+</Project>
