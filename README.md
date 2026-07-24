@@ -1,99 +1,112 @@
 # Cytisus-Trading
 
 <p align="center">
-  <img src="Resources/ProductIcon-iOS27.png" width="220" alt="Cytisus-Trading iOS 27 Liquid Glass Icon">
+  <img src="Resources/ProductIcon-iOS27.png" width="220" alt="Cytisus-Trading product icon">
 </p>
 
-Cytisus-Trading 是一款面向量化研究展示与因子治理评审的 macOS 离线演示应用。它用清晰的可视化流程说明一个因子如何从候选、影子观察、正式启用，最终进入降级、淘汰或隔离状态。
+Cytisus-Trading is a fully offline desktop demonstration for quantitative research and factor-governance reviews. It presents a clear visual workflow for moving a factor from candidate evaluation through shadow review and activation, followed by probation, retirement, or quarantine when the evidence changes.
 
-应用采用液态玻璃风格，所有内容均为内置脱敏样例。它不会连接券商、读取账户、查询真实行情或提交订单，适合产品演示、规则讨论和界面原型评审。
+The app uses a dark glass visual system and contains only built-in sanitized sample data. It never connects to a broker, reads an account, requests live market data, or submits an order. It is suitable for product demonstrations, rule discussions, and interface reviews.
 
-## 主要功能
+## Desktop editions
 
-- **概览**：查看活跃因子、加权覆盖率、影子队列和样本策略轨迹。
-- **因子生命周期**：观察 IC、IR、覆盖率、权重和 OOS 证据窗口，并模拟因子晋升与淘汰。
-- **策略实验室**：调整风险预算、最低覆盖率和单因子权重上限。
-- **隐私与脱敏**：检查演示包的数据边界和离线声明。
-- **本地状态机**：所有变化只保存在内存中，重新启动后恢复初始样例。
+Two native desktop editions are maintained:
 
-> 本项目不提供真实交易能力，不构成投资建议，也不承诺任何收益。
+- macOS 14 or later: Universal 2 app distributed as `Cytisus-Trading-1.0.0-universal.dmg`.
+- Windows 11: 64-bit, self-contained WPF app distributed as `Cytisus-Trading-1.0.0-win11-x64.exe`.
 
-## 普通用户使用教程
+Both editions use the same English-only sample content and implement the same four work areas:
 
-### 1. 安装
+- Overview
+- Factor Lifecycle
+- Strategy Lab
+- Privacy and Sanitization
 
-1. 获取 `Cytisus-Trading-1.0.0-universal.dmg`。
-2. 双击打开 DMG。
-3. 将 `Cytisus-Trading.app` 拖入“应用程序”文件夹。
-4. 在“应用程序”中打开 Cytisus-Trading。
+## Features
 
-当前公开构建采用本地临时代码签名且未经过 Apple 公证。如果 macOS 阻止首次打开，请前往 **系统设置 → 隐私与安全性**，确认应用来源后选择“仍要打开”。仅运行你信任来源的构建。
+- Review active factors, weighted coverage, the shadow queue, and a sample strategy path.
+- Inspect IC, IR, coverage, weight, OOS evidence windows, and governance status.
+- Simulate factor promotion, probation, and retirement.
+- Adjust risk budget, minimum coverage, and factor-weight limits.
+- Review explicit privacy, sanitization, and release boundaries.
+- Reset all in-memory changes by restarting the app or selecting Reset.
 
-### 2. 认识主界面
+This project does not provide live trading capability, investment advice, or any promise of returns.
 
-左侧有四个区域：
+## Install on macOS
 
-1. **概览**：确认当前为“离线”模式，并查看总体治理状态。
-2. **因子生命周期**：查看每个因子的状态、指标和评审原因。
-3. **策略实验室**：拖动滑杆，模拟不同治理门槛。
-4. **隐私与脱敏**：确认应用不包含账户、密钥、持仓或订单数据。
+1. Download `Cytisus-Trading-1.0.0-universal.dmg`.
+2. Open the DMG.
+3. Drag `Cytisus-Trading.app` into Applications.
+4. Open Cytisus-Trading from Applications.
 
-### 3. 运行一次因子评审演示
+The public DMG uses ad hoc signing unless release signing variables are supplied. If macOS blocks the first launch, open System Settings, select Privacy & Security, verify the source, and choose Open Anyway. Only run a build from a source you trust.
 
-1. 进入“因子生命周期”。
-2. 点击一次“生成评审提案”，观察候选因子进入影子观察、弱因子进入降级流程。
-3. 再点击一次，观察满足连续 OOS 证据要求的因子晋升，以及连续失败因子的淘汰。
-4. 点击“重置”即可恢复初始演示数据。
+## Install on Windows 11
 
-### 4. 调整治理参数
+1. Download `Cytisus-Trading-1.0.0-win11-x64.exe`.
+2. Run the executable directly.
 
-进入“策略实验室”，调整以下参数：
+The Windows release is self-contained and does not require a separate .NET installation. Unsigned public builds can trigger Microsoft Defender SmartScreen. Verify the release source and checksum before choosing Run anyway.
 
-- 单笔风险预算
-- 最低数据覆盖率
-- 单因子权重上限
+## Build the macOS DMG
 
-底部的“当前参数提案”会即时更新。此操作仅演示治理规则，不会触发交易。
-
-## 系统要求
-
-- macOS 14 或更高版本
-- Apple Silicon 或 Intel Mac（Universal 2）
-- 不需要网络、账户或 API 密钥
-
-## 从源码构建
-
-需要安装 Xcode Command Line Tools。在项目目录运行：
+Install Xcode Command Line Tools, then run:
 
 ```bash
 chmod +x tools/build_dmg.sh
 tools/build_dmg.sh
 ```
 
-构建产物位于：
+Output:
 
 ```text
 dist/Cytisus-Trading-1.0.0-universal.dmg
 ```
 
-## 正式签名与 Apple 公证
-
-在登录钥匙串中安装有效的 `Developer ID Application` 证书，并保存 `notarytool` 公证配置。不要将密码、令牌或 `.p8` 私钥提交到仓库。
+For Developer ID signing and Apple notarization:
 
 ```bash
 DEVELOPER_ID_APPLICATION_IDENTITY="Developer ID Application: Organization (TEAMID)" \
-NOTARY_PROFILE="sentinel-notary" \
+NOTARY_PROFILE="cytisus-notary" \
 tools/build_dmg.sh
 ```
 
-启用后，构建脚本会使用 Hardened Runtime 和安全时间戳签名应用与 DMG，等待 Apple 公证结果，随后装订并验证公证票据。
+Install a valid `Developer ID Application` certificate in the login keychain and save a `notarytool` profile before using these variables. Never commit passwords, tokens, certificates, or private keys.
 
-## 隐私与安全
+## Build the Windows 11 executable
 
-- 无网络请求
-- 无身份信息
-- 无账户、持仓、订单或盈亏数据
-- 无令牌、证书或环境变量
-- 默认不保存演示状态
+Install the .NET 8 SDK on Windows 11, then run:
 
-详细说明见 [PRIVACY.md](PRIVACY.md) 与 [SANITIZATION.json](SANITIZATION.json)。
+```powershell
+pwsh -File tools/build_win11.ps1
+```
+
+Output:
+
+```text
+dist/Cytisus-Trading-1.0.0-win11-x64.exe
+```
+
+The build is published as a self-contained, single-file WPF executable for `win-x64`.
+
+## English-only validation
+
+Run the repository text check before release:
+
+```powershell
+pwsh -File tools/check_ascii.ps1
+```
+
+The check fails if a tracked project text file contains a character outside printable ASCII, tabs, or standard line endings.
+
+## Privacy and security
+
+- No network requests
+- No identity data
+- No account, position, order, or profit-and-loss data
+- No tokens, certificates, or environment variables
+- No persisted demo state by default
+- No trade-execution capability
+
+See [PRIVACY.md](PRIVACY.md) and [SANITIZATION.json](SANITIZATION.json) for the complete release boundary.

@@ -1,6 +1,11 @@
 {
   "artifact": "Cytisus-Trading",
   "version": "1.0.0",
+  "language": "en",
+  "platforms": [
+    "macOS",
+    "Windows 11"
+  ],
   "network_access": false,
   "broker_integrations": [],
   "account_identifiers": false,

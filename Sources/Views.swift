@@ -64,7 +64,7 @@ struct SidebarView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Cytisus-Trading")
                         .font(.headline.weight(.semibold))
-                    Text("离线因子实验室")
+                    Text("Offline Factor Lab")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -103,10 +103,10 @@ struct SidebarView: View {
             Spacer()
 
             VStack(alignment: .leading, spacing: 9) {
-                Label("本地演示模式", systemImage: "checkmark.shield.fill")
+                Label("Local Demo Mode", systemImage: "checkmark.shield.fill")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.green)
-                Text("无网络 · 无账户 · 无真实订单")
+                Text("No network | No accounts | No real orders")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
@@ -150,19 +150,19 @@ struct OverviewView: View {
                 HStack(alignment: .bottom) {
                     PageHeader(
                         eyebrow: "Research Workspace",
-                        title: "策略状态一目了然",
-                        subtitle: "所有数据均为脱敏样例，仅用于展示因子治理流程。"
+                        title: "Strategy status at a glance",
+                        subtitle: "Sanitized sample data demonstrates the factor governance workflow."
                     )
                     Spacer()
-                    Button("运行样本评审") { model.runReview() }
+                    Button("Run Sample Review") { model.runReview() }
                         .buttonStyle(PrimaryGlassButton())
                 }
 
                 HStack(spacing: 16) {
-                    MetricCard(title: "运行模式", value: "离线", detail: "不连接任何账户", symbol: "wifi.slash", tint: .cyan)
-                    MetricCard(title: "活跃因子", value: "\(model.activeFactors)", detail: "风险门控独立", symbol: "point.3.filled.connected.trianglepath.dotted", tint: .green)
-                    MetricCard(title: "加权覆盖率", value: model.weightedCoverage.formatted(.percent.precision(.fractionLength(0))), detail: "最低门槛 80%", symbol: "chart.dots.scatter", tint: .purple)
-                    MetricCard(title: "影子队列", value: "\(model.shadowFactors)", detail: "等待样本外证据", symbol: "eye.circle", tint: .orange)
+                    MetricCard(title: "Run Mode", value: "Offline", detail: "No account connections", symbol: "wifi.slash", tint: .cyan)
+                    MetricCard(title: "Active Factors", value: "\(model.activeFactors)", detail: "Independent risk gates", symbol: "point.3.filled.connected.trianglepath.dotted", tint: .green)
+                    MetricCard(title: "Weighted Coverage", value: model.weightedCoverage.formatted(.percent.precision(.fractionLength(0))), detail: "Minimum gate: 80%", symbol: "chart.dots.scatter", tint: .purple)
+                    MetricCard(title: "Shadow Queue", value: "\(model.shadowFactors)", detail: "Awaiting OOS evidence", symbol: "eye.circle", tint: .orange)
                 }
 
                 HStack(spacing: 16) {
@@ -170,9 +170,9 @@ struct OverviewView: View {
                         VStack(alignment: .leading, spacing: 18) {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("样本策略轨迹")
+                                    Text("Sample Strategy Path")
                                         .font(.headline)
-                                    Text("归一化研究曲线 · 非实际收益")
+                                    Text("Normalized research curve | Not actual returns")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
@@ -183,9 +183,9 @@ struct OverviewView: View {
                             }
                             MiniPerformanceChart().frame(height: 170)
                             HStack {
-                                Label("无真实持仓", systemImage: "lock.fill")
+                                Label("No real positions", systemImage: "lock.fill")
                                 Spacer()
-                                Text("演示区间：12 个样本窗口")
+                                Text("Demo period: 12 sample windows")
                             }
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -195,13 +195,13 @@ struct OverviewView: View {
 
                     GlassCard {
                         VStack(alignment: .leading, spacing: 15) {
-                            Text("治理摘要").font(.headline)
-                            SummaryRow(symbol: "checkmark.seal.fill", tint: .green, title: "准入", detail: "连续两次通过 OOS 门槛")
-                            SummaryRow(symbol: "arrow.down.right.circle.fill", tint: .orange, title: "降级", detail: "连续两次失败进入观察")
-                            SummaryRow(symbol: "archivebox.circle.fill", tint: .secondary, title: "淘汰", detail: "三次失败并冷却 126 天")
-                            SummaryRow(symbol: "exclamationmark.shield.fill", tint: .red, title: "隔离", detail: "前视或来源污染立即停止")
+                            Text("Governance Summary").font(.headline)
+                            SummaryRow(symbol: "checkmark.seal.fill", tint: .green, title: "Admission", detail: "Pass the OOS gate twice in sequence")
+                            SummaryRow(symbol: "arrow.down.right.circle.fill", tint: .orange, title: "Downgrade", detail: "Two failures trigger probation")
+                            SummaryRow(symbol: "archivebox.circle.fill", tint: .secondary, title: "Retirement", detail: "Three failures and a 126-day cooldown")
+                            SummaryRow(symbol: "exclamationmark.shield.fill", tint: .red, title: "Quarantine", detail: "Stop immediately on look-ahead or source contamination")
                             Divider().overlay(.white.opacity(0.08))
-                            Text("收益目标永远不参与因子晋升。")
+                            Text("Return targets never influence factor promotion.")
                                 .font(.caption.weight(.medium))
                                 .foregroundStyle(.cyan)
                         }
@@ -239,29 +239,29 @@ struct FactorsView: View {
             HStack(alignment: .bottom) {
                 PageHeader(
                     eyebrow: "Factor Governance",
-                    title: "因子生命周期",
-                    subtitle: "以冻结样本外证据控制准入、降级与淘汰。"
+                    title: "Factor Lifecycle",
+                    subtitle: "Use frozen out-of-sample evidence to control admission, downgrade, and retirement."
                 )
                 Spacer()
                 if let date = model.lastReview {
-                    Text("最近评审 \(date.formatted(date: .omitted, time: .shortened))")
+                    Text("Last review \(date.formatted(date: .omitted, time: .shortened))")
                         .font(.caption).foregroundStyle(.secondary)
                 }
-                Button("重置") { model.resetDemo() }
+                Button("Reset") { model.resetDemo() }
                     .buttonStyle(.borderless)
-                Button("生成评审提案") { model.runReview() }
+                Button("Generate Review Proposal") { model.runReview() }
                     .buttonStyle(PrimaryGlassButton())
             }
 
             GlassCard(padding: 0) {
                 VStack(spacing: 0) {
                     HStack {
-                        Text("因子").frame(maxWidth: .infinity, alignment: .leading)
-                        Text("状态").frame(width: 105, alignment: .leading)
+                        Text("Factor").frame(maxWidth: .infinity, alignment: .leading)
+                        Text("State").frame(width: 120, alignment: .leading)
                         Text("IC").frame(width: 62, alignment: .trailing)
                         Text("IR").frame(width: 62, alignment: .trailing)
-                        Text("覆盖").frame(width: 70, alignment: .trailing)
-                        Text("权重").frame(width: 70, alignment: .trailing)
+                        Text("Coverage").frame(width: 70, alignment: .trailing)
+                        Text("Weight").frame(width: 70, alignment: .trailing)
                         Text("OOS").frame(width: 58, alignment: .trailing)
                     }
                     .font(.caption.weight(.semibold))
@@ -286,7 +286,7 @@ struct FactorsView: View {
                                     Text(factor.reason).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                StatusPill(state: factor.state).frame(width: 105, alignment: .leading)
+                                StatusPill(state: factor.state).frame(width: 120, alignment: .leading)
                                 Text(factor.ic.formatted(.number.precision(.fractionLength(3)))).frame(width: 62, alignment: .trailing)
                                 Text(factor.ir.formatted(.number.precision(.fractionLength(2)))).frame(width: 62, alignment: .trailing)
                                 Text(factor.coverage.formatted(.percent.precision(.fractionLength(0)))).frame(width: 70, alignment: .trailing)
@@ -306,7 +306,7 @@ struct FactorsView: View {
 
             HStack(spacing: 10) {
                 Image(systemName: "info.circle.fill").foregroundStyle(.cyan)
-                Text("点击两次“生成评审提案”可看到影子因子晋升和弱因子淘汰。所有变化只存在于本地内存。")
+                Text("Run the proposal twice to promote the shadow factor and retire the weak factor. Changes remain in local memory.")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -322,31 +322,31 @@ struct LabView: View {
             VStack(alignment: .leading, spacing: 24) {
                 PageHeader(
                     eyebrow: "Policy Lab",
-                    title: "策略实验室",
-                    subtitle: "调整演示门槛，观察治理规则如何约束因子。"
+                    title: "Strategy Lab",
+                    subtitle: "Adjust demo thresholds and observe how governance rules constrain factors."
                 )
 
                 HStack(alignment: .top, spacing: 18) {
                     GlassCard {
                         VStack(alignment: .leading, spacing: 24) {
-                            Text("治理参数").font(.headline)
+                            Text("Governance Parameters").font(.headline)
                             ParameterSlider(
-                                title: "单笔风险预算",
-                                detail: "仅用于界面演示",
+                                title: "Per-Trade Risk Budget",
+                                detail: "Interface demonstration only",
                                 value: $model.riskBudget,
                                 range: 0.25...0.75,
                                 display: { String(format: "%.2f%%", $0) }
                             )
                             ParameterSlider(
-                                title: "最低数据覆盖率",
-                                detail: "低于门槛不新增风险",
+                                title: "Minimum Data Coverage",
+                                detail: "No new risk below the gate",
                                 value: $model.coverageGate,
                                 range: 0.70...0.95,
                                 display: { $0.formatted(.percent.precision(.fractionLength(0))) }
                             )
                             ParameterSlider(
-                                title: "单因子权重上限",
-                                detail: "新因子初始仍不超过 5%",
+                                title: "Single-Factor Weight Cap",
+                                detail: "New factors still start at no more than 5%",
                                 value: $model.maxFactorWeight,
                                 range: 0.10...0.35,
                                 display: { $0.formatted(.percent.precision(.fractionLength(0))) }
@@ -357,15 +357,15 @@ struct LabView: View {
 
                     GlassCard {
                         VStack(alignment: .leading, spacing: 18) {
-                            Text("不可绕过的边界").font(.headline)
-                            BoundaryRow(text: "至少 252 个时间序列观察")
-                            BoundaryRow(text: "至少 6 个冻结 OOS 窗口")
-                            BoundaryRow(text: "样本外退化率必须受控")
-                            BoundaryRow(text: "成本后增量贡献为正")
-                            BoundaryRow(text: "缺失值不能按中性 0 处理")
-                            BoundaryRow(text: "风险门控与 Alpha 权重分离")
+                            Text("Non-Negotiable Boundaries").font(.headline)
+                            BoundaryRow(text: "At least 252 time-series observations")
+                            BoundaryRow(text: "At least 6 frozen OOS windows")
+                            BoundaryRow(text: "OOS degradation must remain controlled")
+                            BoundaryRow(text: "Positive incremental contribution after costs")
+                            BoundaryRow(text: "Missing values cannot be treated as neutral zero")
+                            BoundaryRow(text: "Risk gates remain separate from alpha weights")
                             Divider().overlay(.white.opacity(0.08))
-                            Label("本应用不提供交易执行", systemImage: "hand.raised.fill")
+                            Label("This app does not execute trades", systemImage: "hand.raised.fill")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(.orange)
                         }
@@ -376,8 +376,8 @@ struct LabView: View {
                 GlassCard {
                     HStack {
                         VStack(alignment: .leading, spacing: 5) {
-                            Text("当前参数提案").font(.headline)
-                            Text("覆盖率 ≥ \(model.coverageGate.formatted(.percent.precision(.fractionLength(0)))) · 权重上限 \(model.maxFactorWeight.formatted(.percent.precision(.fractionLength(0)))) · 风险预算 \(String(format: "%.2f%%", model.riskBudget))")
+                            Text("Current Parameter Proposal").font(.headline)
+                            Text("Coverage >= \(model.coverageGate.formatted(.percent.precision(.fractionLength(0)))) | Weight cap \(model.maxFactorWeight.formatted(.percent.precision(.fractionLength(0)))) | Risk budget \(String(format: "%.2f%%", model.riskBudget))")
                                 .font(.subheadline).foregroundStyle(.secondary)
                         }
                         Spacer()
@@ -434,25 +434,25 @@ struct PrivacyView: View {
             VStack(alignment: .leading, spacing: 24) {
                 PageHeader(
                     eyebrow: "Privacy by Design",
-                    title: "已脱敏，自包含",
-                    subtitle: "发行包不含任何生产账户或个人数据。"
+                    title: "Sanitized and self-contained",
+                    subtitle: "The release contains no production account or personal data."
                 )
 
                 HStack(spacing: 16) {
-                    PrivacyCard(symbol: "network.slash", title: "无网络请求", detail: "没有行情、券商或分析服务连接")
-                    PrivacyCard(symbol: "person.crop.circle.badge.xmark", title: "无身份信息", detail: "不含账户号、用户名或设备标识")
-                    PrivacyCard(symbol: "key.slash", title: "无密钥", detail: "不含令牌、证书或环境变量")
+                    PrivacyCard(symbol: "network.slash", title: "No Network Requests", detail: "No market-data, broker, or analytics service connections")
+                    PrivacyCard(symbol: "person.crop.circle.badge.xmark", title: "No Identity Data", detail: "No account numbers, user names, or device identifiers")
+                    PrivacyCard(symbol: "key.slash", title: "No Secrets", detail: "No tokens, certificates, or environment variables")
                 }
 
                 GlassCard {
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("发行边界").font(.headline)
-                        PrivacyLine(label: "包含", value: "原生界面、演示因子、离线状态机、规则说明")
-                        PrivacyLine(label: "不包含", value: "真实代码、真实持仓、订单、盈亏、账户绑定、访问令牌")
-                        PrivacyLine(label: "数据保存", value: "默认不落盘；重启后恢复内置演示状态")
-                        PrivacyLine(label: "交易能力", value: "没有下单、撤单、账户配置或资金操作接口")
+                        Text("Release Boundary").font(.headline)
+                        PrivacyLine(label: "Includes", value: "Native UI, demo factors, an offline state machine, and rule descriptions")
+                        PrivacyLine(label: "Excludes", value: "Production code, positions, orders, P&L, account bindings, and access tokens")
+                        PrivacyLine(label: "Storage", value: "No persistence by default; restart restores the built-in demo state")
+                        PrivacyLine(label: "Trading", value: "No order, cancellation, account configuration, or fund-management interfaces")
                         Divider().overlay(.white.opacity(0.08))
-                        Label("适合演示、评审和界面原型，不构成投资建议。", systemImage: "checkmark.shield.fill")
+                        Label("Suitable for demos, reviews, and UI prototyping. Not investment advice.", systemImage: "checkmark.shield.fill")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.green)
                     }

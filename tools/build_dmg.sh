@@ -59,7 +59,7 @@ fi
 
 cp -R "$APP_BUNDLE" "$DMG_ROOT/$APP_NAME.app"
 ln -s /Applications "$DMG_ROOT/Applications"
-cp "$PROJECT_DIR/INSTALL.txt" "$DMG_ROOT/安装说明.txt"
+cp "$PROJECT_DIR/INSTALL.txt" "$DMG_ROOT/INSTALL.txt"
 
 rm -f "$DIST_DIR/$DMG_NAME"
 hdiutil create \

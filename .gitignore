@@ -5,3 +5,7 @@ dist/
 DerivedData/
 *.xcuserstate
 xcuserdata/
+.vs/
+**/bin/
+**/obj/
+*.user

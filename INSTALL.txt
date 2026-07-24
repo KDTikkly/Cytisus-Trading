@@ -1,12 +1,18 @@
 Cytisus-Trading 1.0.0
 
-安装：
-1. 将“Cytisus-Trading.app”拖入 Applications。
-2. 从“应用程序”打开。
+INSTALLATION
 
-说明：
-- 支持 Apple Silicon 与 Intel Mac。
-- 最低系统版本为 macOS 14。
-- 当前版本采用本地临时代码签名，未进行 Apple 公证。
-- 如果 macOS 阻止首次打开，请在“系统设置 → 隐私与安全性”中选择“仍要打开”。
-- 应用完全离线，只包含虚构演示数据，不具备交易能力。
+macOS
+1. Drag "Cytisus-Trading.app" into Applications.
+2. Open Cytisus-Trading from Applications.
+
+Windows 11
+1. Download "Cytisus-Trading-1.0.0-win11-x64.exe".
+2. Run the executable directly. No separate runtime is required.
+
+NOTES
+- The macOS build supports Apple Silicon and Intel Mac computers.
+- The minimum macOS version is macOS 14.
+- The Windows build supports 64-bit Windows 11.
+- Public builds may be unsigned. Only run artifacts from a source you trust.
+- The app is fully offline, contains fictional demo data, and cannot execute trades.

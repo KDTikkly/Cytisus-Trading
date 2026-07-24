@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 @main
@@ -8,6 +9,7 @@ struct CytisusTradingApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(model)
+                .environment(\.locale, Locale(identifier: "en_US"))
                 .frame(minWidth: 1060, minHeight: 700)
         }
         .windowStyle(.hiddenTitleBar)
@@ -16,6 +18,7 @@ struct CytisusTradingApp: App {
         Settings {
             PrivacyView()
                 .environmentObject(model)
+                .environment(\.locale, Locale(identifier: "en_US"))
                 .frame(width: 620, height: 430)
         }
     }

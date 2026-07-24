@@ -1,0 +1,87 @@
+name: Build desktop releases
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  text-check:
+    name: English-only text check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate project text
+        shell: pwsh
+        run: ./tools/check_ascii.ps1
+
+  macos:
+    name: Build macOS DMG
+    needs: text-check
+    runs-on: macos-14
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build Universal 2 DMG
+        run: |
+          chmod +x tools/build_dmg.sh
+          tools/build_dmg.sh
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cytisus-trading-macos
+          path: dist/Cytisus-Trading-1.0.0-universal.dmg
+          if-no-files-found: error
+
+  windows:
+    name: Build Windows 11 executable
+    needs: text-check
+    runs-on: windows-2022
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Build self-contained executable
+        shell: pwsh
+        run: ./tools/build_win11.ps1
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cytisus-trading-win11
+          path: dist/Cytisus-Trading-1.0.0-win11-x64.exe
+          if-no-files-found: error
+
+  release:
+    name: Publish tagged release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs:
+      - macos
+      - windows
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download desktop artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cytisus-trading-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/*
+          generate_release_notes: true
