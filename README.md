@@ -1,7 +1,7 @@
 # Cytisus-Trading
 
 <p align="center">
-  <img src="Resources/ProductLogo.png" width="180" alt="Cytisus-Trading Logo">
+  <img src="Resources/ProductIcon-iOS27.png" width="220" alt="Cytisus-Trading iOS 27 Liquid Glass Icon">
 </p>
 
 Cytisus-Trading 是一款面向量化研究展示与因子治理评审的 macOS 离线演示应用。它用清晰的可视化流程说明一个因子如何从候选、影子观察、正式启用，最终进入降级、淘汰或隔离状态。
