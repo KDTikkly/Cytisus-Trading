@@ -7,7 +7,7 @@ namespace CytisusTrading.Windows;
 
 public static class ProductVersion
 {
-    public const string Current = "1.1.5";
+    public const string Current = "1.1.6";
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]

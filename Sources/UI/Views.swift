@@ -70,7 +70,7 @@ struct SidebarView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Cytisus-Trading")
                         .font(.headline.weight(.semibold))
-                    Text("v1.1.5 Automated Operations")
+                    Text("v1.1.6 Automated Operations")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

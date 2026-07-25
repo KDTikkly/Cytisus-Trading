@@ -182,6 +182,11 @@ public partial class MainWindow : Window
         _model.RequestPaperMode();
     }
 
+    private void UseLongbridgePaper_Click(object sender, RoutedEventArgs e)
+    {
+        _model.RequestLongbridgePaperMode();
+    }
+
     private void RunReconciliationDiagnostic_Click(
         object sender,
         RoutedEventArgs e)

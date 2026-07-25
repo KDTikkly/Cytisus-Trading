@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.IO;
+using System.Diagnostics;
+using System.Globalization;
 
 namespace CytisusTrading.Windows;
 
@@ -203,6 +205,75 @@ public sealed class LocalStudioService
                 ComputeHealth.Unavailable,
                 "No ONNX execution provider was validated.")
         };
+    }
+
+    public static IReadOnlyList<ComputeDevice> DiscoverDevices()
+    {
+        var devices = DiscoverFixtureDevices().ToArray();
+        devices[1] = DetectNvidiaDevice() ?? devices[1];
+        return devices;
+    }
+
+    private static ComputeDevice? DetectNvidiaDevice()
+    {
+        try
+        {
+            using var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "nvidia-smi.exe",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                }
+            };
+            process.StartInfo.ArgumentList.Add(
+                "--query-gpu=name,driver_version,memory.total");
+            process.StartInfo.ArgumentList.Add(
+                "--format=csv,noheader,nounits");
+            if (!process.Start() || !process.WaitForExit(2_000))
+            {
+                if (!process.HasExited)
+                {
+                    process.Kill(true);
+                }
+                return null;
+            }
+            var values = process.StandardOutput.ReadToEnd()
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                .FirstOrDefault()?
+                .Split(',', StringSplitOptions.TrimEntries);
+            if (process.ExitCode != 0 || values is null || values.Length < 3)
+            {
+                return null;
+            }
+            var memoryBytes = long.TryParse(
+                values[2],
+                NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out var memoryMiB)
+                ? memoryMiB * 1_048_576
+                : (long?)null;
+            return new ComputeDevice(
+                "nvidia-cuda",
+                ComputeDeviceType.NvidiaCuda,
+                "NVIDIA",
+                values[0].Replace("NVIDIA ", "", StringComparison.Ordinal),
+                values[1],
+                memoryBytes,
+                new[] { "FP32", "FP16" },
+                new[] { "CUDA", "ONNXRuntimeCUDA" },
+                true,
+                true,
+                ComputeHealth.Ready,
+                "Detected by the NVIDIA driver. Worker validation runs before each job.");
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     public static ComputeDevice SelectDevice(

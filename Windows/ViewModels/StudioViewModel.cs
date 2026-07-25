@@ -39,6 +39,8 @@ public sealed class StudioViewModel : ObservableObject
     private string _longbridgeFailureCategory = "None";
     private string _longbridgeAuthorizationUrl = string.Empty;
     private string _longbridgeShortCode = string.Empty;
+    private LongbridgePaperMode _selectedPaperMode =
+        LongbridgePaperMode.LocalPaper;
     private CancellationTokenSource? _longbridgeSignInCancellation;
     private bool _globalLiveLock;
     private StrategyItemViewModel? _selectedStrategy;
@@ -95,7 +97,7 @@ public sealed class StudioViewModel : ObservableObject
         ModelProviders = new ModelProvidersViewModel(
             services.ModelProviderManager);
         LocalStudio = services.LocalStudioService.LoadOrCreateFixtureState();
-        ComputeDevices = LocalStudioService.DiscoverFixtureDevices();
+        ComputeDevices = LocalStudioService.DiscoverDevices();
         var settings = services.SettingsStore.LoadSettings();
         _riskBudget = settings.RiskBudget;
         _coverageGate = settings.CoverageGate;
@@ -299,6 +301,11 @@ public sealed class StudioViewModel : ObservableObject
 
     public StrategyMode CurrentStrategyMode =>
         SelectedStrategy?.Mode ?? StrategyMode.PaperOnly;
+    public LongbridgePaperMode SelectedPaperMode
+    {
+        get => _selectedPaperMode;
+        private set => Set(ref _selectedPaperMode, value);
+    }
     public bool LiveExecutionAvailable => false;
 
     public bool GlobalLiveLock
@@ -584,7 +591,15 @@ public sealed class StudioViewModel : ObservableObject
             {
                 Raise(nameof(CliStatus));
                 Raise(nameof(LongbridgePaperReadiness));
+                Raise(nameof(LongbridgePaperAvailable));
                 Raise(nameof(LongbridgeAccountStatus));
+                if (value != LongbridgeStatusState.ReadyPaper &&
+                    SelectedPaperMode == LongbridgePaperMode.LongbridgePaper)
+                {
+                    SelectedPaperMode = LongbridgePaperMode.LocalPaper;
+                    StrategyStatusMessage =
+                        "Longbridge Paper became unavailable. Local Paper was restored.";
+                }
             }
         }
     }
@@ -673,6 +688,8 @@ public sealed class StudioViewModel : ObservableObject
         CliStatusState == LongbridgeStatusState.ReadyPaper
             ? "Longbridge Paper ready"
             : "Longbridge Paper blocked";
+    public bool LongbridgePaperAvailable =>
+        CliStatusState == LongbridgeStatusState.ReadyPaper;
 
     public string LocalPaperReadiness => "Local Paper ready";
 
@@ -1146,6 +1163,7 @@ public sealed class StudioViewModel : ObservableObject
         {
             return;
         }
+        SelectedPaperMode = LongbridgePaperMode.LocalPaper;
         var wasLive = strategy.Mode == StrategyMode.Live;
         var result = _services.StrategyModeService.SelectMode(
             StrategyMode.PaperOnly,
@@ -1181,6 +1199,31 @@ public sealed class StudioViewModel : ObservableObject
         }
         SaveStrategy(strategy);
         AppendModeAudit(strategy, result);
+        RaiseDashboard();
+    }
+
+    public void RequestLongbridgePaperMode()
+    {
+        var strategy = SelectedStrategy;
+        if (strategy is null)
+        {
+            return;
+        }
+        if (!LongbridgePaperPolicy.CanRun(
+                LongbridgePaperMode.LongbridgePaper,
+                CliStatusState))
+        {
+            StrategyStatusMessage =
+                "Longbridge Paper requires an authenticated ReadyPaper account.";
+            return;
+        }
+
+        SelectedPaperMode = LongbridgePaperMode.LongbridgePaper;
+        strategy.Mode = StrategyMode.PaperOnly;
+        StrategyStatusMessage = "Longbridge Paper selected.";
+        LatestStrategyAlert =
+            "Longbridge Paper is selected. Unverified broker submission remains blocked.";
+        SaveStrategy(strategy);
         RaiseDashboard();
     }
 
