@@ -1,7 +1,7 @@
 import Foundation
 
 struct StoreSchemaVersion: Codable, Equatable {
-    static let current = StoreSchemaVersion(version: 5)
+    static let current = StoreSchemaVersion(version: 6)
 
     let version: Int
 }
@@ -85,4 +85,22 @@ protocol FactorResearchStore {
 protocol ExecutionStore {
     func loadExecutionState() throws -> ExecutionStateSnapshot
     func saveExecutionState(_ state: ExecutionStateSnapshot) throws
+}
+
+protocol ModelProviderStore {
+    func loadModelProviders() throws -> [ModelProviderProfile]
+    func saveModelProviders(_ providers: [ModelProviderProfile]) throws
+    func loadProviderModels() throws -> [ProviderModelRecord]
+    func saveProviderModels(_ models: [ProviderModelRecord]) throws
+    func loadModelRoleAssignments() throws -> [ModelRoleAssignment]
+    func saveModelRoleAssignments(_ assignments: [ModelRoleAssignment]) throws
+    func loadProviderTestEvents(limit: Int) throws -> [ProviderTestEvent]
+    func appendProviderTestEvent(_ event: ProviderTestEvent) throws
+}
+
+protocol ModelSecretStore {
+    func save(secret: String, reference: String) throws
+    func replace(secret: String, reference: String) throws
+    func retrieve(reference: String) throws -> String
+    func delete(reference: String) throws
 }

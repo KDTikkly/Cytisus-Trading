@@ -1,7 +1,7 @@
 {
   "artifact": "Cytisus-Trading",
-  "version": "1.1.0",
-  "implementation_stage": "Prompt 5 Local Paper execution, virtual ledger, and cross-platform release",
+  "version": "1.1.1",
+  "implementation_stage": "secure multi-model provider configuration",
   "implementation_in_progress": false,
   "language": "en",
   "platforms": [
@@ -9,7 +9,8 @@
     "Windows 11"
   ],
   "fixture_mode_default": true,
-  "direct_network_access": false,
+  "direct_network_access": true,
+  "direct_network_access_scope": "user-triggered model-provider discovery and connectivity requests",
   "fixture_network_access": false,
   "local_cli_process_access": true,
   "longbridge_integration": "read-only data",
@@ -29,6 +30,19 @@
   "synthetic_local_paper_positions_and_orders": true,
   "real_positions_or_orders": false,
   "tokens_or_api_keys": false,
+  "user_supplied_model_api_keys": true,
+  "model_key_storage": [
+    "macOS Keychain Services",
+    "Windows DPAPI CurrentUser"
+  ],
+  "model_key_plaintext_persistence": false,
+  "model_provider_authorization_separate_from_longbridge": true,
+  "model_provider_protocols": [
+    "OpenAICompatible",
+    "AnthropicCompatible",
+    "GeminiCompatible"
+  ],
+  "model_provider_fixture_tests_only": true,
   "personal_paths": false,
   "repository_sample_data_only": true,
   "runtime_real_market_data_optional": true,
@@ -45,7 +59,12 @@
     "bounded Live authorizations without credentials",
     "factor definitions and append-only trial records",
     "Local Paper execution state and virtual ledger",
+    "model-provider metadata and secure-storage references",
+    "provider model capability records",
+    "primary and fallback model assignments",
+    "sanitized provider-test events",
     "application logs",
     "audit events"
-  ]
+  ],
+  "v1_1_1_packaging_deferred_to": "1.1.3"
 }

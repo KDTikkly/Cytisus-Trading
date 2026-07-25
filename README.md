@@ -6,9 +6,9 @@
 
 Cytisus-Trading is a local desktop front end for automated quantitative operations. It is not a manual trading terminal.
 
-## v1.1 implementation status
+## v1.1.1 implementation status
 
-Version 1.1.0 completes the native Local Paper automated execution path. Live broker submission remains intentionally unavailable until v1.1.3 verifies Longbridge Terminal authentication and command mapping.
+Version 1.1.1 adds secure user-supplied model-provider configuration on top of the completed v1.1.0 Local Paper execution path. Live broker submission remains intentionally unavailable until v1.1.3 verifies Longbridge Terminal authentication and command mapping.
 
 Currently available:
 
@@ -48,6 +48,12 @@ Currently available:
 - Per-strategy virtual ledgers with ownership, cost basis, realized and unrealized profit and loss, capital usage, and risk contribution.
 - Fixture-based reconciliation, persistent critical risk events, symbol risk blocks, and non-trading diagnostics.
 - Native read-only Portfolio and Execution screens on macOS and Windows.
+- Native Model Providers settings on macOS and Windows.
+- Multiple OpenAI-compatible, Anthropic-compatible, and Gemini-compatible provider profiles with custom Base URLs.
+- macOS Keychain and Windows CurrentUser DPAPI secret storage with no plaintext API-key database column.
+- Provider discovery where supported, manual model entry, user-triggered connectivity tests, and sanitized result categories.
+- One Ready primary model and ordered Ready fallback models with disabled-provider skipping.
+- A fixture-only read-only Quote, MarketStatus, and SymbolLookup model-tool boundary that rejects trading tools.
 - English-only ASCII repository validation.
 
 Not yet available:
@@ -56,10 +62,14 @@ Not yet available:
 - Broker order submission.
 - Verified Longbridge Terminal authentication and execution command mapping.
 - Manual order entry.
+- Chat, assistants, knowledge bases, prompt libraries, and model benchmarking.
+- Provider import, export, billing, key rotation, or automatic cost routing.
 
 `Live` can be selected only when the Global Live Lock and a bounded authorization both pass validation. The Live Longbridge adapter still rejects every submission without starting a process, and no UI path can create a manual order. Local Paper does not require Longbridge CLI, authentication, connectivity, or an account.
 
-## Native desktop editions
+## Native desktop editions and packaging
+
+The source version is 1.1.1. The repository owner has deferred new desktop packaging until v1.1.3, so no v1.1.1 DMG, Windows installer, tag, or GitHub Release is published. The latest existing v1.1.0 packages remain:
 
 - macOS 14 or later: SwiftUI Universal 2 app distributed as `Cytisus-Trading-1.1.0-universal.dmg`.
 - Windows 11 x64: self-contained WPF app distributed as `Cytisus-Trading-1.1.0-win11-x64.exe`.
@@ -108,6 +118,9 @@ The platforms do not share a compiled runtime. They share schema definitions, fi
 - [Strategy protocol](docs/STRATEGY-PROTOCOL.md)
 - [Factor DSL](docs/FACTOR-DSL.md)
 - [Longbridge integration boundary](docs/LONGBRIDGE-INTEGRATION.md)
+- [v1.1.1 PDM](docs/PDM-v1.1.1.md)
+- [v1.1.1 implementation prompt](docs/CODEX-v1.1.1-PROMPT.md)
+- [Model-provider configuration and security](docs/MODEL-PROVIDERS.md)
 
 ## Install on macOS
 
@@ -126,7 +139,7 @@ The public DMG uses ad hoc signing unless release signing variables are supplied
 
 The installed Windows application is self-contained and does not require a separate .NET installation. The release workflow supports Authenticode signing when repository signing secrets are configured. Unsigned builds can trigger Microsoft Defender SmartScreen; a clean source tree alone cannot establish Microsoft reputation.
 
-## Build the macOS DMG
+## Prepared macOS packaging
 
 Install Xcode Command Line Tools, then run:
 
@@ -135,10 +148,10 @@ chmod +x tools/build_dmg.sh
 tools/build_dmg.sh
 ```
 
-Output:
+The script is prepared for this source version, but it is not run or published before v1.1.3 under the current packaging plan. Its prepared output name is:
 
 ```text
-dist/Cytisus-Trading-1.1.0-universal.dmg
+dist/Cytisus-Trading-1.1.1-universal.dmg
 ```
 
 For Developer ID signing and Apple notarization:
@@ -149,7 +162,7 @@ NOTARY_PROFILE="cytisus-notary" \
 tools/build_dmg.sh
 ```
 
-## Build the Windows 11 executable
+## Prepared Windows 11 packaging
 
 Install the .NET 8 SDK and Inno Setup 6 on Windows 11, then run:
 
@@ -157,10 +170,10 @@ Install the .NET 8 SDK and Inno Setup 6 on Windows 11, then run:
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/build_win11.ps1
 ```
 
-Output:
+The script is prepared for this source version, but it is not run or published before v1.1.3 under the current packaging plan. Its prepared output name is:
 
 ```text
-dist/Cytisus-Trading-1.1.0-win11-x64.exe
+dist/Cytisus-Trading-1.1.1-win11-x64.exe
 ```
 
 With Inno Setup present, this artifact is a standard English install wizard containing the self-contained single-file application. Without Inno Setup, the local script emits a development single-file fallback. Release CI installs Inno Setup and always builds the wizard.
@@ -178,6 +191,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_prompt2.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_prompt3.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_prompt4.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_prompt5.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_model_providers.ps1
 ```
 
 The Prompt 5 smoke is deliberately small: one complete strategy-intent-to-Local-Paper-fill cycle, one internal-netting case, one partial-fill allocation case, one reconciliation case, one assertion that unavailable Longbridge CLI does not block Local Paper, and one assertion that the Live adapter remains rejecting.
@@ -192,5 +206,7 @@ The Prompt 5 smoke is deliberately small: one complete strategy-intent-to-Local-
 - Live broker submission remains unavailable and process-free.
 - Registered strategy manifests and state, Local Paper execution records, virtual ledgers, parameter history, bounded Live authorizations, factor definitions and trials, non-sensitive settings, market cache records, universe snapshots, operational logs, and audit events are stored locally.
 - Factor demo state resets deterministically from repository fixtures.
+- Model API keys remain in operating-system secure storage and never enter the application database, logs, Longbridge CLI arguments, or Longbridge environment.
+- Model-provider authorization is separate from Longbridge OAuth. Users supply and pay their selected provider directly.
 
 See [PRIVACY.md](PRIVACY.md) and [SANITIZATION.json](SANITIZATION.json).

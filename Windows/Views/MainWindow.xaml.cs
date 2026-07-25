@@ -101,6 +101,134 @@ public partial class MainWindow : Window
         _model.RunReconciliationDiagnostic();
     }
 
+    private void ModelApiKeyBox_PasswordChanged(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender is PasswordBox passwordBox)
+        {
+            _model.ModelProviders.ApiKey = passwordBox.Password;
+        }
+    }
+
+    private void AddProvider_Click(object sender, RoutedEventArgs e)
+    {
+        ModelApiKeyBox.Clear();
+        _model.ModelProviders.BeginAdd();
+    }
+
+    private void EditProvider_Click(object sender, RoutedEventArgs e)
+    {
+        ModelApiKeyBox.Clear();
+        _model.ModelProviders.BeginEdit();
+    }
+
+    private void SaveProvider_Click(object sender, RoutedEventArgs e)
+    {
+        _model.ModelProviders.SaveProvider();
+        ModelApiKeyBox.Clear();
+    }
+
+    private void ReplaceProviderKey_Click(object sender, RoutedEventArgs e)
+    {
+        _model.ModelProviders.ReplaceApiKey();
+        ModelApiKeyBox.Clear();
+    }
+
+    private void DeleteProvider_Click(object sender, RoutedEventArgs e)
+    {
+        if (_model.ModelProviders.SelectedProvider is null)
+        {
+            return;
+        }
+        var result = MessageBox.Show(
+            this,
+            "Delete this provider, its models, role assignments, and protected API key?",
+            "Delete provider",
+            MessageBoxButton.OKCancel,
+            MessageBoxImage.Warning);
+        if (result == MessageBoxResult.OK)
+        {
+            _model.ModelProviders.DeleteProvider();
+            ModelApiKeyBox.Clear();
+        }
+    }
+
+    private void ToggleProvider_Click(object sender, RoutedEventArgs e)
+    {
+        _model.ModelProviders.ToggleProvider();
+    }
+
+    private async void TestProvider_Click(object sender, RoutedEventArgs e)
+    {
+        await _model.ModelProviders.TestConnectionAsync();
+    }
+
+    private async void DiscoverModels_Click(object sender, RoutedEventArgs e)
+    {
+        await _model.ModelProviders.DiscoverModelsAsync();
+    }
+
+    private void AddManualModel_Click(object sender, RoutedEventArgs e)
+    {
+        _model.ModelProviders.AddManualModel();
+    }
+
+    private void ToggleModel_Click(object sender, RoutedEventArgs e)
+    {
+        _model.ModelProviders.ToggleModel();
+    }
+
+    private void UpdateModelDisplayName_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        _model.ModelProviders.UpdateModelDisplayName();
+    }
+
+    private void RemoveModel_Click(object sender, RoutedEventArgs e)
+    {
+        if (_model.ModelProviders.SelectedModel is null)
+        {
+            return;
+        }
+        var result = MessageBox.Show(
+            this,
+            "Remove this model and its role assignment?",
+            "Remove model",
+            MessageBoxButton.OKCancel,
+            MessageBoxImage.Warning);
+        if (result == MessageBoxResult.OK)
+        {
+            _model.ModelProviders.RemoveModel();
+        }
+    }
+
+    private void SetPrimaryModel_Click(object sender, RoutedEventArgs e)
+    {
+        _model.ModelProviders.SetPrimary();
+    }
+
+    private void AddFallbackModel_Click(object sender, RoutedEventArgs e)
+    {
+        _model.ModelProviders.AddFallback();
+    }
+
+    private void RemoveModelRole_Click(object sender, RoutedEventArgs e)
+    {
+        _model.ModelProviders.RemoveRole();
+    }
+
+    private void MoveFallbackUp_Click(object sender, RoutedEventArgs e)
+    {
+        _model.ModelProviders.MoveFallback(-1);
+    }
+
+    private void MoveFallbackDown_Click(object sender, RoutedEventArgs e)
+    {
+        _model.ModelProviders.MoveFallback(1);
+    }
+
     private void StopRiskTransition_Checked(
         object sender,
         RoutedEventArgs e)

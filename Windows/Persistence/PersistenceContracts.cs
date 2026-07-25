@@ -2,7 +2,7 @@ namespace CytisusTrading.Windows;
 
 public sealed record StoreSchemaVersion(int Version)
 {
-    public static StoreSchemaVersion Current { get; } = new(5);
+    public static StoreSchemaVersion Current { get; } = new(6);
 }
 
 public sealed record MigrationRecord(
@@ -83,4 +83,24 @@ public interface IExecutionStore
 {
     ExecutionStateSnapshot LoadExecutionState();
     void SaveExecutionState(ExecutionStateSnapshot state);
+}
+
+public interface IModelProviderStore
+{
+    IReadOnlyList<ModelProviderProfile> LoadModelProviders();
+    void SaveModelProviders(IReadOnlyList<ModelProviderProfile> providers);
+    IReadOnlyList<ProviderModelRecord> LoadProviderModels();
+    void SaveProviderModels(IReadOnlyList<ProviderModelRecord> models);
+    IReadOnlyList<ModelRoleAssignment> LoadModelRoleAssignments();
+    void SaveModelRoleAssignments(IReadOnlyList<ModelRoleAssignment> assignments);
+    IReadOnlyList<ProviderTestEvent> LoadProviderTestEvents(int limit);
+    void AppendProviderTestEvent(ProviderTestEvent testEvent);
+}
+
+public interface IModelSecretStore
+{
+    void Save(string secret, string reference);
+    void Replace(string secret, string reference);
+    string Retrieve(string reference);
+    void Delete(string reference);
 }

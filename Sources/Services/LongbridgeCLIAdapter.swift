@@ -140,7 +140,7 @@ enum SensitiveDataRedactor {
         let jsonRedacted = redactJSON(value) ?? value
         let patterns = [
             "(?i)\\bBearer\\s+[A-Za-z0-9._~+/=-]+",
-            "(?i)\\b(token|secret|password|authorization|authorization_code|account_number)\\s*[:=]\\s*[^\\s,;]+"
+            "(?i)\\b(token|secret|password|authorization|authorization_code|account_number|api_key|apikey|apiKey|x-api-key)\\s*[:=]\\s*[^\\s,;]+"
         ]
         return patterns.reduce(jsonRedacted) { current, pattern in
             guard let expression = try? NSRegularExpression(pattern: pattern) else {
@@ -190,6 +190,8 @@ enum SensitiveDataRedactor {
             normalized.contains("secret") ||
             normalized.contains("password") ||
             normalized.contains("credential") ||
+            normalized.contains("api_key") ||
+            normalized == "apikey" ||
             [
                 "authorization",
                 "authorization_code",
@@ -352,7 +354,7 @@ final class LongbridgeCLIAdapter: LongbridgeCLIAdapting {
                 schemaVersion: 1,
                 fixtureMode: false,
                 cliVersion: version,
-                sourceVersion: "\(version)|cytisus-adapter-1.1.0",
+                sourceVersion: "\(version)|cytisus-adapter-1.1.1",
                 statusState: .degraded,
                 supportsJSON: !jsonArguments(helpResult.standardOutput).isEmpty,
                 commands: templates,

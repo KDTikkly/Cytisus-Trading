@@ -56,7 +56,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cytisus-trading-macos
-          path: dist/Cytisus-Trading-1.1.0-universal.dmg
+          path: dist/Cytisus-Trading-1.1.1-universal.dmg
           if-no-files-found: error
 
   windows:
@@ -97,7 +97,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cytisus-trading-win11
-          path: dist/Cytisus-Trading-1.1.0-win11-x64.exe
+          path: dist/Cytisus-Trading-1.1.1-win11-x64.exe
           if-no-files-found: error
 
   release:

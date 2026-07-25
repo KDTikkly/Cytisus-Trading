@@ -776,7 +776,11 @@ struct SettingsView: View {
                 PageHeader(
                     eyebrow: "Local Data Configuration",
                     title: "Settings",
-                    subtitle: "Only non-sensitive CLI and cache preferences are stored. Authorization stays inside the user-installed CLI."
+                    subtitle: "Configure local data and user-supplied model APIs. Longbridge OAuth and model-provider authorization remain separate."
+                )
+
+                ModelProvidersSettingsView(
+                    viewModel: model.modelProviders
                 )
 
                 HStack(alignment: .top, spacing: 18) {

@@ -12,7 +12,8 @@ public sealed class JsonFilePersistentStore :
     IMigrationStore,
     IStrategyStateStore,
     IFactorResearchStore,
-    IExecutionStore
+    IExecutionStore,
+    IModelProviderStore
 {
     private readonly string _rootDirectory;
     private readonly object _gate = new();
@@ -38,6 +39,14 @@ public sealed class JsonFilePersistentStore :
         Path.Combine(_rootDirectory, "factor-trials.ndjson");
     private string ExecutionStatePath =>
         Path.Combine(_rootDirectory, "execution-state.json");
+    private string ModelProvidersPath =>
+        Path.Combine(_rootDirectory, "model-providers.json");
+    private string ProviderModelsPath =>
+        Path.Combine(_rootDirectory, "provider-models.json");
+    private string ModelRoleAssignmentsPath =>
+        Path.Combine(_rootDirectory, "model-role-assignments.json");
+    private string ProviderTestEventsPath =>
+        Path.Combine(_rootDirectory, "provider-test-events.ndjson");
 
     public JsonFilePersistentStore(string rootDirectory)
     {
@@ -368,6 +377,97 @@ public sealed class JsonFilePersistentStore :
         {
             WriteDocument(ExecutionStatePath, state);
         }
+    }
+
+    public IReadOnlyList<ModelProviderProfile> LoadModelProviders()
+    {
+        lock (_gate)
+        {
+            return File.Exists(ModelProvidersPath)
+                ? ReadDocument<List<ModelProviderProfile>>(ModelProvidersPath)
+                : Array.Empty<ModelProviderProfile>();
+        }
+    }
+
+    public void SaveModelProviders(
+        IReadOnlyList<ModelProviderProfile> providers)
+    {
+        lock (_gate)
+        {
+            WriteDocument(
+                ModelProvidersPath,
+                providers.OrderBy(item => item.DisplayName).ToArray());
+        }
+    }
+
+    public IReadOnlyList<ProviderModelRecord> LoadProviderModels()
+    {
+        lock (_gate)
+        {
+            return File.Exists(ProviderModelsPath)
+                ? ReadDocument<List<ProviderModelRecord>>(ProviderModelsPath)
+                : Array.Empty<ProviderModelRecord>();
+        }
+    }
+
+    public void SaveProviderModels(
+        IReadOnlyList<ProviderModelRecord> models)
+    {
+        lock (_gate)
+        {
+            WriteDocument(
+                ProviderModelsPath,
+                models
+                    .OrderBy(item => item.ProviderId)
+                    .ThenBy(item => item.ModelId)
+                    .ToArray());
+        }
+    }
+
+    public IReadOnlyList<ModelRoleAssignment> LoadModelRoleAssignments()
+    {
+        lock (_gate)
+        {
+            return File.Exists(ModelRoleAssignmentsPath)
+                ? ReadDocument<List<ModelRoleAssignment>>(
+                    ModelRoleAssignmentsPath)
+                : Array.Empty<ModelRoleAssignment>();
+        }
+    }
+
+    public void SaveModelRoleAssignments(
+        IReadOnlyList<ModelRoleAssignment> assignments)
+    {
+        lock (_gate)
+        {
+            WriteDocument(
+                ModelRoleAssignmentsPath,
+                assignments.OrderBy(item => item.Position).ToArray());
+        }
+    }
+
+    public IReadOnlyList<ProviderTestEvent> LoadProviderTestEvents(int limit)
+    {
+        lock (_gate)
+        {
+            if (!File.Exists(ProviderTestEventsPath))
+            {
+                return Array.Empty<ProviderTestEvent>();
+            }
+            return File.ReadLines(ProviderTestEventsPath, Encoding.UTF8)
+                .Where(line => !string.IsNullOrWhiteSpace(line))
+                .TakeLast(Math.Max(0, limit))
+                .Select(line => JsonSerializer.Deserialize<ProviderTestEvent>(
+                    line,
+                    _lineOptions) ?? throw new InvalidDataException(
+                    "Invalid provider-test JSON line."))
+                .ToArray();
+        }
+    }
+
+    public void AppendProviderTestEvent(ProviderTestEvent testEvent)
+    {
+        AppendLine(ProviderTestEventsPath, testEvent);
     }
 
     private static JsonSerializerOptions CreateOptions(bool writeIndented)

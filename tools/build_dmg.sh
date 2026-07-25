@@ -5,7 +5,7 @@ PROJECT_DIR=${0:A:h:h}
 BUILD_DIR="$PROJECT_DIR/build"
 APP_NAME="Cytisus-Trading"
 EXECUTABLE_NAME="CytisusTrading"
-DMG_NAME="Cytisus-Trading-1.1.0-universal.dmg"
+DMG_NAME="Cytisus-Trading-1.1.1-universal.dmg"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 DMG_ROOT="$BUILD_DIR/dmg-root"
 DIST_DIR="$PROJECT_DIR/dist"
@@ -29,7 +29,7 @@ swiftc -parse-as-library -O \
   -target arm64-apple-macosx14.0 \
   -sdk "$SDK_PATH" \
   -module-cache-path "$MODULE_CACHE/arm64" \
-  -framework SwiftUI -framework AppKit \
+  -framework SwiftUI -framework AppKit -framework Security \
   "${SOURCE_FILES[@]}" \
   -o "$BUILD_DIR/$EXECUTABLE_NAME-arm64"
 
@@ -37,7 +37,7 @@ swiftc -parse-as-library -O \
   -target x86_64-apple-macosx14.0 \
   -sdk "$SDK_PATH" \
   -module-cache-path "$MODULE_CACHE/x86_64" \
-  -framework SwiftUI -framework AppKit \
+  -framework SwiftUI -framework AppKit -framework Security \
   "${SOURCE_FILES[@]}" \
   -o "$BUILD_DIR/$EXECUTABLE_NAME-x86_64"
 

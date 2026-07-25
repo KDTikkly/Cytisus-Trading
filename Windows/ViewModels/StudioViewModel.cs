@@ -62,6 +62,8 @@ public sealed class StudioViewModel : ObservableObject
     public StudioViewModel(AppServices services)
     {
         _services = services;
+        ModelProviders = new ModelProvidersViewModel(
+            services.ModelProviderManager);
         var settings = services.SettingsStore.LoadSettings();
         _riskBudget = settings.RiskBudget;
         _coverageGate = settings.CoverageGate;
@@ -121,6 +123,7 @@ public sealed class StudioViewModel : ObservableObject
         new();
     public ObservableCollection<string> LogSeverityOptions { get; } =
         new(new[] { "All", "Debug", "Info", "Warning", "Error", "Critical" });
+    public ModelProvidersViewModel ModelProviders { get; }
 
     public IReadOnlyList<TradeIntent> ExecutionIntents =>
         _executionState.Intents;

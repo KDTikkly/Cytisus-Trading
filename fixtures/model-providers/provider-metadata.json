@@ -1,0 +1,14 @@
+{
+  "provider_id": "fixture-provider-openai",
+  "display_name": "Fixture OpenAI Gateway",
+  "protocol_type": "OpenAICompatible",
+  "base_url": "https://models.example.invalid/v1",
+  "enabled": false,
+  "request_timeout_seconds": 15,
+  "created_at": "2026-07-25T00:00:00Z",
+  "updated_at": "2026-07-25T00:00:00Z",
+  "last_tested_at": null,
+  "last_test_status": "NotVerified",
+  "last_test_message": "Synthetic fixture only.",
+  "secret_reference": "model-provider:fixture-provider-openai"
+}

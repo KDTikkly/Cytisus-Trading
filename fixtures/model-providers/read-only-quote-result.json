@@ -1,0 +1,8 @@
+{
+  "tool": "Quote",
+  "result": {
+    "symbol": "AAPL.US",
+    "last_price": "215.25",
+    "source": "synthetic-fixture"
+  }
+}

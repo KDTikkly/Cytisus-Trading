@@ -5,7 +5,7 @@ enum PersistentStoreError: Error {
     case invalidJSONLine
 }
 
-final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEventStore, MigrationStore, StrategyStateStore, FactorResearchStore, ExecutionStore {
+final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEventStore, MigrationStore, StrategyStateStore, FactorResearchStore, ExecutionStore, ModelProviderStore {
     private let rootURL: URL
     private let fileManager: FileManager
     private let encoder: JSONEncoder
@@ -29,6 +29,18 @@ final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEv
     }
     private var executionStateURL: URL {
         rootURL.appendingPathComponent("execution-state.json")
+    }
+    private var modelProvidersURL: URL {
+        rootURL.appendingPathComponent("model-providers.json")
+    }
+    private var providerModelsURL: URL {
+        rootURL.appendingPathComponent("provider-models.json")
+    }
+    private var modelRoleAssignmentsURL: URL {
+        rootURL.appendingPathComponent("model-role-assignments.json")
+    }
+    private var providerTestEventsURL: URL {
+        rootURL.appendingPathComponent("provider-test-events.ndjson")
     }
 
     init(rootURL: URL, fileManager: FileManager = .default) {
@@ -244,6 +256,76 @@ final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEv
 
     func saveExecutionState(_ state: ExecutionStateSnapshot) throws {
         try write(state, to: executionStateURL)
+    }
+
+    func loadModelProviders() throws -> [ModelProviderProfile] {
+        guard fileManager.fileExists(atPath: modelProvidersURL.path) else {
+            return []
+        }
+        return try read([ModelProviderProfile].self, from: modelProvidersURL)
+    }
+
+    func saveModelProviders(_ providers: [ModelProviderProfile]) throws {
+        try write(
+            providers.sorted { $0.displayName < $1.displayName },
+            to: modelProvidersURL
+        )
+    }
+
+    func loadProviderModels() throws -> [ProviderModelRecord] {
+        guard fileManager.fileExists(atPath: providerModelsURL.path) else {
+            return []
+        }
+        return try read([ProviderModelRecord].self, from: providerModelsURL)
+    }
+
+    func saveProviderModels(_ models: [ProviderModelRecord]) throws {
+        try write(
+            models.sorted {
+                ($0.providerId, $0.modelId) < ($1.providerId, $1.modelId)
+            },
+            to: providerModelsURL
+        )
+    }
+
+    func loadModelRoleAssignments() throws -> [ModelRoleAssignment] {
+        guard fileManager.fileExists(atPath: modelRoleAssignmentsURL.path) else {
+            return []
+        }
+        return try read(
+            [ModelRoleAssignment].self,
+            from: modelRoleAssignmentsURL
+        )
+    }
+
+    func saveModelRoleAssignments(
+        _ assignments: [ModelRoleAssignment]
+    ) throws {
+        try write(
+            assignments.sorted { $0.position < $1.position },
+            to: modelRoleAssignmentsURL
+        )
+    }
+
+    func loadProviderTestEvents(limit: Int) throws -> [ProviderTestEvent] {
+        guard fileManager.fileExists(atPath: providerTestEventsURL.path) else {
+            return []
+        }
+        let content = try String(
+            contentsOf: providerTestEventsURL,
+            encoding: .utf8
+        )
+        return try content.split(separator: "\n").suffix(max(0, limit)).map {
+            line in
+            guard let data = String(line).data(using: .utf8) else {
+                throw PersistentStoreError.invalidJSONLine
+            }
+            return try decoder.decode(ProviderTestEvent.self, from: data)
+        }
+    }
+
+    func appendProviderTestEvent(_ event: ProviderTestEvent) throws {
+        try appendLine(event, to: providerTestEventsURL)
     }
 
     private func read<T: Decodable>(_ type: T.Type, from url: URL) throws -> T {

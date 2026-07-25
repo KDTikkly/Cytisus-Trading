@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cytisus.local/schemas/model-role-assignment.schema.json",
+  "title": "Cytisus Model Role Assignment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assignment_id",
+    "model_record_id",
+    "role",
+    "position",
+    "updated_at"
+  ],
+  "properties": {
+    "assignment_id": {
+      "type": "string"
+    },
+    "model_record_id": {
+      "type": "string"
+    },
+    "role": {
+      "enum": [
+        "Primary",
+        "Fallback"
+      ]
+    },
+    "position": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

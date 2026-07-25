@@ -35,7 +35,12 @@ public sealed record AppServices(
     ILongbridgeLiveBrokerAdapter LiveExecutionAdapter,
     VirtualLedgerService VirtualLedger,
     ReconciliationService Reconciliation,
-    ExecutionGateway ExecutionGateway)
+    ExecutionGateway ExecutionGateway,
+    IModelProviderStore ModelProviderStore,
+    IModelSecretStore ModelSecretStore,
+    IModelProviderClient ModelProviderClient,
+    ModelProviderManager ModelProviderManager,
+    ModelLongbridgeCoordinator ModelLongbridgeCoordinator)
 {
     public static AppServices CreateOfflineFixture()
     {
@@ -62,6 +67,15 @@ public sealed record AppServices(
             new LongbridgeLiveCommandFactory());
         var virtualLedger = new VirtualLedgerService();
         var reconciliation = new ReconciliationService();
+        var modelSecretStore = new DpapiModelSecretStore();
+        var modelProviderClient = new HttpModelProviderClient();
+        var modelProviderManager = new ModelProviderManager(
+            store,
+            modelSecretStore,
+            modelProviderClient);
+        var modelLongbridgeCoordinator = new ModelLongbridgeCoordinator(
+            new FixtureReadOnlyLongbridgeToolGateway(
+                new FixtureLongbridgeDataService(cache, universeService)));
         var executionGateway = new ExecutionGateway(
             store,
             store,
@@ -109,6 +123,11 @@ public sealed record AppServices(
             liveExecution,
             virtualLedger,
             reconciliation,
-            executionGateway);
+            executionGateway,
+            store,
+            modelSecretStore,
+            modelProviderClient,
+            modelProviderManager,
+            modelLongbridgeCoordinator);
     }
 }

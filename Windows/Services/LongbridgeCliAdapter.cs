@@ -237,6 +237,8 @@ public static partial class SensitiveDataRedactor
             normalized.Contains("secret", StringComparison.Ordinal) ||
             normalized.Contains("password", StringComparison.Ordinal) ||
             normalized.Contains("credential", StringComparison.Ordinal) ||
+            normalized.Contains("api_key", StringComparison.Ordinal) ||
+            normalized is "apikey" ||
             normalized is "authorization" or "authorization_code" or
                 "oauth" or "account_id" or
                 "account_number" or "full_account_number";
@@ -248,7 +250,7 @@ public static partial class SensitiveDataRedactor
     private static partial Regex BearerPattern();
 
     [GeneratedRegex(
-        @"(?i)\b(token|secret|password|authorization|authorization_code|account_number)\s*[:=]\s*[^\s,;]+",
+        @"(?i)\b(token|secret|password|authorization|authorization_code|account_number|api_key|apikey|apiKey|x-api-key)\s*[:=]\s*[^\s,;]+",
         RegexOptions.CultureInvariant)]
     private static partial Regex NamedSecretPattern();
 }
@@ -425,7 +427,7 @@ public sealed class LongbridgeCliAdapter : ILongbridgeCliAdapter
             1,
             false,
             version,
-            $"{version}|cytisus-adapter-1.1.0",
+            $"{version}|cytisus-adapter-1.1.1",
             LongbridgeStatusState.Degraded,
             HasJsonOutput(rootHelp.StandardOutput),
             templates,

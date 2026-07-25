@@ -1,0 +1,11 @@
+{
+  "models": [
+    {
+      "name": "models/fixture-gemini",
+      "displayName": "Fixture Gemini",
+      "supportedGenerationMethods": [
+        "generateContent"
+      ]
+    }
+  ]
+}

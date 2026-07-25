@@ -125,6 +125,7 @@ final class StudioModel: ObservableObject {
     @Published private(set) var executionState = ExecutionStateSnapshot.empty
 
     let liveExecutionAvailable = false
+    let modelProviders: ModelProvidersViewModel
 
     private let services: AppServices
     private var externalRuntimes: [String: ExternalStrategyRuntime] = [:]
@@ -132,6 +133,9 @@ final class StudioModel: ObservableObject {
 
     init(services: AppServices = .offlineFixture()) {
         self.services = services
+        self.modelProviders = ModelProvidersViewModel(
+            manager: services.modelProviderManager
+        )
 
         let settings = (try? services.settingsStore.loadSettings()) ?? AppSettings()
         riskBudget = settings.riskBudget

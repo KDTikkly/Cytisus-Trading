@@ -36,6 +36,11 @@ struct AppServices {
     let virtualLedger: VirtualLedgerService
     let reconciliation: ReconciliationService
     let executionGateway: ExecutionGateway
+    let modelProviderStore: ModelProviderStore
+    let modelSecretStore: ModelSecretStore
+    let modelProviderClient: ModelProviderClient
+    let modelProviderManager: ModelProviderManager
+    let modelLongbridgeCoordinator: ModelLongbridgeCoordinator
 
     static func offlineFixture() -> AppServices {
         let store = JSONFilePersistentStore(rootURL: JSONFilePersistentStore.defaultRootURL())
@@ -62,6 +67,21 @@ struct AppServices {
         )
         let virtualLedger = VirtualLedgerService()
         let reconciliation = ReconciliationService()
+        let modelSecretStore = KeychainModelSecretStore()
+        let modelProviderClient = HTTPModelProviderClient()
+        let modelProviderManager = ModelProviderManager(
+            store: store,
+            secrets: modelSecretStore,
+            client: modelProviderClient
+        )
+        let modelLongbridgeCoordinator = ModelLongbridgeCoordinator(
+            gateway: FixtureReadOnlyLongbridgeToolGateway(
+                fixtures: FixtureLongbridgeDataService(
+                    cache: cache,
+                    universeService: universeService
+                )
+            )
+        )
         let executionGateway = ExecutionGateway(
             store: store,
             auditStore: store,
@@ -118,7 +138,12 @@ struct AppServices {
             liveExecutionAdapter: liveExecution,
             virtualLedger: virtualLedger,
             reconciliation: reconciliation,
-            executionGateway: executionGateway
+            executionGateway: executionGateway,
+            modelProviderStore: store,
+            modelSecretStore: modelSecretStore,
+            modelProviderClient: modelProviderClient,
+            modelProviderManager: modelProviderManager,
+            modelLongbridgeCoordinator: modelLongbridgeCoordinator
         )
     }
 }

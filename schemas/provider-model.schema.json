@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cytisus.local/schemas/provider-model.schema.json",
+  "title": "Cytisus Provider Model",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "model_record_id",
+    "provider_id",
+    "model_id",
+    "display_name",
+    "enabled",
+    "source",
+    "status",
+    "supports_text",
+    "supports_tool_calling",
+    "supports_structured_output",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "model_record_id": {
+      "type": "string"
+    },
+    "provider_id": {
+      "type": "string"
+    },
+    "model_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "source": {
+      "enum": [
+        "Discovered",
+        "Manual"
+      ]
+    },
+    "status": {
+      "enum": [
+        "Available",
+        "Unverified",
+        "Unavailable",
+        "Disabled"
+      ]
+    },
+    "supports_text": {
+      "$ref": "#/$defs/capability"
+    },
+    "supports_tool_calling": {
+      "$ref": "#/$defs/capability"
+    },
+    "supports_structured_output": {
+      "$ref": "#/$defs/capability"
+    },
+    "context_window_optional": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_verified_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "capability": {
+      "enum": [
+        "Supported",
+        "Unsupported",
+        "Unknown"
+      ]
+    }
+  }
+}

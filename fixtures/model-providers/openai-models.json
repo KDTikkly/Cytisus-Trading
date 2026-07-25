@@ -1,0 +1,13 @@
+{
+  "data": [
+    {
+      "id": "fixture-text-tool-model",
+      "object": "model"
+    },
+    {
+      "id": "fixture-text-model",
+      "object": "model"
+    }
+  ],
+  "object": "list"
+}

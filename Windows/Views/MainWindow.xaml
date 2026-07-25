@@ -1685,9 +1685,240 @@
                                    Style="{StaticResource EyebrowText}" />
                         <TextBlock Text="Settings"
                                    Style="{StaticResource PageTitle}" />
-                        <TextBlock Text="Only non-sensitive CLI and cache preferences are stored. Authorization stays inside the user-installed CLI."
+                        <TextBlock Text="Configure local data and user-supplied model APIs. Longbridge OAuth and model-provider authorization remain separate."
                                    Style="{StaticResource BodySecondary}"
                                    Margin="0,0,0,22" />
+
+                        <Border Style="{StaticResource CardBorder}"
+                                DataContext="{Binding ModelProviders}"
+                                Margin="0,0,0,18">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Model Providers"
+                                                   FontSize="15"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock Text="Model API authorization is separate from Longbridge OAuth."
+                                                   Style="{StaticResource BodySecondary}"
+                                                   Margin="0,4,0,0" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1"
+                                                Orientation="Horizontal">
+                                        <Button Content="Add Provider"
+                                                Click="AddProvider_Click"
+                                                Margin="0,0,8,0" />
+                                        <Button Content="Edit"
+                                                Click="EditProvider_Click"
+                                                Margin="0,0,8,0" />
+                                        <Button Content="Delete"
+                                                Click="DeleteProvider_Click" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="18" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Providers"
+                                                   FontSize="11"
+                                                   FontWeight="SemiBold" />
+                                        <ComboBox ItemsSource="{Binding Providers}"
+                                                  SelectedItem="{Binding SelectedProvider, Mode=TwoWay}"
+                                                  DisplayMemberPath="DisplayName"
+                                                  Margin="0,6,0,10" />
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="Protocol"
+                                                           FontSize="10"
+                                                           Foreground="{StaticResource SecondaryTextBrush}" />
+                                                <TextBlock Text="{Binding SelectedProvider.ProtocolType}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Status"
+                                                           FontSize="10"
+                                                           Foreground="{StaticResource SecondaryTextBrush}" />
+                                                <TextBlock Text="{Binding SelectedProvider.LastTestStatus}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="Models / Roles"
+                                                           FontSize="10"
+                                                           Foreground="{StaticResource SecondaryTextBrush}" />
+                                                <TextBlock>
+                                                    <Run Text="{Binding SelectedProviderModelCount}" />
+                                                    <Run Text=" / " />
+                                                    <Run Text="{Binding SelectedProviderRoleBadge}" />
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </Grid>
+                                        <TextBlock Text="{Binding SelectedProvider.LastTestedAt, StringFormat=Last tested: {0:u}, TargetNullValue=Last tested: Never}"
+                                                   FontSize="11"
+                                                   Foreground="{StaticResource SecondaryTextBrush}"
+                                                   Margin="0,0,0,10" />
+                                        <WrapPanel>
+                                            <Button Content="Enable / Disable"
+                                                    Click="ToggleProvider_Click"
+                                                    Margin="0,0,8,8" />
+                                            <Button Content="Test Connection"
+                                                    Click="TestProvider_Click"
+                                                    Margin="0,0,8,8" />
+                                            <Button Content="Fetch Models"
+                                                    Click="DiscoverModels_Click"
+                                                    Margin="0,0,8,8" />
+                                        </WrapPanel>
+                                        <TextBlock Text="{Binding SavedKeyState}"
+                                                   Foreground="#FF54D38A"
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Provider Editor"
+                                                   FontSize="11"
+                                                   FontWeight="SemiBold" />
+                                        <TextBox Text="{Binding ProviderName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 Margin="0,6,0,8"
+                                                 ToolTip="Provider name" />
+                                        <ComboBox ItemsSource="{Binding ProtocolOptions}"
+                                                  SelectedItem="{Binding ProtocolType, Mode=TwoWay}"
+                                                  Margin="0,0,0,8" />
+                                        <TextBox Text="{Binding BaseUrl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 Margin="0,0,0,8"
+                                                 ToolTip="Base URL" />
+                                        <PasswordBox x:Name="ModelApiKeyBox"
+                                                     PasswordChanged="ModelApiKeyBox_PasswordChanged"
+                                                     Margin="0,0,0,8"
+                                                     ToolTip="API key or replacement key" />
+                                        <TextBlock Text="{Binding RequestTimeoutSeconds, StringFormat=Request timeout: {0:0} seconds}"
+                                                   FontSize="11" />
+                                        <Slider Minimum="2"
+                                                Maximum="120"
+                                                Value="{Binding RequestTimeoutSeconds, Mode=TwoWay}"
+                                                Margin="0,4,0,8" />
+                                        <CheckBox Content="I confirm this non-local HTTP endpoint"
+                                                  IsChecked="{Binding ConfirmRemoteHttp, Mode=TwoWay}"
+                                                  Margin="0,0,0,8" />
+                                        <WrapPanel>
+                                            <Button Content="Save Provider"
+                                                    Click="SaveProvider_Click"
+                                                    Margin="0,0,8,0" />
+                                            <Button Content="Replace API Key"
+                                                    Click="ReplaceProviderKey_Click" />
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </Grid>
+
+                                <Separator Margin="0,16,0,14" />
+
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Text="{Binding ManualModelId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             ToolTip="Manual model ID" />
+                                    <Button Grid.Column="1"
+                                            Content="Add Model Manually"
+                                            Click="AddManualModel_Click"
+                                            Margin="10,0,0,0" />
+                                </Grid>
+
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Text="{Binding ModelDisplayName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             ToolTip="Selected model display name" />
+                                    <Button Grid.Column="1"
+                                            Content="Update Display Name"
+                                            Click="UpdateModelDisplayName_Click"
+                                            Margin="10,0,0,0" />
+                                    <Button Grid.Column="2"
+                                            Content="Remove Model"
+                                            Click="RemoveModel_Click"
+                                            Margin="8,0,0,0" />
+                                </Grid>
+
+                                <DataGrid ItemsSource="{Binding Models}"
+                                          SelectedItem="{Binding SelectedModel, Mode=TwoWay}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          CanUserAddRows="False"
+                                          HeadersVisibility="Column"
+                                          Background="Transparent"
+                                          BorderThickness="0"
+                                          MaxHeight="250">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Model"
+                                                            Binding="{Binding DisplayName}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Source"
+                                                            Binding="{Binding Source}"
+                                                            Width="90" />
+                                        <DataGridTextColumn Header="Status"
+                                                            Binding="{Binding Status}"
+                                                            Width="90" />
+                                        <DataGridTextColumn Header="Tool use"
+                                                            Binding="{Binding ToolCalling}"
+                                                            Width="90" />
+                                        <DataGridTextColumn Header="Role"
+                                                            Binding="{Binding Role}"
+                                                            Width="85" />
+                                        <DataGridTextColumn Header="Order"
+                                                            Binding="{Binding FallbackPosition}"
+                                                            Width="55" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <WrapPanel Margin="0,10,0,0">
+                                    <Button Content="Enable / Disable Model"
+                                            Click="ToggleModel_Click"
+                                            Margin="0,0,8,8" />
+                                    <Button Content="Set Primary"
+                                            Click="SetPrimaryModel_Click"
+                                            Margin="0,0,8,8" />
+                                    <Button Content="Add Fallback"
+                                            Click="AddFallbackModel_Click"
+                                            Margin="0,0,8,8" />
+                                    <Button Content="Remove Role"
+                                            Click="RemoveModelRole_Click"
+                                            Margin="0,0,8,8" />
+                                    <Button Content="Move Up"
+                                            Click="MoveFallbackUp_Click"
+                                            Margin="0,0,8,8" />
+                                    <Button Content="Move Down"
+                                            Click="MoveFallbackDown_Click"
+                                            Margin="0,0,8,8" />
+                                </WrapPanel>
+                                <TextBlock Text="{Binding SelectionSummary}"
+                                           Foreground="#FF58D8FF"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"
+                                           TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding StatusMessage}"
+                                           Style="{StaticResource BodySecondary}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,5,0,0" />
+                                <TextBlock Text="API keys are masked and never stored in the application database, logs, CLI arguments, or Longbridge environment."
+                                           Foreground="#FF54D38A"
+                                           FontSize="11"
+                                           TextWrapping="Wrap"
+                                           Margin="0,5,0,0" />
+                            </StackPanel>
+                        </Border>
 
                         <Grid>
                             <Grid.ColumnDefinitions>

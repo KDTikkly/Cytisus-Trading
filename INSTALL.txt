@@ -1,8 +1,9 @@
-Cytisus-Trading 1.1.0
+Cytisus-Trading 1.1.1
 
 IMPLEMENTATION STATUS
 
-v1.1 Local Paper implementation is complete. This build starts in offline fixture mode.
+v1.1 Local Paper implementation is complete. Version 1.1.1 adds secure
+user-supplied model-provider configuration. The app starts in offline fixture mode.
 Read-only Longbridge CLI discovery, market fixtures, local caching, and daily
 universe snapshots are available. Deterministic Local Paper strategy cycles, factor
 research, regime probabilities, and governed strategy capital budgets are
@@ -17,9 +18,8 @@ MACOS
 
 WINDOWS 11
 
-1. Download "Cytisus-Trading-1.1.0-win11-x64.exe".
-2. Run the installer and choose the destination.
-3. Launch Cytisus-Trading from the Start menu. No separate .NET runtime is required.
+New packaging is deferred until v1.1.3. No v1.1.1 Windows installer is published.
+The prepared future artifact name is "Cytisus-Trading-1.1.1-win11-x64.exe".
 
 NOTES
 
@@ -33,3 +33,8 @@ NOTES
   logs, audit events, factor definitions, and trial records are stored locally.
 - Local Paper is independent from Longbridge CLI and cannot send real trades.
 - The Live Longbridge adapter rejects without starting a process.
+- Users supply their own model API and may incur provider charges.
+- macOS keys use Keychain Services. Windows keys use CurrentUser DPAPI.
+- Model-provider authorization is separate from Longbridge OAuth.
+- Never include API keys in issues, logs, screenshots, or bug reports.
+- No v1.1.1 DMG, Windows installer, tag, or GitHub Release is produced.
