@@ -70,7 +70,7 @@ struct SidebarView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Cytisus-Trading")
                         .font(.headline.weight(.semibold))
-                    Text("v1.1.6 Automated Operations")
+                    Text("v1.1.7 Automated Operations")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -928,7 +928,7 @@ struct SettingsView: View {
                         VStack(alignment: .leading, spacing: 16) {
                             Text("Longbridge CLI").font(.headline)
                             Toggle(
-                                "Use deterministic fixture mode",
+                                "Use deterministic market-data fixtures",
                                 isOn: $model.fixtureMode
                             )
                             VStack(alignment: .leading, spacing: 6) {

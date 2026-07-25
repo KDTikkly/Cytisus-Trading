@@ -167,6 +167,7 @@ public static class ModelProviderRequestFactory
         var body = new JsonObject
         {
             ["model"] = model.ModelId,
+            ["max_tokens"] = 384,
             ["temperature"] = 0,
             ["messages"] = new JsonArray
             {
@@ -201,7 +202,7 @@ public static class ModelProviderRequestFactory
         var body = new JsonObject
         {
             ["model"] = model.ModelId,
-            ["max_tokens"] = 64,
+            ["max_tokens"] = 384,
             ["temperature"] = 0,
             ["system"] = systemInstruction,
             ["messages"] = new JsonArray
@@ -258,7 +259,7 @@ public static class ModelProviderRequestFactory
             ["generationConfig"] = new JsonObject
             {
                 ["temperature"] = 0,
-                ["maxOutputTokens"] = 64
+                ["maxOutputTokens"] = 384
             }
         };
         return JsonRequest(

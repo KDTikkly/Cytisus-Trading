@@ -236,7 +236,7 @@ final class StudioModel: ObservableObject {
             level: .info,
             module: "Application",
             message: fixtureMode
-                ? "Started in offline fixture mode"
+                ? "Started with deterministic market-data fixtures"
                 : "Started with local CLI mode selected",
             context: ["fixture_mode": fixtureMode ? "true" : "false"]
         )
@@ -353,8 +353,8 @@ final class StudioModel: ObservableObject {
 
     var fixtureModeStatus: String {
         fixtureMode
-            ? "Fixture mode is ON. No CLI, account, or network is used."
-            : "Fixture mode is OFF. Only the selected local CLI may be inspected."
+            ? "Market-data fixtures are ON. Model APIs remain network services; quantitative compute stays local."
+            : "Market-data fixtures are OFF. Longbridge CLI access may use the network."
     }
 
     var regimeTrendDisplay: String {

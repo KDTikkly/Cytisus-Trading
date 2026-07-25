@@ -322,6 +322,20 @@ public partial class MainWindow : Window
         _model.ModelProviders.MoveFallback(1);
     }
 
+    private async void AskModelAssistant_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        await _model.ModelProviders.AskAssistantAsync(false);
+    }
+
+    private async void ProposeAlgorithmChange_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        await _model.ModelProviders.AskAssistantAsync(true);
+    }
+
     private void StopRiskTransition_Checked(
         object sender,
         RoutedEventArgs e)

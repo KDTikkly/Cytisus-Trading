@@ -32,6 +32,9 @@ public sealed class ModelProvidersViewModel : ObservableObject
     private string _modelDisplayName = string.Empty;
     private string _statusMessage =
         "Add a provider or select an existing profile.";
+    private string _assistantPrompt = string.Empty;
+    private string _assistantResponse =
+        "Configure and enable a primary model, then ask a question.";
     private bool _isBusy;
     private bool _editingExisting;
 
@@ -124,6 +127,18 @@ public sealed class ModelProvidersViewModel : ObservableObject
     {
         get => _statusMessage;
         private set => Set(ref _statusMessage, value);
+    }
+
+    public string AssistantPrompt
+    {
+        get => _assistantPrompt;
+        set => Set(ref _assistantPrompt, value);
+    }
+
+    public string AssistantResponse
+    {
+        get => _assistantResponse;
+        private set => Set(ref _assistantResponse, value);
     }
 
     public bool IsBusy
@@ -354,6 +369,40 @@ public sealed class ModelProvidersViewModel : ObservableObject
         catch (Exception exception)
         {
             StatusMessage = SensitiveDataRedactor.Redact(exception.Message);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    public async Task AskAssistantAsync(bool algorithmProposal)
+    {
+        var prompt = AssistantPrompt.Trim();
+        if (string.IsNullOrWhiteSpace(prompt))
+        {
+            AssistantResponse = "Enter a question or algorithm-change request.";
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            var systemInstruction = algorithmProposal
+                ? "You are the Cytisus quantitative algorithm reviewer. Return a concise, review-only change proposal with rationale, affected algorithm area, risks, and validation steps. Do not claim that code, settings, files, or orders were changed. Never request secrets."
+                : "You are the Cytisus model assistant. Answer concisely. Distinguish network model and Longbridge services from local quantitative CPU/GPU compute. Never request secrets or claim that broker orders were submitted.";
+            var outcome = await _manager.GenerateTextWithFallbackAsync(
+                systemInstruction,
+                prompt,
+                CancellationToken.None);
+            AssistantResponse = outcome.Text;
+            StatusMessage =
+                $"Response from {outcome.Selection.Provider.DisplayName}/{outcome.Selection.Model.DisplayName}.";
+        }
+        catch (Exception exception)
+        {
+            AssistantResponse =
+                SensitiveDataRedactor.Redact(exception.Message);
         }
         finally
         {

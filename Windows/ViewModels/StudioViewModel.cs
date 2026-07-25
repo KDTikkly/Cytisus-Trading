@@ -142,7 +142,7 @@ public sealed class StudioViewModel : ObservableObject
             ApplicationLogLevel.Info,
             "Application",
             _fixtureMode
-                ? "Started in offline fixture mode"
+                ? "Started with deterministic market-data fixtures"
                 : "Started with local CLI mode selected",
             new Dictionary<string, string>
             {
@@ -492,8 +492,8 @@ public sealed class StudioViewModel : ObservableObject
     }
 
     public string FixtureModeStatus => FixtureMode
-        ? "Fixture mode is ON. No CLI, account, or network is used."
-        : "Fixture mode is OFF. Only the selected local CLI may be inspected.";
+        ? "Market-data fixtures are ON. Model APIs remain network services; quantitative compute stays local."
+        : "Market-data fixtures are OFF. Longbridge CLI access may use the network.";
 
     public string CliExecutablePath
     {

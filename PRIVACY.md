@@ -1,10 +1,10 @@
 # Cytisus-Trading Privacy Statement
 
-Cytisus-Trading 1.1.6 retains bounded Longbridge Terminal authentication and Paper-channel readiness and adds local NVIDIA device discovery. Fixture mode remains the default, Local Paper is independent from Longbridge CLI, model providers, and the Quant Worker, and Live broker submission remains unavailable.
+Cytisus-Trading 1.1.7 retains bounded Longbridge Terminal authentication, Paper-channel readiness, and local NVIDIA device discovery while clarifying network boundaries. Market-data fixtures remain the default, Local Paper is independent from Longbridge CLI, model providers, and the Quant Worker, and Live broker submission remains unavailable.
 
 ## Current behavior
 
-- Fixture mode makes no network request and does not invoke Longbridge CLI.
+- Market-data fixtures do not invoke Longbridge CLI. Enabled model APIs and CLI access may use the network; quantitative CPU/GPU compute stays local.
 - Local CLI mode invokes only capability-advertised read-only data operations. Any CLI network or authorization activity belongs to the separately installed CLI.
 - The app never reads Longbridge token files or asks for a broker secret.
 - A read-only broker-position snapshot may be held in memory to mark excluded holdings Reduce Only. It is not cached.
@@ -60,6 +60,6 @@ API keys must not be included in issues, logs, screenshots, diagnostic exports, 
 
 Future prompts will update this statement only when their behavior is implemented. The completed v1.1 PDM is a product plan and does not describe current functionality by itself.
 
-The v1.1.6 release packages the native macOS and Windows applications. Publisher signing, notarization, and platform reputation depend on repository-owner certificates and external trust services.
+The v1.1.7 release packages the native macOS and Windows applications. Publisher signing, notarization, and platform reputation depend on repository-owner certificates and external trust services.
 
 Cytisus-Trading is intended for automated quantitative operations development and review. It is not a manual trading terminal and is not investment advice.

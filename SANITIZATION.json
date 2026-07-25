@@ -1,6 +1,6 @@
 {
   "artifact": "Cytisus-Trading",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "implementation_stage": "Longbridge authentication and Paper account readiness",
   "implementation_in_progress": false,
   "language": "en",
@@ -96,7 +96,7 @@
   "raw_longbridge_authentication_persisted": false,
   "longbridge_authorization_code_persisted": false,
   "release_artifacts": [
-    "Cytisus-Trading-1.1.6-universal.dmg",
-    "Cytisus-Trading-1.1.6-win11-x64.exe"
+    "Cytisus-Trading-1.1.7-universal.dmg",
+    "Cytisus-Trading-1.1.7-win11-x64.exe"
   ]
 }

@@ -6,14 +6,14 @@
 
 Cytisus-Trading is a local desktop front end for automated quantitative operations. It is not a manual trading terminal.
 
-## v1.1.6 implementation status
+## v1.1.7 implementation status
 
-Version 1.1.6 adds native NVIDIA discovery and the governed Longbridge Paper selector while retaining the Windows contrast and startup repairs. Local Paper remains independent, and Live broker submission remains intentionally unavailable.
+Version 1.1.7 clarifies network and local-compute boundaries while retaining native NVIDIA discovery, the governed Longbridge Paper selector, and Windows UI repairs. Local Paper remains independent, and Live broker submission remains intentionally unavailable.
 
 Currently available:
 
 - Native macOS SwiftUI and Windows 11 WPF applications.
-- Offline fixture mode with deterministic factor data.
+- Deterministic market-data fixtures and local factor data.
 - Fixture-backed factor-governance demonstrations.
 - Matching platform domain identifiers.
 - Local non-sensitive settings persistence.
@@ -83,13 +83,13 @@ Not yet available:
 
 ## Native desktop editions and packaging
 
-The source version is 1.1.6. The release workflow builds and publishes both native desktop artifacts:
+The source version is 1.1.7. The release workflow builds and publishes both native desktop artifacts:
 
-- macOS 14 or later: SwiftUI Universal 2 app distributed as `Cytisus-Trading-1.1.6-universal.dmg`.
-- Windows 11 x64: self-contained WPF app with an English install wizard distributed as `Cytisus-Trading-1.1.6-win11-x64.exe`.
+- macOS 14 or later: SwiftUI Universal 2 app distributed as `Cytisus-Trading-1.1.7-universal.dmg`.
+- Windows 11 x64: self-contained WPF app with an English install wizard distributed as `Cytisus-Trading-1.1.7-win11-x64.exe`.
 
 Both applications start without Longbridge CLI, a network connection, an account, or credentials.
-Fixture mode is the default. When fixture mode is disabled, Cytisus may invoke only a separately installed, user-authorized Longbridge CLI through its restricted read-only adapter.
+Market-data fixture mode is the default. Model APIs and Longbridge CLI access are network services when enabled; quantitative algorithms run locally on validated CPU or GPU backends.
 
 ## Optional Longbridge Terminal setup
 
@@ -171,7 +171,7 @@ The platforms do not share a compiled runtime. They share schema definitions, fi
 
 ## Install on macOS
 
-1. Download `Cytisus-Trading-1.1.6-universal.dmg`.
+1. Download `Cytisus-Trading-1.1.7-universal.dmg`.
 2. Open the DMG.
 3. Drag `Cytisus-Trading.app` into Applications.
 4. Open Cytisus-Trading from Applications.
@@ -180,7 +180,7 @@ The public DMG uses ad hoc signing unless release signing variables are supplied
 
 ## Install on Windows 11
 
-1. Download `Cytisus-Trading-1.1.6-win11-x64.exe`.
+1. Download `Cytisus-Trading-1.1.7-win11-x64.exe`.
 2. Run the installer and choose the destination.
 3. Launch Cytisus-Trading from the Start menu.
 
@@ -198,7 +198,7 @@ tools/build_dmg.sh
 The release workflow runs this script on macOS. Its output name is:
 
 ```text
-dist/Cytisus-Trading-1.1.6-universal.dmg
+dist/Cytisus-Trading-1.1.7-universal.dmg
 ```
 
 For Developer ID signing and Apple notarization:
@@ -220,7 +220,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/build_win11.ps1
 The release workflow runs this script on Windows. Its output name is:
 
 ```text
-dist/Cytisus-Trading-1.1.6-win11-x64.exe
+dist/Cytisus-Trading-1.1.7-win11-x64.exe
 ```
 
 With Inno Setup present, this artifact is a standard English install wizard containing the self-contained single-file application. Without Inno Setup, the local script emits a development single-file fallback. Release CI installs Inno Setup and always builds the wizard.
@@ -247,7 +247,7 @@ The Prompt 5 smoke is deliberately small: one complete strategy-intent-to-Local-
 
 ## Privacy and security
 
-- Fixture mode makes no network request and invokes no CLI.
+- Market-data fixtures do not invoke Longbridge CLI. Enabled model APIs and CLI access may use the network; quantitative compute stays local.
 - Local CLI mode never reads or stores Longbridge token files. It persists only sanitized environment, channel, check time, CLI version, and permission summaries.
 - Optional broker-position snapshots are used only for Reduce Only universe behavior and are not cached.
 - No tokens, credentials, certificates, or authorization output.

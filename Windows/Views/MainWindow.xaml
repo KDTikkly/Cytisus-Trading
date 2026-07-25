@@ -88,7 +88,7 @@
                             <TextBlock Text="Cytisus-Trading"
                                        FontWeight="SemiBold"
                                        FontSize="15" />
-                            <TextBlock Text="v1.1.6 Automated Operations"
+                            <TextBlock Text="v1.1.7 Automated Operations"
                                        Foreground="{StaticResource SecondaryTextBrush}"
                                        FontSize="11"
                                        Margin="0,3,0,0" />
@@ -2043,6 +2043,42 @@
                             </StackPanel>
                         </Border>
 
+                        <Border Style="{StaticResource CardBorder}"
+                                DataContext="{Binding ModelProviders}"
+                                Margin="0,0,0,18">
+                            <StackPanel>
+                                <TextBlock Text="Model Assistant"
+                                           FontSize="15"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="Ask the configured primary model a question or request a review-only algorithm adjustment proposal."
+                                           Style="{StaticResource BodySecondary}"
+                                           Margin="0,4,0,10" />
+                                <TextBox Text="{Binding AssistantPrompt, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         MinHeight="72"
+                                         VerticalScrollBarVisibility="Auto"
+                                         ToolTip="Do not paste API keys or broker credentials." />
+                                <WrapPanel Margin="0,10,0,10">
+                                    <Button Content="Ask Model"
+                                            Click="AskModelAssistant_Click"
+                                            Margin="0,0,8,0" />
+                                    <Button Content="Propose Algorithm Change"
+                                            Click="ProposeAlgorithmChange_Click" />
+                                </WrapPanel>
+                                <TextBox Text="{Binding AssistantResponse, Mode=OneWay}"
+                                         IsReadOnly="True"
+                                         TextWrapping="Wrap"
+                                         MinHeight="110"
+                                         VerticalScrollBarVisibility="Auto" />
+                                <TextBlock Text="Responses are not persisted. Algorithm proposals require review and do not change files, settings, or orders."
+                                           Foreground="#FF54D38A"
+                                           FontSize="11"
+                                           TextWrapping="Wrap"
+                                           Margin="0,7,0,0" />
+                            </StackPanel>
+                        </Border>
+
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -2056,7 +2092,7 @@
                                                FontSize="15"
                                                FontWeight="SemiBold"
                                                Margin="0,0,0,16" />
-                                    <CheckBox Content="Use deterministic fixture mode"
+                                    <CheckBox Content="Use deterministic market-data fixtures"
                                               IsChecked="{Binding FixtureMode, Mode=TwoWay}"
                                               Margin="0,0,0,16" />
                                     <TextBlock Text="Executable path"

@@ -1,11 +1,11 @@
-Cytisus-Trading 1.1.6
+Cytisus-Trading 1.1.7
 
 IMPLEMENTATION STATUS
 
-v1.1 Local Paper implementation is complete. Version 1.1.6 adds NVIDIA
-discovery and Longbridge Paper selection while retaining the Windows repairs and
+v1.1 Local Paper implementation is complete. Version 1.1.7 clarifies network
+boundaries while retaining NVIDIA and Longbridge Paper support, Windows repairs,
 Longbridge Terminal discovery, login, command mapping, and account classification.
-The app starts in offline fixture mode.
+The app starts with deterministic market-data fixtures enabled.
 Read-only Longbridge CLI discovery, market fixtures, local caching, and daily
 universe snapshots are available. Deterministic Local Paper strategy cycles, factor
 research, regime probabilities, and governed strategy capital budgets are
@@ -15,13 +15,13 @@ not available.
 
 MACOS
 
-1. Download and open "Cytisus-Trading-1.1.6-universal.dmg".
+1. Download and open "Cytisus-Trading-1.1.7-universal.dmg".
 2. Drag "Cytisus-Trading.app" into Applications.
 3. Open Cytisus-Trading from Applications.
 
 WINDOWS 11
 
-Download "Cytisus-Trading-1.1.6-win11-x64.exe", run the English installation
+Download "Cytisus-Trading-1.1.7-win11-x64.exe", run the English installation
 wizard, choose the destination, and launch Cytisus-Trading from the Start menu.
 
 NOTES
@@ -30,7 +30,8 @@ NOTES
 - The minimum macOS version is macOS 14.
 - The Windows build supports 64-bit Windows 11.
 - Public builds may be unsigned. Only run artifacts from a source you trust.
-- Fixture mode makes no network requests and stores no credentials.
+- Market-data fixtures do not invoke Longbridge CLI. Enabled model APIs and CLI
+  access may use the network; quantitative CPU/GPU compute stays local.
 - Local CLI mode uses only a separately installed, user-authorized Longbridge CLI.
 - Non-sensitive settings, market cache records, universe snapshots, application
   logs, audit events, factor definitions, and trial records are stored locally.
