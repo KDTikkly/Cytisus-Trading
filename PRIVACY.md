@@ -1,6 +1,6 @@
 # Cytisus-Trading Privacy Statement
 
-Cytisus-Trading 1.1.2 adds a local Algorithm Studio and isolated quantitative-compute foundation. Fixture mode remains the default, Local Paper is independent from Longbridge CLI, model providers, and the Quant Worker, and Live broker submission remains unavailable.
+Cytisus-Trading 1.1.3 adds bounded Longbridge Terminal authentication and Paper-channel readiness. Fixture mode remains the default, Local Paper is independent from Longbridge CLI, model providers, and the Quant Worker, and Live broker submission remains unavailable.
 
 ## Current behavior
 
@@ -29,7 +29,8 @@ Cytisus-Trading 1.1.2 adds a local Algorithm Studio and isolated quantitative-co
 - A Python interpreter must be explicitly selected and validated. Cytisus does not install Python or silently choose an arbitrary system interpreter.
 - Accelerator status is based on discovered local runtime providers. Optional package discovery does not install or download software.
 - Agent project patches are limited to allowlisted relative project files and a configured token-cost ceiling. They cannot use a shell, read arbitrary files, or access secrets.
-- v1.1.2 Longbridge accounts and strategy mappings are synthetic fixtures only.
+- Longbridge device and authorization-code login invoke only allowlisted commands. One-time codes are cleared after every outcome and are never persisted or logged.
+- Authentication persistence contains only sanitized account environment, account channel, status-check time, CLI version, and permission summaries.
 - Agent order authorizations contain limits and allowlists but no broker credential. An authorized intent must still pass the existing risk and execution gateways.
 
 ## Local persistence
@@ -51,7 +52,7 @@ The v1.1 foundation stores only:
 - Algorithm project versions and file hashes.
 - Quant job metadata, progress, artifact references, and training checkpoints.
 - ONNX model registry metadata and compatibility state.
-- Synthetic account fixtures, strategy-account mappings, and bounded Agent authorization records.
+- Synthetic account fixtures, strategy-account mappings, bounded Agent authorization records, and sanitized Longbridge connection metadata.
 
 These files remain on the local device. They must not contain credentials, full account identifiers, raw authentication output, broker-position snapshots, or real broker instructions.
 
@@ -59,6 +60,6 @@ API keys must not be included in issues, logs, screenshots, diagnostic exports, 
 
 Future prompts will update this statement only when their behavior is implemented. The completed v1.1 PDM is a product plan and does not describe current functionality by itself.
 
-No v1.1.2 package is published. Packaging and verified Longbridge authentication remain deferred until v1.1.3.
+The v1.1.3 release packages the native macOS and Windows applications. Publisher signing, notarization, and platform reputation depend on repository-owner certificates and external trust services.
 
 Cytisus-Trading is intended for automated quantitative operations development and review. It is not a manual trading terminal and is not investment advice.

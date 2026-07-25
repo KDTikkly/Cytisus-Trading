@@ -1,0 +1,9 @@
+{
+  "authenticated": true,
+  "account_environment": "Live",
+  "account_channel": "lb_live",
+  "permissions": [
+    "market_data",
+    "positions"
+  ]
+}

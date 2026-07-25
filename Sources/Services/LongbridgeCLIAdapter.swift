@@ -11,13 +11,62 @@ protocol ReadOnlyProcessRunning {
     ) throws -> CLIProcessResult
 }
 
-final class LongbridgeProcessRunner: ReadOnlyProcessRunning {
+protocol StreamingProcessRunning {
+    func runStreaming(
+        executableURL: URL,
+        arguments: [String],
+        timeout: TimeInterval,
+        outputLimit: Int,
+        cancellationRequested: () -> Bool,
+        progress: @escaping (String) -> Void
+    ) throws -> CLIProcessResult
+}
+
+final class LongbridgeProcessRunner:
+    ReadOnlyProcessRunning,
+    StreamingProcessRunning {
     func run(
         executableURL: URL,
         arguments: [String],
         timeout: TimeInterval,
         outputLimit: Int,
         cancellationRequested: () -> Bool = { false }
+    ) throws -> CLIProcessResult {
+        try runCore(
+            executableURL: executableURL,
+            arguments: arguments,
+            timeout: timeout,
+            outputLimit: outputLimit,
+            cancellationRequested: cancellationRequested,
+            progress: nil
+        )
+    }
+
+    func runStreaming(
+        executableURL: URL,
+        arguments: [String],
+        timeout: TimeInterval,
+        outputLimit: Int,
+        cancellationRequested: () -> Bool,
+        progress: @escaping (String) -> Void
+    ) throws -> CLIProcessResult {
+        try runCore(
+            executableURL: executableURL,
+            arguments: arguments,
+            timeout: timeout,
+            outputLimit: outputLimit,
+            cancellationRequested: cancellationRequested,
+            progress: progress
+        )
+    }
+
+    private func runCore(
+        executableURL: URL,
+        arguments: [String],
+        timeout: TimeInterval,
+        outputLimit: Int,
+        cancellationRequested: () -> Bool,
+        progress: ((String) -> Void)?
     ) throws -> CLIProcessResult {
         guard timeout > 0 else {
             throw ProcessRunnerError.invalidTimeout
@@ -36,12 +85,18 @@ final class LongbridgeProcessRunner: ReadOnlyProcessRunning {
         let readers = DispatchGroup()
         readers.enter()
         DispatchQueue.global(qos: .utility).async {
-            standardOutput.drain(standardOutputPipe.fileHandleForReading)
+            standardOutput.drain(
+                standardOutputPipe.fileHandleForReading,
+                progress: progress
+            )
             readers.leave()
         }
         readers.enter()
         DispatchQueue.global(qos: .utility).async {
-            standardError.drain(standardErrorPipe.fileHandleForReading)
+            standardError.drain(
+                standardErrorPipe.fileHandleForReading,
+                progress: progress
+            )
             readers.leave()
         }
 
@@ -113,11 +168,17 @@ private final class BoundedDataCapture: @unchecked Sendable {
         return String(data: data, encoding: .utf8) ?? ""
     }
 
-    func drain(_ handle: FileHandle) {
+    func drain(
+        _ handle: FileHandle,
+        progress: ((String) -> Void)? = nil
+    ) {
         while true {
             let chunk = handle.readData(ofLength: 8192)
             if chunk.isEmpty {
                 break
+            }
+            if let text = String(data: chunk, encoding: .utf8) {
+                progress?(text)
             }
             lock.lock()
             let remaining = max(0, limit - data.count)
@@ -278,16 +339,26 @@ final class LongbridgeCLIAdapter: LongbridgeCLIAdapting {
         let fileManager = FileManager.default
         let trimmed = configuredPath.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty {
-            let url = URL(fileURLWithPath: trimmed).standardizedFileURL
+            let url = URL(fileURLWithPath: trimmed)
+                .standardizedFileURL
+                .resolvingSymlinksInPath()
             return fileManager.isExecutableFile(atPath: url.path) ? url : nil
         }
 
         let path = ProcessInfo.processInfo.environment["PATH"] ?? ""
-        for directory in path.split(separator: ":").map(String.init) {
-            let url = URL(fileURLWithPath: directory, isDirectory: true)
+        var candidates = path.split(separator: ":").map(String.init).map {
+            URL(fileURLWithPath: $0, isDirectory: true)
                 .appendingPathComponent("longbridge")
+        }
+        candidates.append(contentsOf: [
+            URL(fileURLWithPath: "/opt/homebrew/bin/longbridge"),
+            URL(fileURLWithPath: "/usr/local/bin/longbridge"),
+            URL(fileURLWithPath: "/usr/bin/longbridge")
+        ])
+        for candidate in candidates {
+            let url = candidate.standardizedFileURL.resolvingSymlinksInPath()
             if fileManager.isExecutableFile(atPath: url.path) {
-                return url.standardizedFileURL
+                return url
             }
         }
         return nil
@@ -327,25 +398,16 @@ final class LongbridgeCLIAdapter: LongbridgeCLIAdapting {
                 )
             }
             let version = firstBoundedLine(versionResult.standardOutput)
-            let helpResult = try runner.run(
+            _ = try runner.run(
                 executableURL: executableURL,
                 arguments: ["--help"],
                 timeout: timeout,
                 outputLimit: outputLimit,
                 cancellationRequested: cancellationRequested
             )
-            guard helpResult.succeeded else {
-                return failedInspection(
-                    executableURL: executableURL,
-                    version: version,
-                    result: helpResult,
-                    message: "CLI help inspection failed."
-                )
-            }
 
             let templates = try discoverTemplates(
                 executableURL: executableURL,
-                rootHelp: helpResult.standardOutput,
                 timeout: timeout,
                 cancellationRequested: cancellationRequested
             )
@@ -354,9 +416,9 @@ final class LongbridgeCLIAdapter: LongbridgeCLIAdapting {
                 schemaVersion: 1,
                 fixtureMode: false,
                 cliVersion: version,
-                sourceVersion: "\(version)|cytisus-adapter-1.1.2",
+                sourceVersion: "\(version)|cytisus-adapter-1.1.3",
                 statusState: .degraded,
-                supportsJSON: !jsonArguments(helpResult.standardOutput).isEmpty,
+                supportsJSON: !templates.isEmpty,
                 commands: templates,
                 dataPermissions: permissions,
                 discoveredAt: Date(),
@@ -430,7 +492,7 @@ final class LongbridgeCLIAdapter: LongbridgeCLIAdapting {
                 cancellationRequested: cancellationRequested
             )
             let state: LongbridgeStatusState = connectivityResult.succeeded
-                ? .ready
+                ? .readyUnknownChannel
                 : .degraded
             capabilities.statusState = state
             return LongbridgeInspection(
@@ -439,7 +501,7 @@ final class LongbridgeCLIAdapter: LongbridgeCLIAdapting {
                 cliVersion: version,
                 checkedAt: Date(),
                 dataPermissions: permissions,
-                message: state == .ready
+                message: state == .readyUnknownChannel
                     ? "The local CLI is ready for advertised read-only data calls."
                     : "The local CLI connectivity check failed.",
                 capabilities: capabilities
@@ -476,97 +538,73 @@ final class LongbridgeCLIAdapter: LongbridgeCLIAdapting {
 
     private func discoverTemplates(
         executableURL: URL,
-        rootHelp: String,
         timeout: TimeInterval,
         cancellationRequested: () -> Bool
     ) throws -> [CLICommandTemplate] {
         var templates: [CLICommandTemplate] = []
-        let rootJSON = jsonArguments(rootHelp)
-        if containsWord(rootHelp, "status"), !rootJSON.isEmpty {
-            templates.append(
-                CLICommandTemplate(
-                    operation: .status,
-                    arguments: ["status"] + rootJSON
-                )
+        let specifications: [(
+            LongbridgeOperation,
+            [String],
+            [String],
+            [String]
+        )] = [
+            (
+                .status,
+                ["auth", "status", "--help"],
+                ["auth", "status", "--format", "json"],
+                ["--format"]
+            ),
+            (
+                .connectivity,
+                ["check", "--help"],
+                ["check", "--format", "json"],
+                ["--format"]
+            ),
+            (
+                .currentSnapshot,
+                ["quote", "--help"],
+                ["quote", "{symbol}", "--format", "json"],
+                ["--format"]
+            ),
+            (
+                .historicalBars,
+                ["kline", "history", "--help"],
+                [
+                    "kline", "history", "{symbol}",
+                    "--start", "{start}", "--end", "{end}",
+                    "--format", "json"
+                ],
+                ["--start", "--end", "--format"]
+            ),
+            (
+                .securityList,
+                ["security-list", "--help"],
+                ["security-list", "{market}", "--format", "json"],
+                ["--format"]
+            ),
+            (
+                .brokerPositions,
+                ["positions", "--help"],
+                ["positions", "--format", "json"],
+                ["--format"]
             )
-        }
-        let connectivity = containsWord(rootHelp, "doctor")
-            ? "doctor"
-            : containsWord(rootHelp, "check") ? "check" : nil
-        if let connectivity, !rootJSON.isEmpty {
-            templates.append(
-                CLICommandTemplate(
-                    operation: .connectivity,
-                    arguments: [connectivity] + rootJSON
-                )
-            )
-        }
-        guard containsWord(rootHelp, "market") else { return templates }
-
-        let marketHelpResult = try runner.run(
-            executableURL: executableURL,
-            arguments: ["market", "--help"],
-            timeout: timeout,
-            outputLimit: outputLimit,
-            cancellationRequested: cancellationRequested
-        )
-        guard marketHelpResult.succeeded else { return templates }
-        let marketHelp = marketHelpResult.standardOutput
-        let marketJSON = jsonArguments(marketHelp)
-        addMarketTemplate(
-            to: &templates,
-            help: marketHelp,
-            json: marketJSON,
-            command: "bars",
-            operation: .historicalBars,
-            arguments: [
-                "--symbol", "{symbol}",
-                "--interval", "{interval}",
-                "--start", "{start}",
-                "--end", "{end}"
-            ]
-        )
-        addMarketTemplate(
-            to: &templates,
-            help: marketHelp,
-            json: marketJSON,
-            command: "snapshot",
-            operation: .currentSnapshot,
-            arguments: ["--symbol", "{symbol}"]
-        )
-        addMarketTemplate(
-            to: &templates,
-            help: marketHelp,
-            json: marketJSON,
-            command: "status",
-            operation: .marketStatus,
-            arguments: ["--market", "{market}"]
-        )
-        addMarketTemplate(
-            to: &templates,
-            help: marketHelp,
-            json: marketJSON,
-            command: "securities",
-            operation: .securityList,
-            arguments: ["--market", "{market}"]
-        )
-
-        if containsWord(rootHelp, "account") {
-            let accountHelp = try runner.run(
+        ]
+        for (operation, helpArguments, arguments, requiredFlags) in specifications {
+            let result = try runner.run(
                 executableURL: executableURL,
-                arguments: ["account", "--help"],
+                arguments: helpArguments,
                 timeout: timeout,
                 outputLimit: outputLimit,
                 cancellationRequested: cancellationRequested
             )
-            let accountJSON = jsonArguments(accountHelp.standardOutput)
-            if accountHelp.succeeded,
-               containsWord(accountHelp.standardOutput, "positions"),
-               !accountJSON.isEmpty {
+            if result.succeeded,
+               requiredFlags.allSatisfy({
+                   result.standardOutput.localizedCaseInsensitiveContains($0)
+               }) {
                 templates.append(
                     CLICommandTemplate(
-                        operation: .brokerPositions,
-                        arguments: ["account", "positions"] + accountJSON
+                        operation: operation,
+                        arguments: arguments
                     )
                 )
             }
@@ -574,58 +612,10 @@ final class LongbridgeCLIAdapter: LongbridgeCLIAdapting {
         return templates
     }
 
-    private func addMarketTemplate(
-        to templates: inout [CLICommandTemplate],
-        help: String,
-        json: [String],
-        command: String,
-        operation: LongbridgeOperation,
-        arguments: [String]
-    ) {
-        let flags = arguments.filter { $0.hasPrefix("--") }
-        guard containsWord(help, command),
-              !json.isEmpty,
-              flags.allSatisfy({
-                  help.localizedCaseInsensitiveContains($0)
-              }) else {
-            return
-        }
-        templates.append(
-            CLICommandTemplate(
-                operation: operation,
-                arguments: ["market", command] + arguments + json
-            )
-        )
-    }
-
-    private func jsonArguments(_ help: String) -> [String] {
-        if help.localizedCaseInsensitiveContains("--output"),
-           help.localizedCaseInsensitiveContains("json") {
-            return ["--output", "json"]
-        }
-        if help.localizedCaseInsensitiveContains("--json") {
-            return ["--json"]
-        }
-        return []
-    }
-
-    private func containsWord(_ value: String, _ word: String) -> Bool {
-        guard let expression = try? NSRegularExpression(
-            pattern: "(?i)(^|\\s)\(NSRegularExpression.escapedPattern(for: word))(\\s|$)"
-        ) else {
-            return false
-        }
-        return expression.firstMatch(
-            in: value,
-            range: NSRange(value.startIndex..., in: value)
-        ) != nil
-    }
-
     private func dataPermissions(_ templates: [CLICommandTemplate]) -> [String] {
         let mapping: [(LongbridgeOperation, String)] = [
             (.historicalBars, "historical_bars"),
             (.currentSnapshot, "current_snapshot"),
-            (.marketStatus, "market_status"),
             (.securityList, "security_list"),
             (.brokerPositions, "position_snapshot")
         ]

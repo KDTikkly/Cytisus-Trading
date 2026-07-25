@@ -56,11 +56,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cytisus-trading-macos
-          path: dist/Cytisus-Trading-1.1.2-universal.dmg
+          path: dist/Cytisus-Trading-1.1.3-universal.dmg
           if-no-files-found: error
 
   windows:
-    name: Build Windows 11 executable
+    name: Build Windows 11 installer
     if: github.event_name != 'workflow_dispatch' || inputs.target == 'all' || inputs.target == 'windows'
     needs: text-check
     runs-on: windows-2022
@@ -81,7 +81,7 @@ jobs:
             choco install innosetup --no-progress --yes
           }
 
-      - name: Build self-contained executable
+      - name: Build self-contained installer
         shell: pwsh
         env:
           WINDOWS_SIGNING_CERTIFICATE_BASE64: ${{ secrets.WINDOWS_SIGNING_CERTIFICATE_BASE64 }}
@@ -93,11 +93,15 @@ jobs:
         shell: pwsh
         run: ./tools/check_prompt5.ps1 -ExecutablePath ./build/win11-x64/publish/CytisusTrading.exe
 
+      - name: Run focused v1.1.3 Longbridge smoke
+        shell: pwsh
+        run: ./tools/check_v113.ps1 -ExecutablePath ./build/win11-x64/publish/CytisusTrading.exe
+
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: cytisus-trading-win11
-          path: dist/Cytisus-Trading-1.1.2-win11-x64.exe
+          path: dist/Cytisus-Trading-1.1.3-win11-x64.exe
           if-no-files-found: error
 
   release:

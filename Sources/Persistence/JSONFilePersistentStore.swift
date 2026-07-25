@@ -5,7 +5,7 @@ enum PersistentStoreError: Error {
     case invalidJSONLine
 }
 
-final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEventStore, MigrationStore, StrategyStateStore, FactorResearchStore, ExecutionStore, ModelProviderStore, LocalStudioStore {
+final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEventStore, MigrationStore, StrategyStateStore, FactorResearchStore, ExecutionStore, ModelProviderStore, LocalStudioStore, LongbridgeConnectionStore {
     private let rootURL: URL
     private let fileManager: FileManager
     private let encoder: JSONEncoder
@@ -44,6 +44,9 @@ final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEv
     }
     private var localStudioStateURL: URL {
         rootURL.appendingPathComponent("local-studio-state.json")
+    }
+    private var longbridgeConnectionURL: URL {
+        rootURL.appendingPathComponent("longbridge-connection.json")
     }
 
     init(rootURL: URL, fileManager: FileManager = .default) {
@@ -340,6 +343,17 @@ final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEv
 
     func saveLocalStudioState(_ state: LocalStudioState) throws {
         try write(state, to: localStudioStateURL)
+    }
+
+    func loadLongbridgeConnection() throws -> LongbridgeConnectionMetadata {
+        guard fileManager.fileExists(atPath: longbridgeConnectionURL.path) else {
+            return .empty
+        }
+        return try read(LongbridgeConnectionMetadata.self, from: longbridgeConnectionURL)
+    }
+
+    func saveLongbridgeConnection(_ metadata: LongbridgeConnectionMetadata) throws {
+        try write(metadata, to: longbridgeConnectionURL)
     }
 
     private func read<T: Decodable>(_ type: T.Type, from url: URL) throws -> T {

@@ -14,7 +14,8 @@ public sealed class JsonFilePersistentStore :
     IFactorResearchStore,
     IExecutionStore,
     IModelProviderStore,
-    ILocalStudioStore
+    ILocalStudioStore,
+    ILongbridgeConnectionStore
 {
     private readonly string _rootDirectory;
     private readonly object _gate = new();
@@ -50,6 +51,8 @@ public sealed class JsonFilePersistentStore :
         Path.Combine(_rootDirectory, "provider-test-events.ndjson");
     private string LocalStudioStatePath =>
         Path.Combine(_rootDirectory, "local-studio-state.json");
+    private string LongbridgeConnectionPath =>
+        Path.Combine(_rootDirectory, "longbridge-connection.json");
 
     public JsonFilePersistentStore(string rootDirectory)
     {
@@ -488,6 +491,24 @@ public sealed class JsonFilePersistentStore :
         lock (_gate)
         {
             WriteDocument(LocalStudioStatePath, state);
+        }
+    }
+
+    public LongbridgeConnectionMetadata LoadLongbridgeConnection()
+    {
+        lock (_gate)
+        {
+            return File.Exists(LongbridgeConnectionPath)
+                ? ReadDocument<LongbridgeConnectionMetadata>(LongbridgeConnectionPath)
+                : LongbridgeConnectionMetadata.Empty;
+        }
+    }
+
+    public void SaveLongbridgeConnection(LongbridgeConnectionMetadata metadata)
+    {
+        lock (_gate)
+        {
+            WriteDocument(LongbridgeConnectionPath, metadata);
         }
     }
 

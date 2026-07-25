@@ -1,0 +1,8 @@
+{
+  "authenticated": true,
+  "account_environment": "Unknown",
+  "account_channel": "future_channel",
+  "permissions": [
+    "market_data"
+  ]
+}

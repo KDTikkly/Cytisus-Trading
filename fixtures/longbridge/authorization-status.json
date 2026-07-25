@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "state": "Ready",
+  "state": "ReadyPaper",
   "authenticated": true,
   "permissions": [
     "US daily bars",

@@ -482,7 +482,7 @@ final class LongbridgeLiveBrokerAdapter {
             order: copy(
                 order,
                 state: .rejected,
-                message: "Live submission is unavailable until v1.1.3 verifies the Longbridge Terminal command mapping."
+                message: "Live submission is unavailable. v1.1.3 validates authentication and Paper readiness only."
             ),
             arguments: arguments,
             retryPermitted: false,

@@ -6,9 +6,16 @@ namespace CytisusTrading.Windows;
 public enum LongbridgeStatusState
 {
     Missing,
+    Installed,
+    Authorizing,
     Unauthenticated,
+    RefreshPending,
+    Expired,
+    ReadyPaper,
+    ReadyLive,
+    ReadyUnknownChannel,
     Degraded,
-    Ready
+    UpdateRequired
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -26,7 +33,30 @@ public enum LongbridgeOperation
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum CliCallCategory
 {
-    ReadOnlyData
+    ReadOnlyData,
+    Authentication,
+    Maintenance
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum LongbridgeMaintenanceOperation
+{
+    Version,
+    RootHelp,
+    AuthHelp,
+    DeviceLogin,
+    AuthorizationCodeLogin,
+    AuthStatus,
+    Logout,
+    ConnectivityCheck,
+    Update
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum LongbridgePaperMode
+{
+    LocalPaper,
+    LongbridgePaper
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -236,6 +266,61 @@ public sealed record LongbridgeInspection(
     IReadOnlyList<string> DataPermissions,
     string Message,
     LongbridgeCapabilities? Capabilities);
+
+public sealed record LongbridgeConnectionMetadata(
+    string AccountEnvironment,
+    string AccountChannel,
+    DateTimeOffset StatusCheckedAt,
+    string CliVersion,
+    IReadOnlyList<string> PermissionsSummary)
+{
+    public static LongbridgeConnectionMetadata Empty { get; } = new(
+        "Unknown",
+        "Unknown",
+        DateTimeOffset.UnixEpoch,
+        "Unavailable",
+        Array.Empty<string>());
+}
+
+public sealed record LongbridgeConnectionState(
+    LongbridgeStatusState Status,
+    string ExecutablePath,
+    string CliVersion,
+    bool ConnectivityReady,
+    string AccountEnvironment,
+    string AccountChannel,
+    IReadOnlyList<string> PermissionsSummary,
+    DateTimeOffset CheckedAt,
+    string FailureCategory,
+    string Message,
+    string AuthorizationUrl,
+    string ShortCode)
+{
+    public bool LocalPaperAvailable => true;
+    public bool LongbridgePaperAvailable =>
+        Status == LongbridgeStatusState.ReadyPaper;
+}
+
+public sealed record LongbridgeMaintenanceCommand(
+    string ExecutablePath,
+    IReadOnlyList<string> Arguments,
+    CliCallCategory Category,
+    LongbridgeMaintenanceOperation Operation);
+
+public sealed record LongbridgeAuthenticationProgress(
+    LongbridgeStatusState Status,
+    string AuthorizationUrl,
+    string ShortCode,
+    string Message);
+
+public static class LongbridgePaperPolicy
+{
+    public static bool CanRun(
+        LongbridgePaperMode mode,
+        LongbridgeStatusState status) =>
+        mode == LongbridgePaperMode.LocalPaper ||
+        status == LongbridgeStatusState.ReadyPaper;
+}
 
 public enum CacheWriteResult
 {

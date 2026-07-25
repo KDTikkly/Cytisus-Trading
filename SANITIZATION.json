@@ -1,7 +1,7 @@
 {
   "artifact": "Cytisus-Trading",
-  "version": "1.1.2",
-  "implementation_stage": "local algorithm studio and accelerated quant runtime",
+  "version": "1.1.3",
+  "implementation_stage": "Longbridge authentication and Paper account readiness",
   "implementation_in_progress": false,
   "language": "en",
   "platforms": [
@@ -13,18 +13,20 @@
   "direct_network_access_scope": "user-triggered model-provider discovery and connectivity requests",
   "fixture_network_access": false,
   "local_cli_process_access": true,
-  "longbridge_integration": "read-only data",
+  "longbridge_integration": "read-only data plus bounded authentication and Paper channel readiness",
   "strategy_execution": true,
   "strategy_execution_scope": "local governed processes and deterministic Local Paper execution",
   "strategy_direct_cli_access": false,
   "global_live_lock_default": false,
-  "live_adapter": "process-free rejecting boundary pending v1.1.3 command verification",
+  "live_adapter": "process-free rejecting boundary",
   "factor_search": true,
   "factor_search_scope": "bounded deterministic local fixture research",
   "portfolio_allocation": true,
   "portfolio_allocation_scope": "local strategy capital budgets, internal netting, and virtual ownership",
   "broker_integrations": [
     "Longbridge CLI read-only data adapter"
+    ,
+    "Longbridge Terminal bounded authentication adapter"
   ],
   "account_identifiers": false,
   "synthetic_local_paper_positions_and_orders": true,
@@ -84,5 +86,17 @@
     "application logs",
     "audit events"
   ],
-  "v1_1_2_packaging_deferred_to": "1.1.3"
+  "longbridge_persisted_fields": [
+    "account_environment",
+    "account_channel",
+    "status_checked_at",
+    "cli_version",
+    "permissions_summary"
+  ],
+  "raw_longbridge_authentication_persisted": false,
+  "longbridge_authorization_code_persisted": false,
+  "release_artifacts": [
+    "Cytisus-Trading-1.1.3-universal.dmg",
+    "Cytisus-Trading-1.1.3-win11-x64.exe"
+  ]
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "state": "Ready",
+  "state": "ReadyPaper",
   "reachable": true,
   "checked_at": "2026-07-24T21:05:00Z",
   "latency_ms": 0,

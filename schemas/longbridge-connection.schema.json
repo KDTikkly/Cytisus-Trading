@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cytisus.local/schemas/longbridge-connection.schema.json",
+  "title": "Longbridge Connection Metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "account_environment",
+    "account_channel",
+    "status_checked_at",
+    "cli_version",
+    "permissions_summary"
+  ],
+  "properties": {
+    "account_environment": {
+      "type": "string",
+      "maxLength": 128
+    },
+    "account_channel": {
+      "type": "string",
+      "maxLength": 128
+    },
+    "status_checked_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "cli_version": {
+      "type": "string",
+      "maxLength": 128
+    },
+    "permissions_summary": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "string",
+        "maxLength": 128
+      }
+    }
+  }
+}

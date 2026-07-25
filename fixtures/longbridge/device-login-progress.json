@@ -1,0 +1,5 @@
+{
+  "authorization_url": "https://open.longbridge.com/device",
+  "short_code": "ABCD-EFGH",
+  "message": "Complete authorization in the browser."
+}

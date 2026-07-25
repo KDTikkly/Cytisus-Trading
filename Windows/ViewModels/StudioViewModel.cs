@@ -33,6 +33,13 @@ public sealed class StudioViewModel : ObservableObject
     private string _cliStatusMessage =
         "Enable fixture mode or select an installed Longbridge CLI.";
     private string _cliPathDisplay = "Fixture mode (no executable)";
+    private string _longbridgeEnvironment = "Unknown";
+    private string _longbridgeChannel = "Unknown";
+    private string _longbridgeConnectivity = "Not checked";
+    private string _longbridgeFailureCategory = "None";
+    private string _longbridgeAuthorizationUrl = string.Empty;
+    private string _longbridgeShortCode = string.Empty;
+    private CancellationTokenSource? _longbridgeSignInCancellation;
     private bool _globalLiveLock;
     private StrategyItemViewModel? _selectedStrategy;
     private string _strategyManifestPath = string.Empty;
@@ -71,6 +78,20 @@ public sealed class StudioViewModel : ObservableObject
     public StudioViewModel(AppServices services)
     {
         _services = services;
+        _services.LongbridgeAuthentication.AuthenticationProgressChanged +=
+            progress =>
+            {
+                var dispatcher = System.Windows.Application.Current?.Dispatcher;
+                if (dispatcher is null)
+                {
+                    ApplyAuthenticationProgress(progress);
+                }
+                else
+                {
+                    dispatcher.BeginInvoke(
+                        () => ApplyAuthenticationProgress(progress));
+                }
+            };
         ModelProviders = new ModelProvidersViewModel(
             services.ModelProviderManager);
         LocalStudio = services.LocalStudioService.LoadOrCreateFixtureState();
@@ -156,7 +177,9 @@ public sealed class StudioViewModel : ObservableObject
     public string ExecutionModuleStatus =>
         "Synthetic child proposals only; every proposal must enter the Execution Gateway.";
     public string LongbridgeAccountStatus =>
-        "Synthetic account fixtures only. v1.1.3 will verify authentication and account mapping.";
+        CliStatusState == LongbridgeStatusState.ReadyPaper
+            ? "Longbridge Paper is ready through the Execution Gateway."
+            : "Local Paper is ready. Longbridge Paper requires a verified Paper channel.";
 
     public string PythonExecutablePath
     {
@@ -560,6 +583,8 @@ public sealed class StudioViewModel : ObservableObject
             if (Set(ref _cliStatusState, value))
             {
                 Raise(nameof(CliStatus));
+                Raise(nameof(LongbridgePaperReadiness));
+                Raise(nameof(LongbridgeAccountStatus));
             }
         }
     }
@@ -607,6 +632,49 @@ public sealed class StudioViewModel : ObservableObject
         get => _cliPathDisplay;
         private set => Set(ref _cliPathDisplay, value);
     }
+
+    public string LongbridgeEnvironment
+    {
+        get => _longbridgeEnvironment;
+        private set => Set(ref _longbridgeEnvironment, value);
+    }
+
+    public string LongbridgeChannel
+    {
+        get => _longbridgeChannel;
+        private set => Set(ref _longbridgeChannel, value);
+    }
+
+    public string LongbridgeConnectivity
+    {
+        get => _longbridgeConnectivity;
+        private set => Set(ref _longbridgeConnectivity, value);
+    }
+
+    public string LongbridgeFailureCategory
+    {
+        get => _longbridgeFailureCategory;
+        private set => Set(ref _longbridgeFailureCategory, value);
+    }
+
+    public string LongbridgeAuthorizationUrl
+    {
+        get => _longbridgeAuthorizationUrl;
+        private set => Set(ref _longbridgeAuthorizationUrl, value);
+    }
+
+    public string LongbridgeShortCode
+    {
+        get => _longbridgeShortCode;
+        private set => Set(ref _longbridgeShortCode, value);
+    }
+
+    public string LongbridgePaperReadiness =>
+        CliStatusState == LongbridgeStatusState.ReadyPaper
+            ? "Longbridge Paper ready"
+            : "Longbridge Paper blocked";
+
+    public string LocalPaperReadiness => "Local Paper ready";
 
     public string ProcessTimeoutDisplay => $"{ProcessTimeoutSeconds:0} seconds";
     public string DataRetentionDisplay => $"{DataRetentionDays:0} days";
@@ -1130,42 +1198,38 @@ public sealed class StudioViewModel : ObservableObject
             Math.Clamp(ProcessTimeoutSeconds, 2, 120));
         try
         {
-            var inspection = await _services.CliAdapter.InspectAsync(
+            var connection = await _services.LongbridgeAuthentication.CheckAsync(
                 CliExecutablePath,
                 timeout,
                 cancellationToken);
-            CliStatusState = inspection.State;
-            CliVersion = inspection.CliVersion;
-            CliPathDisplay = string.IsNullOrWhiteSpace(inspection.ExecutablePath)
-                ? "System PATH lookup did not resolve an executable"
-                : inspection.ExecutablePath;
-            LastCheckDisplay = inspection.CheckedAt
-                .ToLocalTime()
-                .ToString("g", EnglishCulture);
-            DataPermissionsSummary = inspection.DataPermissions.Count == 0
-                ? "No advertised market-data permissions"
-                : string.Join(", ", inspection.DataPermissions);
-            CliStatusMessage = inspection.Message;
+            ApplyConnectionState(connection);
 
             AppendLog(
-                inspection.State == LongbridgeStatusState.Ready
+                IsReadyState(connection.Status)
                     ? ApplicationLogLevel.Info
                     : ApplicationLogLevel.Warning,
                 "LongbridgeCLI",
-                $"Read-only capability check completed with state {inspection.State}.",
+                $"Authentication and capability check completed with state {connection.Status}.",
                 new Dictionary<string, string>
                 {
                     ["call_category"] = CliCallCategory.ReadOnlyData.ToString(),
-                    ["state"] = inspection.State.ToString(),
+                    ["state"] = connection.Status.ToString(),
                     ["exit_output_logged"] = "false"
                 });
 
-            if (inspection.State != LongbridgeStatusState.Ready ||
-                inspection.Capabilities is null)
+            if (!IsReadyState(connection.Status))
             {
                 return;
             }
 
+            var inspection = await _services.CliAdapter.InspectAsync(
+                CliExecutablePath,
+                timeout,
+                cancellationToken);
+            if (inspection.Capabilities is null)
+            {
+                return;
+            }
             await RefreshRealMarketDataAsync(
                 inspection,
                 timeout,
@@ -1192,6 +1256,63 @@ public sealed class StudioViewModel : ObservableObject
                 "Read-only market refresh failed without logging raw CLI output.",
                 SafeCliContext("Failed"));
         }
+    }
+
+    public async Task SignInLongbridgeAsync()
+    {
+        _longbridgeSignInCancellation?.Cancel();
+        _longbridgeSignInCancellation?.Dispose();
+        _longbridgeSignInCancellation = new CancellationTokenSource();
+        CliStatusState = LongbridgeStatusState.Authorizing;
+        CliStatusMessage =
+            "Waiting for Longbridge device authorization. Local Paper remains available.";
+        var state = await _services.LongbridgeAuthentication.SignInAsync(
+            CliExecutablePath,
+            TimeSpan.FromMinutes(5),
+            _longbridgeSignInCancellation.Token);
+        ApplyConnectionState(state);
+    }
+
+    public async Task SignInLongbridgeWithCodeAsync(string authorizationCode)
+    {
+        _longbridgeSignInCancellation?.Cancel();
+        _longbridgeSignInCancellation?.Dispose();
+        _longbridgeSignInCancellation = new CancellationTokenSource();
+        CliStatusState = LongbridgeStatusState.Authorizing;
+        CliStatusMessage =
+            "Checking the one-time authorization code in memory.";
+        var state = await _services.LongbridgeAuthentication
+            .SignInWithAuthorizationCodeAsync(
+                CliExecutablePath,
+                authorizationCode,
+                TimeSpan.FromMinutes(5),
+                _longbridgeSignInCancellation.Token);
+        ApplyConnectionState(state);
+    }
+
+    public void CancelLongbridgeSignIn()
+    {
+        _longbridgeSignInCancellation?.Cancel();
+        CliStatusMessage =
+            "Longbridge sign-in cancellation was requested. Local Paper remains available.";
+    }
+
+    public async Task SignOutLongbridgeAsync()
+    {
+        var state = await _services.LongbridgeAuthentication.SignOutAsync(
+            CliExecutablePath,
+            TimeSpan.FromSeconds(Math.Clamp(ProcessTimeoutSeconds, 2, 120)),
+            CancellationToken.None);
+        ApplyConnectionState(state);
+    }
+
+    public async Task UpdateLongbridgeAsync()
+    {
+        var state = await _services.LongbridgeAuthentication.UpdateAsync(
+            CliExecutablePath,
+            TimeSpan.FromMinutes(5),
+            CancellationToken.None);
+        ApplyConnectionState(state);
     }
 
     public void RunTinyFactorSearch()
@@ -1320,6 +1441,46 @@ public sealed class StudioViewModel : ObservableObject
         }
     }
 
+    private void ApplyConnectionState(LongbridgeConnectionState state)
+    {
+        CliStatusState = state.Status;
+        CliVersion = state.CliVersion;
+        CliPathDisplay = string.IsNullOrWhiteSpace(state.ExecutablePath)
+            ? "System PATH lookup did not resolve an executable"
+            : state.ExecutablePath;
+        LastCheckDisplay = state.CheckedAt
+            .ToLocalTime()
+            .ToString("g", EnglishCulture);
+        DataPermissionsSummary = state.PermissionsSummary.Count == 0
+            ? "No advertised market-data permissions"
+            : string.Join(", ", state.PermissionsSummary);
+        LongbridgeEnvironment = state.AccountEnvironment;
+        LongbridgeChannel = state.AccountChannel;
+        LongbridgeConnectivity = state.ConnectivityReady
+            ? "Ready"
+            : "Unavailable";
+        LongbridgeFailureCategory = string.IsNullOrWhiteSpace(state.FailureCategory)
+            ? "None"
+            : state.FailureCategory;
+        LongbridgeAuthorizationUrl = state.AuthorizationUrl;
+        LongbridgeShortCode = state.ShortCode;
+        CliStatusMessage = state.Message;
+    }
+
+    private void ApplyAuthenticationProgress(
+        LongbridgeAuthenticationProgress progress)
+    {
+        CliStatusState = progress.Status;
+        LongbridgeAuthorizationUrl = progress.AuthorizationUrl;
+        LongbridgeShortCode = progress.ShortCode;
+        CliStatusMessage = progress.Message;
+    }
+
+    private static bool IsReadyState(LongbridgeStatusState state) =>
+        state is LongbridgeStatusState.ReadyPaper or
+            LongbridgeStatusState.ReadyLive or
+            LongbridgeStatusState.ReadyUnknownChannel;
+
     private async Task RefreshRealMarketDataAsync(
         LongbridgeInspection inspection,
         TimeSpan timeout,
@@ -1331,8 +1492,7 @@ public sealed class StudioViewModel : ObservableObject
         {
             LongbridgeOperation.SecurityList,
             LongbridgeOperation.CurrentSnapshot,
-            LongbridgeOperation.HistoricalBars,
-            LongbridgeOperation.MarketStatus
+            LongbridgeOperation.HistoricalBars
         };
         if (required.Any(operation => capabilities.Commands.All(
                 command => command.Operation != operation)))
@@ -1370,13 +1530,6 @@ public sealed class StudioViewModel : ObservableObject
                 reference.Symbol,
                 timeout,
                 cancellationToken);
-        var marketStatus =
-            await _services.MarketDataClient.FetchMarketStatusAsync(
-                inspection.ExecutablePath,
-                capabilities,
-                DefaultMarket,
-                timeout,
-                cancellationToken);
         var positions = capabilities.Commands.Any(command =>
                 command.Operation == LongbridgeOperation.BrokerPositions)
             ? await _services.MarketDataClient.FetchBrokerPositionsAsync(
@@ -1410,7 +1563,7 @@ public sealed class StudioViewModel : ObservableObject
         ReplaceUniverse(universe.Entries);
         DataFreshnessDisplay =
             $"Available {current.AvailableTime.ToLocalTime():g}";
-        MarketSession = marketStatus.Session;
+        MarketSession = "Provided by quote availability";
         UpdateCacheSize();
         CliStatusMessage =
             "Read-only market data and the daily universe were refreshed.";

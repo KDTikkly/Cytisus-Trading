@@ -17,13 +17,56 @@ public interface IReadOnlyProcessRunner
         CancellationToken cancellationToken);
 }
 
-public sealed class LongbridgeProcessRunner : IReadOnlyProcessRunner
+public interface IStreamingProcessRunner
 {
-    public async Task<CliProcessResult> RunAsync(
+    Task<CliProcessResult> RunStreamingAsync(
         string executablePath,
         IReadOnlyList<string> arguments,
         TimeSpan timeout,
         int outputLimit,
+        Action<string> progress,
+        CancellationToken cancellationToken);
+}
+
+public sealed class LongbridgeProcessRunner :
+    IReadOnlyProcessRunner,
+    IStreamingProcessRunner
+{
+    public Task<CliProcessResult> RunAsync(
+        string executablePath,
+        IReadOnlyList<string> arguments,
+        TimeSpan timeout,
+        int outputLimit,
+        CancellationToken cancellationToken) =>
+        RunCoreAsync(
+            executablePath,
+            arguments,
+            timeout,
+            outputLimit,
+            null,
+            cancellationToken);
+
+    public Task<CliProcessResult> RunStreamingAsync(
+        string executablePath,
+        IReadOnlyList<string> arguments,
+        TimeSpan timeout,
+        int outputLimit,
+        Action<string> progress,
+        CancellationToken cancellationToken) =>
+        RunCoreAsync(
+            executablePath,
+            arguments,
+            timeout,
+            outputLimit,
+            progress,
+            cancellationToken);
+
+    private async Task<CliProcessResult> RunCoreAsync(
+        string executablePath,
+        IReadOnlyList<string> arguments,
+        TimeSpan timeout,
+        int outputLimit,
+        Action<string>? progress,
         CancellationToken cancellationToken)
     {
         if (timeout <= TimeSpan.Zero)
@@ -48,9 +91,21 @@ public sealed class LongbridgeProcessRunner : IReadOnlyProcessRunner
         var standardOutput = new BoundedOutput(outputLimit);
         var standardError = new BoundedOutput(outputLimit);
         process.OutputDataReceived += (_, eventArgs) =>
+        {
             standardOutput.AppendLine(eventArgs.Data);
+            if (eventArgs.Data is not null)
+            {
+                progress?.Invoke(eventArgs.Data);
+            }
+        };
         process.ErrorDataReceived += (_, eventArgs) =>
+        {
             standardError.AppendLine(eventArgs.Data);
+            if (eventArgs.Data is not null)
+            {
+                progress?.Invoke(eventArgs.Data);
+            }
+        };
 
         var startedAt = Stopwatch.GetTimestamp();
         if (!process.Start())
@@ -346,9 +401,10 @@ public sealed class LongbridgeCliAdapter : ILongbridgeCliAdapter
         if (!string.IsNullOrWhiteSpace(configuredPath))
         {
             var resolved = Path.GetFullPath(configuredPath.Trim());
-            return File.Exists(resolved) ? resolved : null;
+            return IsExecutableCandidate(resolved) ? ResolveLink(resolved) : null;
         }
 
+        var candidates = new List<string>();
         var searchPath = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
         foreach (var directory in searchPath.Split(
                      Path.PathSeparator,
@@ -358,13 +414,39 @@ public sealed class LongbridgeCliAdapter : ILongbridgeCliAdapter
             foreach (var fileName in new[] { "longbridge.exe", "longbridge" })
             {
                 var candidate = Path.Combine(directory, fileName);
-                if (File.Exists(candidate))
-                {
-                    return Path.GetFullPath(candidate);
-                }
+                candidates.Add(candidate);
             }
         }
 
+        var localAppData = Environment.GetFolderPath(
+            Environment.SpecialFolder.LocalApplicationData);
+        var userProfile = Environment.GetFolderPath(
+            Environment.SpecialFolder.UserProfile);
+        candidates.Add(Path.Combine(
+            localAppData,
+            "Programs",
+            "longbridge",
+            "longbridge.exe"));
+        candidates.Add(Path.Combine(
+            userProfile,
+            "scoop",
+            "shims",
+            "longbridge.exe"));
+        candidates.Add(Path.Combine(
+            userProfile,
+            "scoop",
+            "apps",
+            "longbridge",
+            "current",
+            "longbridge.exe"));
+
+        foreach (var candidate in candidates.Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            if (IsExecutableCandidate(candidate))
+            {
+                return ResolveLink(candidate);
+            }
+        }
         return null;
     }
 
@@ -402,24 +484,15 @@ public sealed class LongbridgeCliAdapter : ILongbridgeCliAdapter
         }
 
         var version = FirstBoundedLine(versionResult.StandardOutput);
-        var rootHelp = await _runner.RunAsync(
+        _ = await _runner.RunAsync(
             executablePath,
             new[] { "--help" },
             timeout,
             OutputLimit,
             cancellationToken).ConfigureAwait(false);
-        if (!rootHelp.Succeeded)
-        {
-            return FailedInspection(
-                executablePath,
-                version,
-                rootHelp,
-                "CLI help inspection failed.");
-        }
 
         var templates = await DiscoverTemplatesAsync(
             executablePath,
-            rootHelp.StandardOutput,
             timeout,
             cancellationToken).ConfigureAwait(false);
         var permissions = DataPermissions(templates);
@@ -427,9 +500,9 @@ public sealed class LongbridgeCliAdapter : ILongbridgeCliAdapter
             1,
             false,
             version,
-            $"{version}|cytisus-adapter-1.1.2",
+            $"{version}|cytisus-adapter-1.1.3",
             LongbridgeStatusState.Degraded,
-            HasJsonOutput(rootHelp.StandardOutput),
+            templates.Count > 0,
             templates,
             permissions,
             DateTimeOffset.UtcNow,
@@ -502,7 +575,7 @@ public sealed class LongbridgeCliAdapter : ILongbridgeCliAdapter
             cancellationToken).ConfigureAwait(false);
         var ready = connectionResult.Succeeded;
         var stateResult = ready
-            ? LongbridgeStatusState.Ready
+            ? LongbridgeStatusState.ReadyUnknownChannel
             : LongbridgeStatusState.Degraded;
         return new LongbridgeInspection(
             stateResult,
@@ -537,159 +610,98 @@ public sealed class LongbridgeCliAdapter : ILongbridgeCliAdapter
 
     private async Task<IReadOnlyList<CliCommandTemplate>> DiscoverTemplatesAsync(
         string executablePath,
-        string rootHelp,
         TimeSpan timeout,
         CancellationToken cancellationToken)
     {
         var templates = new List<CliCommandTemplate>();
-        var jsonArguments = JsonArguments(rootHelp);
-        if (ContainsWord(rootHelp, "status") && jsonArguments.Count > 0)
+        var specifications = new[]
         {
-            templates.Add(new CliCommandTemplate(
+            new CommandSpecification(
                 LongbridgeOperation.Status,
-                new[] { "status" }.Concat(jsonArguments).ToArray()));
-        }
-
-        var connectivityCommand = ContainsWord(rootHelp, "doctor")
-            ? "doctor"
-            : ContainsWord(rootHelp, "check")
-                ? "check"
-                : null;
-        if (connectivityCommand is not null && jsonArguments.Count > 0)
-        {
-            templates.Add(new CliCommandTemplate(
+                new[] { "auth", "status", "--help" },
+                new[] { "auth", "status", "--format", "json" },
+                new[] { "--format" }),
+            new CommandSpecification(
                 LongbridgeOperation.Connectivity,
-                new[] { connectivityCommand }.Concat(jsonArguments).ToArray()));
-        }
+                new[] { "check", "--help" },
+                new[] { "check", "--format", "json" },
+                new[] { "--format" }),
+            new CommandSpecification(
+                LongbridgeOperation.CurrentSnapshot,
+                new[] { "quote", "--help" },
+                new[] { "quote", "{symbol}", "--format", "json" },
+                new[] { "--format" }),
+            new CommandSpecification(
+                LongbridgeOperation.HistoricalBars,
+                new[] { "kline", "history", "--help" },
+                new[]
+                {
+                    "kline", "history", "{symbol}",
+                    "--start", "{start}", "--end", "{end}",
+                    "--format", "json"
+                },
+                new[] { "--start", "--end", "--format" }),
+            new CommandSpecification(
+                LongbridgeOperation.SecurityList,
+                new[] { "security-list", "--help" },
+                new[] { "security-list", "{market}", "--format", "json" },
+                new[] { "--format" }),
+            new CommandSpecification(
+                LongbridgeOperation.BrokerPositions,
+                new[] { "positions", "--help" },
+                new[] { "positions", "--format", "json" },
+                new[] { "--format" })
+        };
 
-        if (!ContainsWord(rootHelp, "market"))
+        foreach (var specification in specifications)
         {
-            return templates;
-        }
-
-        var marketHelpResult = await _runner.RunAsync(
-            executablePath,
-            new[] { "market", "--help" },
-            timeout,
-            OutputLimit,
-            cancellationToken).ConfigureAwait(false);
-        if (!marketHelpResult.Succeeded)
-        {
-            return templates;
-        }
-
-        var marketHelp = marketHelpResult.StandardOutput;
-        var marketJsonArguments = JsonArguments(marketHelp);
-        AddMarketTemplate(
-            templates,
-            marketHelp,
-            marketJsonArguments,
-            "bars",
-            LongbridgeOperation.HistoricalBars,
-            "--symbol", "{symbol}",
-            "--interval", "{interval}",
-            "--start", "{start}",
-            "--end", "{end}");
-        AddMarketTemplate(
-            templates,
-            marketHelp,
-            marketJsonArguments,
-            "snapshot",
-            LongbridgeOperation.CurrentSnapshot,
-            "--symbol", "{symbol}");
-        AddMarketTemplate(
-            templates,
-            marketHelp,
-            marketJsonArguments,
-            "status",
-            LongbridgeOperation.MarketStatus,
-            "--market", "{market}");
-        AddMarketTemplate(
-            templates,
-            marketHelp,
-            marketJsonArguments,
-            "securities",
-            LongbridgeOperation.SecurityList,
-            "--market", "{market}");
-
-        if (ContainsWord(rootHelp, "account"))
-        {
-            var accountHelpResult = await _runner.RunAsync(
+            var result = await _runner.RunAsync(
                 executablePath,
-                new[] { "account", "--help" },
+                specification.HelpArguments,
                 timeout,
                 OutputLimit,
                 cancellationToken).ConfigureAwait(false);
-            if (accountHelpResult.Succeeded &&
-                ContainsWord(accountHelpResult.StandardOutput, "positions"))
+            if (result.Succeeded &&
+                specification.RequiredFlags.All(flag =>
+                    result.StandardOutput.Contains(
+                        flag,
+                        StringComparison.OrdinalIgnoreCase)))
             {
-                var accountJsonArguments =
-                    JsonArguments(accountHelpResult.StandardOutput);
-                if (accountJsonArguments.Count > 0)
-                {
-                    templates.Add(new CliCommandTemplate(
-                        LongbridgeOperation.BrokerPositions,
-                        new[] { "account", "positions" }
-                            .Concat(accountJsonArguments)
-                            .ToArray()));
-                }
+                templates.Add(new CliCommandTemplate(
+                    specification.Operation,
+                    specification.Arguments));
             }
         }
         return templates;
     }
 
-    private static void AddMarketTemplate(
-        ICollection<CliCommandTemplate> templates,
-        string help,
-        IReadOnlyList<string> jsonArguments,
-        string commandName,
-        LongbridgeOperation operation,
-        params string[] operationArguments)
-    {
-        var flags = operationArguments
-            .Where(argument => argument.StartsWith("--", StringComparison.Ordinal))
-            .ToArray();
-        if (!ContainsWord(help, commandName) ||
-            jsonArguments.Count == 0 ||
-            flags.Any(flag => !help.Contains(flag, StringComparison.OrdinalIgnoreCase)))
-        {
-            return;
-        }
+    private sealed record CommandSpecification(
+        LongbridgeOperation Operation,
+        IReadOnlyList<string> HelpArguments,
+        IReadOnlyList<string> Arguments,
+        IReadOnlyList<string> RequiredFlags);
 
-        templates.Add(new CliCommandTemplate(
-            operation,
-            new[] { "market", commandName }
-                .Concat(operationArguments)
-                .Concat(jsonArguments)
-                .ToArray()));
+    private static bool IsExecutableCandidate(string path)
+    {
+        return File.Exists(path) &&
+            (OperatingSystem.IsWindows() ||
+             !string.Equals(
+                 Path.GetExtension(path),
+                 ".txt",
+                 StringComparison.OrdinalIgnoreCase));
     }
 
-    private static IReadOnlyList<string> JsonArguments(string help)
+    private static string ResolveLink(string path)
     {
-        if (help.Contains("--output", StringComparison.OrdinalIgnoreCase) &&
-            help.Contains("json", StringComparison.OrdinalIgnoreCase))
+        var info = new FileInfo(Path.GetFullPath(path));
+        try
         {
-            return new[] { "--output", "json" };
+            return (info.ResolveLinkTarget(returnFinalTarget: true) ?? info).FullName;
         }
-
-        if (help.Contains("--json", StringComparison.OrdinalIgnoreCase))
+        catch (IOException)
         {
-            return new[] { "--json" };
+            return info.FullName;
         }
-
-        return Array.Empty<string>();
-    }
-
-    private static bool HasJsonOutput(string help)
-    {
-        return JsonArguments(help).Count > 0;
-    }
-
-    private static bool ContainsWord(string value, string word)
-    {
-        return Regex.IsMatch(
-            value,
-            $@"(?i)(^|\s){Regex.Escape(word)}(\s|$)");
     }
 
     private static IReadOnlyList<string> DataPermissions(
@@ -705,11 +717,6 @@ public sealed class LongbridgeCliAdapter : ILongbridgeCliAdapter
                 template.Operation == LongbridgeOperation.CurrentSnapshot))
         {
             permissions.Add("current_snapshot");
-        }
-        if (templates.Any(template =>
-                template.Operation == LongbridgeOperation.MarketStatus))
-        {
-            permissions.Add("market_status");
         }
         if (templates.Any(template =>
                 template.Operation == LongbridgeOperation.SecurityList))

@@ -8,7 +8,7 @@ $ErrorActionPreference = "Stop"
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($ExecutablePath)) {
-    $ExecutablePath = Join-Path $projectRoot "dist\Cytisus-Trading-1.1.0-win11-x64.exe"
+    $ExecutablePath = Join-Path $projectRoot "dist\Cytisus-Trading-1.1.3-win11-x64.exe"
 }
 
 $resolvedExecutable = [System.IO.Path]::GetFullPath($ExecutablePath)

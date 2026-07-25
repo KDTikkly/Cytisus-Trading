@@ -11,6 +11,7 @@ public sealed record AppServices(
     IUniverseService UniverseService,
     ILongbridgeDataService FixtureDataService,
     ILongbridgeCliAdapter CliAdapter,
+    ILongbridgeAuthenticationService LongbridgeAuthentication,
     ILongbridgeMarketDataClient MarketDataClient,
     IStrategyStateStore StrategyStore,
     IStrategyRegistryService StrategyRegistry,
@@ -57,6 +58,11 @@ public sealed record AppServices(
         var universeService = new UniverseService();
         var processRunner = new LongbridgeProcessRunner();
         var cliAdapter = new LongbridgeCliAdapter(processRunner);
+        var longbridgeAuthentication = new LongbridgeAuthenticationService(
+            cliAdapter,
+            processRunner,
+            store,
+            store);
         var strategyCodec = new StrategyMessageCodec();
         var liveAdapter = new RejectingLiveBrokerAdapter();
         var intentRouter = new StrategyIntentRouter();
@@ -100,6 +106,7 @@ public sealed record AppServices(
             universeService,
             new FixtureLongbridgeDataService(cache, universeService),
             cliAdapter,
+            longbridgeAuthentication,
             new LongbridgeMarketDataClient(cliAdapter),
             store,
             new StrategyRegistryService(),

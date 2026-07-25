@@ -1,0 +1,9 @@
+{
+  "authenticated": true,
+  "account_environment": "Paper",
+  "account_channel": "lb_papertrading",
+  "permissions": [
+    "market_data",
+    "positions"
+  ]
+}

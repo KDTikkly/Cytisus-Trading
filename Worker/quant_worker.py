@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Any
 
 
-VERSION = "1.1.2"
+VERSION = "1.1.3"
 MAX_MESSAGE_BYTES = 1_048_576
 MAX_OUTPUT_BYTES = 4_194_304
 ALLOWED_JOB_TYPES = {

@@ -1,159 +1,158 @@
 # Cytisus Longbridge Integration
 
-Version: 1.1
-Status: Read-only data foundation retained; Prompt 5 Live execution remains rejecting
-
-## v1.1.2 account-fixture boundary
-
-The Algorithm Studio uses only synthetic account and strategy-mapping fixtures in v1.1.2. They prepare native Longbridge Accounts UI and persistence contracts without requiring CLI installation, authentication, connectivity, or a real account.
-
-The local Quant Worker, ONNX models, execution modules, and Agents have no direct Longbridge CLI access. Execution modules produce child proposals only and every proposal must enter the existing Execution Gateway. Local Paper remains fully independent.
-
-Longbridge login, logout, device authorization, authorization-code login, Paper-account-channel setup, real account discovery, and verified Terminal command mapping remain v1.1.3 work. Real Live submission is still a safe rejecting implementation.
+Version: 1.1.3
+Status: Authentication and Paper-channel readiness implemented; Live submission remains rejecting
 
 ## Security boundary
 
-Longbridge CLI is installed and authorized separately by the user. Cytisus does not bundle it, download it, inspect its token directory, request a token, store OAuth material, or expose CLI arguments to a strategy.
+Longbridge Terminal is installed and authorized separately by the user. Cytisus does not bundle or download it, inspect token directories, request or store a broker token, retain raw authentication JSON, or expose arbitrary command execution to a strategy, model, Agent, or Quant Worker.
 
-Prompt 2 introduced provisional read-only discovery and fixture adapters. Prompt 5 adds an isolated typed Live execution boundary, but it does not submit an order or start Longbridge Terminal. Local Paper is a separate subsystem and never depends on this integration.
+Local Paper is a separate subsystem. Missing, Unauthenticated, RefreshPending, Expired, Degraded, UpdateRequired, ReadyLive, or ReadyUnknownChannel states never block:
+
+- The official Local Paper strategy cycle.
+- The deterministic Local Paper Broker.
+- Internal netting.
+- Partial-fill simulation and allocation.
+- Virtual-ledger updates.
+- Fixture reconciliation.
 
 ## Executable discovery
 
-Both native applications:
+Both native applications use this order:
 
-1. Prefer the executable path stored by the user.
-2. Otherwise search the process `PATH` for the platform executable name.
-3. Require the resolved path to identify an existing executable.
-4. Read `--version`.
-5. Inspect `--help` before constructing capability-dependent commands.
-6. Inspect command-group help where a market or account group is advertised.
+1. A user-selected executable path.
+2. The process `PATH`.
+3. Platform candidates.
 
-The Prompt 2 adapter does not issue an unadvertised market command. Its fixture templates are not execution dependencies. Prompt 5 does not promote provisional commands such as `status`, `market bars`, `market snapshot`, or `account positions`, and does not rely on `--output json` or `--json`.
+macOS candidates:
 
-## Capability-aware calls
+```text
+/opt/homebrew/bin/longbridge
+/usr/local/bin/longbridge
+/usr/bin/longbridge
+```
 
-Supported operation identifiers are:
+Windows candidates:
 
-- `Status`
-- `Connectivity`
-- `HistoricalBars`
-- `CurrentSnapshot`
-- `MarketStatus`
-- `SecurityList`
-- `BrokerPositions`
+```text
+%LOCALAPPDATA%\Programs\longbridge\longbridge.exe
+%USERPROFILE%\scoop\shims\longbridge.exe
+%USERPROFILE%\scoop\apps\longbridge\current\longbridge.exe
+```
 
-Every constructed command has an executable path, an argument array, the `ReadOnlyData` category, and one operation identifier. Placeholder values are bounded and control characters are rejected.
+Resolved symbolic links are followed and the final path must identify an executable file.
 
-The fixture capability file contains exact deterministic templates for offline checks. Those templates are fixture contracts, not a claim that every installed CLI version uses the same syntax.
+## Capability discovery and command mapping
+
+Root help is informational only. Cytisus checks each command with its own help:
+
+```text
+auth status --help
+check --help
+quote --help
+kline history --help
+security-list --help
+positions --help
+```
+
+Machine-readable calls are constructed only as typed argument arrays:
+
+```text
+auth status --format json
+check --format json
+quote SYMBOL --format json
+kline history SYMBOL --start DATE --end DATE --format json
+security-list MARKET --format json
+positions --format json
+```
+
+Cytisus does not construct the superseded provisional command shapes documented in early v1.1 foundations and does not use alternate JSON switches unless a future compatibility profile verifies them explicitly.
+
+All data calls are read only. There is no market-session command in the verified mapping; the UI reports quote availability instead of inventing one.
 
 ## Process controls
 
-The macOS and Windows adapters:
+The adapters:
 
 - Never invoke a shell.
-- Pass one argument array to the executable.
+- Pass one bounded argument array to the executable.
 - Capture standard output and standard error separately.
-- Enforce a configurable timeout.
-- Support cancellation at the process-runner boundary.
-- Kill an over-time child process.
-- Drain output while retaining at most 1 MiB per stream.
-- Preserve the exit code and timeout, cancellation, duration, and truncation state.
-- Reject non-read-only call categories.
-- Parse JSON data and never fall back to a human table parser.
+- Apply timeouts and cancellation.
+- Kill an over-time process.
+- Bound retained output.
+- Preserve exit code, duration, truncation, timeout, and cancellation facts.
+- Parse JSON only where machine-readable output is required.
+- Redact sensitive fields before any diagnostic or audit record is created.
 
-## Status states
+## Authentication
 
-- `Missing`: no selected or system-path executable resolves.
-- `Unauthenticated`: the local status result reports missing authorization.
-- `Degraded`: version, help, status, connectivity, permission, exit-code, timeout, or JSON validation fails.
-- `Ready`: advertised status and connectivity checks succeed.
-
-Missing and Unauthenticated states do not prevent the application from starting. Authorization must be completed through Longbridge CLI itself.
-
-## Sensitive-data handling
-
-Before application logs are created, Cytisus redacts JSON properties and named text fields for tokens, secrets, passwords, credentials, authorization codes, and full account identifiers. Bearer values are also redacted.
-
-CLI logs contain the operation state and `ReadOnlyData` category. Raw status, authentication, standard output, and standard error are not written to application logs.
-
-## Fixture mode
-
-Fixture mode requires no CLI, account, network, or credential. Shared deterministic fixtures cover:
-
-- CLI version, capabilities, and exact argument templates.
-- Authorization and non-sensitive permissions.
-- Connectivity.
-- Historical daily bars.
-- Current market snapshot.
-- Market status.
-- Security reference list.
-- Broker-position snapshot for Reduce Only behavior.
-- Universe rule configuration.
-
-The same fixture files drive both native applications.
-
-## Point-in-time market records
-
-Market bars and current snapshots carry:
-
-- `event_time`
-- `available_time`
-- `collected_at`
-- `source_version`
-- `adjustment_mode`
-- `data_hash`
-
-Historical bar cache identity uses symbol, interval, start, and end. Writing the same `data_hash` to the same identity is idempotent. Current snapshots and universe snapshots also use stable local identities.
-
-The cache is a bounded-scope JSON foundation, not a complete historical warehouse. Cache-directory and retention preferences are persisted. A cache-directory change takes effect on the next application launch; automatic retention pruning is deferred.
-
-## Daily universe
-
-The implemented order is:
+The allowlisted maintenance and authentication operations are:
 
 ```text
-Configured source
--> Tradable filter
--> Price filter
--> Liquidity filter
--> Listing-age filter
--> History-coverage filter
--> Suspension, delisting, and abnormal filter
--> Strategy-specific placeholder filter
--> Universe snapshot
+--version
+--help
+auth --help
+auth login
+auth login --auth-code CODE
+auth status --format json
+auth logout
+check --format json
+update
 ```
 
-Each entry stores date, symbol, inclusion flag, disposition, reason, liquidity metrics, data coverage, industry, rule version, and source version.
+Device authorization and authorization-code login are bounded and cancellable. The UI may show a sanitized HTTPS authorization URL and short code. Authorization codes exist only in memory for the call, are never logged or persisted, and are cleared after success, failure, timeout, cancellation, or parsing errors.
 
-An excluded symbol with a non-zero broker-position fixture becomes `ReduceOnly`. It remains excluded from new-risk eligibility.
+Sign Out and Update CLI require an explicit UI confirmation.
 
-## Current limitations
+## Connection states
 
-- No local Longbridge CLI was present in the Prompt 2 Windows build environment, so real capability syntax and account permissions were not exercised.
-- An installed CLI that does not advertise the required JSON options remains Degraded.
-- Position snapshots are read only when the installed CLI advertises that capability.
-- Cache retention is configured but not automatically pruned.
-- No strategy receives CLI access.
-- Local Paper, internal netting, partial-fill allocation, the virtual ledger, and fixture reconciliation are implemented without CLI access.
-- Live authorization models exist, but the Longbridge Live adapter intentionally rejects without starting a process.
+- `Missing`: no executable resolves.
+- `Installed`: an allowlisted maintenance call completed and status is being rechecked.
+- `Authorizing`: a login is in progress.
+- `Unauthenticated`: sign-in is required.
+- `RefreshPending`: authentication refresh has not completed.
+- `Expired`: authentication has expired.
+- `ReadyPaper`: authenticated, connected, and channel is exactly `lb_papertrading`.
+- `ReadyLive`: authenticated to a recognized Live channel. Live submission is still unavailable.
+- `ReadyUnknownChannel`: authenticated, but the channel is not recognized.
+- `Degraded`: command, connectivity, timeout, exit-code, or JSON validation failed.
+- `UpdateRequired`: CLI is older than 0.20.0 or cannot be safely version-classified.
 
-## Prompt 5 execution isolation
+Display names are never used to infer Paper. Only `lb_papertrading` enables Longbridge Paper readiness.
 
-Local Paper remains available when Longbridge CLI is missing, unauthenticated, degraded, unsupported, disconnected, or has no account. The official Local Paper strategy cycle, deterministic Local Paper Broker, internal netting, partial-fill simulation, virtual-ledger updates, and fixture reconciliation do not inspect CLI help or status.
+## Persistence and logs
 
-Prompt 5 command construction uses only a synthetic typed fixture. It proves placeholder substitution, bounded argument arrays, correlation identifiers, and safe rejection. The synthetic template is not a real Longbridge Terminal command and cannot be executed by the adapter.
+The schema-v8 store persists only:
 
-## Deferred v1.1.3 work
+- `account_environment`
+- `account_channel`
+- `status_checked_at`
+- `cli_version`
+- `permissions_summary`
 
-v1.1.3 must verify the installed Longbridge Terminal and replace provisional read-only mappings with capability-aware typed mappings for:
+It does not persist raw JSON, tokens, authorization codes, account numbers, full account identifiers, device-login output, or broker secrets.
 
-- `auth status --format json`
-- `check --format json`
-- `quote`
-- `kline history`
-- `security-list`
-- `positions`
+Audit events record state transitions and operation outcomes with sanitized environment and channel values. Standard output and standard error are never copied into logs.
 
-v1.1.3 must also implement and validate the intended login, device authorization or authorization-code flow, logout, installer guidance, and any distinct Longbridge Paper account channel. None of those authentication features are implemented in v1.1.0.
+## Paper modes
 
-Until that work is complete, users authorize Longbridge Terminal outside Cytisus using Longbridge's own supported interface. Cytisus must not request, read, or store the resulting credential.
+`Local Paper` always uses the local deterministic Paper Broker and never calls Longbridge Terminal.
+
+`Longbridge Paper` is a distinct readiness classification. It is allowed only in `ReadyPaper` and must remain behind the Execution Gateway. This release does not silently switch account channels, submit a real Paper order, or enable Live submission.
+
+## Fixtures
+
+Deterministic fixtures cover CLI version and command help, Paper and Live channel status, refresh-pending, expired, unknown channel, device-login progress, connectivity, historical daily bars, current quote, market status for offline demonstrations, security reference data, and positions for Reduce Only behavior.
+
+Fixture mode requires no CLI, account, credential, or network.
+
+## Known limitations
+
+- No real OAuth, brokerage account, network, or order call is used by repository smoke checks.
+- Actual Longbridge service availability and the fields returned by a future Terminal version remain external dependencies.
+- The read-only data parsers retain the v1.1 fixture contracts; additional verified Terminal response-shape adapters may be needed for a real account.
+- Longbridge Paper readiness is classified, but real Paper order submission is not claimed or tested.
+- The Live adapter remains process-free and rejecting.
+- Windows publisher signing and macOS notarization require repository-owner certificates and external trust services.
+
+See [Longbridge authentication troubleshooting](LONGBRIDGE-AUTH-TROUBLESHOOTING.md).

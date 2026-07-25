@@ -660,7 +660,7 @@ final class RejectingLiveBrokerAdapter: LiveBrokerAdapting {
 
     func submit(_ intent: StrategyIntentRecord) -> String {
         submissionAttempts += 1
-        return "Rejected: Live broker submission remains unavailable pending v1.1.3 command verification."
+        return "Rejected: Live broker submission remains unavailable. v1.1.3 validates authentication and Paper readiness only."
     }
 }
 

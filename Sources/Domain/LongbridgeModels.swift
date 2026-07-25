@@ -2,9 +2,16 @@ import Foundation
 
 enum LongbridgeStatusState: String, Codable, CaseIterable {
     case missing = "Missing"
+    case installed = "Installed"
+    case authorizing = "Authorizing"
     case unauthenticated = "Unauthenticated"
+    case refreshPending = "RefreshPending"
+    case expired = "Expired"
+    case readyPaper = "ReadyPaper"
+    case readyLive = "ReadyLive"
+    case readyUnknownChannel = "ReadyUnknownChannel"
     case degraded = "Degraded"
-    case ready = "Ready"
+    case updateRequired = "UpdateRequired"
 }
 
 enum LongbridgeOperation: String, Codable, CaseIterable {
@@ -19,6 +26,25 @@ enum LongbridgeOperation: String, Codable, CaseIterable {
 
 enum CLICallCategory: String, Codable {
     case readOnlyData = "ReadOnlyData"
+    case authentication = "Authentication"
+    case maintenance = "Maintenance"
+}
+
+enum LongbridgeMaintenanceOperation: String, Codable {
+    case version = "Version"
+    case rootHelp = "RootHelp"
+    case authHelp = "AuthHelp"
+    case deviceLogin = "DeviceLogin"
+    case authorizationCodeLogin = "AuthorizationCodeLogin"
+    case authStatus = "AuthStatus"
+    case logout = "Logout"
+    case connectivityCheck = "ConnectivityCheck"
+    case update = "Update"
+}
+
+enum LongbridgePaperMode: String, Codable, CaseIterable {
+    case localPaper = "Local Paper"
+    case longbridgePaper = "Longbridge Paper"
 }
 
 enum UniverseDisposition: String, Codable {
@@ -411,6 +437,71 @@ struct LongbridgeInspection {
     let dataPermissions: [String]
     let message: String
     let capabilities: LongbridgeCapabilities?
+}
+
+struct LongbridgeConnectionMetadata: Codable, Equatable {
+    let accountEnvironment: String
+    let accountChannel: String
+    let statusCheckedAt: Date
+    let cliVersion: String
+    let permissionsSummary: [String]
+
+    static let empty = LongbridgeConnectionMetadata(
+        accountEnvironment: "Unknown",
+        accountChannel: "Unknown",
+        statusCheckedAt: Date(timeIntervalSince1970: 0),
+        cliVersion: "Unavailable",
+        permissionsSummary: []
+    )
+
+    enum CodingKeys: String, CodingKey {
+        case accountEnvironment = "account_environment"
+        case accountChannel = "account_channel"
+        case statusCheckedAt = "status_checked_at"
+        case cliVersion = "cli_version"
+        case permissionsSummary = "permissions_summary"
+    }
+}
+
+struct LongbridgeConnectionState: Equatable {
+    let status: LongbridgeStatusState
+    let executableURL: URL?
+    let cliVersion: String
+    let connectivityReady: Bool
+    let accountEnvironment: String
+    let accountChannel: String
+    let permissionsSummary: [String]
+    let checkedAt: Date
+    let failureCategory: String
+    let message: String
+    let authorizationURL: String
+    let shortCode: String
+
+    var localPaperAvailable: Bool { true }
+    var longbridgePaperAvailable: Bool { status == .readyPaper }
+}
+
+struct LongbridgeMaintenanceCommand: Equatable {
+    let executableURL: URL
+    let arguments: [String]
+    let category: CLICallCategory
+    let operation: LongbridgeMaintenanceOperation
+}
+
+struct LongbridgeAuthenticationProgress: Equatable {
+    let status: LongbridgeStatusState
+    let authorizationURL: String
+    let shortCode: String
+    let message: String
+}
+
+enum LongbridgePaperPolicy {
+    static func canRun(
+        mode: LongbridgePaperMode,
+        status: LongbridgeStatusState
+    ) -> Bool {
+        mode == .localPaper || status == .readyPaper
+    }
 }
 
 enum CacheWriteResult {

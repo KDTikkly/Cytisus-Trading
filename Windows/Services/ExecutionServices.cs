@@ -486,7 +486,7 @@ public sealed class LongbridgeLiveBrokerAdapter :
                 State = BrokerOrderState.Rejected,
                 SubmissionAttempts = 0,
                 StatusMessage =
-                    "Live submission is unavailable until v1.1.3 verifies the Longbridge Terminal command mapping."
+                    "Live submission is unavailable. v1.1.3 validates authentication and Paper readiness only."
             },
             arguments,
             false,

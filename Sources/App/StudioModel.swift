@@ -39,6 +39,29 @@ struct BrokerNetPositionSnapshot: Identifiable {
     var id: String { symbol }
 }
 
+private final class LongbridgeCancellationFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value = false
+
+    func reset() {
+        lock.lock()
+        value = false
+        lock.unlock()
+    }
+
+    func cancel() {
+        lock.lock()
+        value = true
+        lock.unlock()
+    }
+
+    var isCancelled: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return value
+    }
+}
+
 @MainActor
 final class StudioModel: ObservableObject {
     @Published var selection: StudioSection = .overview
@@ -108,6 +131,13 @@ final class StudioModel: ObservableObject {
     @Published private(set) var cliStatusMessage =
         "Enable fixture mode or select an installed Longbridge CLI."
     @Published private(set) var cliPathDisplay = "Fixture mode (no executable)"
+    @Published private(set) var longbridgeEnvironment = "Unknown"
+    @Published private(set) var longbridgeChannel = "Unknown"
+    @Published private(set) var longbridgeConnectivity = "Not checked"
+    @Published private(set) var longbridgeFailureCategory = "None"
+    @Published private(set) var longbridgeAuthorizationURL = ""
+    @Published private(set) var longbridgeShortCode = ""
+    @Published var longbridgeAuthorizationCode = ""
     @Published private(set) var strategies: [StrategyItemModel] = []
     @Published var selectedStrategyID = ""
     @Published var strategyManifestPath = ""
@@ -150,6 +180,7 @@ final class StudioModel: ObservableObject {
     @Published var agentMonthlySpendingLimit: Double {
         didSet { persistSettings() }
     }
+    private let longbridgeCancellation = LongbridgeCancellationFlag()
 
     let liveExecutionAvailable = false
     let modelProviders: ModelProvidersViewModel
@@ -195,6 +226,11 @@ final class StudioModel: ObservableObject {
         localStudioState =
             (try? services.localStudioService.loadOrCreateFixtureState()) ??
             .empty
+        services.longbridgeAuthentication.progressHandler = { [weak self] progress in
+            DispatchQueue.main.async {
+                self?.applyAuthenticationProgress(progress)
+            }
+        }
 
         appendLog(
             level: .info,
@@ -226,7 +262,9 @@ final class StudioModel: ObservableObject {
     }
 
     var longbridgeAccountStatus: String {
-        "Synthetic account fixtures only. v1.1.3 will verify authentication and account mapping."
+        cliStatusState == .readyPaper
+            ? "Longbridge Paper is ready through the Execution Gateway."
+            : "Local Paper is ready. Longbridge Paper requires a verified Paper channel."
     }
 
     var agentCostLimitStatus: String {
@@ -797,31 +835,28 @@ final class StudioModel: ObservableObject {
         universeEntries = []
         dataFreshnessDisplay = "No market snapshot"
         let timeout = min(120, max(2, processTimeoutSeconds))
+        let connection = services.longbridgeAuthentication.check(
+            configuredPath: cliExecutablePath,
+            timeout: timeout,
+            cancellationRequested: { false }
+        )
+        applyConnectionState(connection)
+        appendLog(
+            level: isReadyState(connection.status) ? .info : .warning,
+            module: "LongbridgeCLI",
+            message: "Authentication and capability check completed with state \(connection.status.rawValue).",
+            context: safeCLIContext(state: connection.status.rawValue)
+        )
+
+        guard isReadyState(connection.status) else {
+            return
+        }
         let inspection = services.cliAdapter.inspect(
             configuredPath: cliExecutablePath,
             timeout: timeout,
             cancellationRequested: { false }
         )
-        cliStatusState = inspection.state
-        cliVersion = inspection.cliVersion
-        cliPathDisplay = inspection.executableURL?.path
-            ?? "System PATH lookup did not resolve an executable"
-        lastCheckDisplay = inspection.checkedAt.formatted(
-            date: .abbreviated,
-            time: .shortened
-        )
-        dataPermissionsSummary = inspection.dataPermissions.isEmpty
-            ? "No advertised market-data permissions"
-            : inspection.dataPermissions.joined(separator: ", ")
-        cliStatusMessage = inspection.message
-        appendLog(
-            level: inspection.state == .ready ? .info : .warning,
-            module: "LongbridgeCLI",
-            message: "Read-only capability check completed with state \(inspection.state.rawValue).",
-            context: safeCLIContext(state: inspection.state.rawValue)
-        )
-
-        guard inspection.state == .ready,
+        guard
               let executableURL = inspection.executableURL,
               let capabilities = inspection.capabilities else {
             return
@@ -843,6 +878,78 @@ final class StudioModel: ObservableObject {
                 context: safeCLIContext(state: "Failed")
             )
         }
+    }
+
+    func signInLongbridge() async {
+        longbridgeCancellation.reset()
+        cliStatusState = .authorizing
+        cliStatusMessage =
+            "Waiting for Longbridge device authorization. Local Paper remains available."
+        let service = services.longbridgeAuthentication
+        let path = cliExecutablePath
+        let flag = longbridgeCancellation
+        let state = await Task.detached {
+            service.signIn(
+                configuredPath: path,
+                timeout: 300,
+                cancellationRequested: { flag.isCancelled }
+            )
+        }.value
+        applyConnectionState(state)
+    }
+
+    func signInLongbridgeWithCode() async {
+        let code = longbridgeAuthorizationCode
+        longbridgeAuthorizationCode = ""
+        longbridgeCancellation.reset()
+        cliStatusState = .authorizing
+        cliStatusMessage = "Checking the one-time authorization code in memory."
+        let service = services.longbridgeAuthentication
+        let path = cliExecutablePath
+        let flag = longbridgeCancellation
+        let state = await Task.detached {
+            service.signInWithAuthorizationCode(
+                configuredPath: path,
+                authorizationCode: code,
+                timeout: 300,
+                cancellationRequested: { flag.isCancelled }
+            )
+        }.value
+        longbridgeAuthorizationCode = ""
+        applyConnectionState(state)
+    }
+
+    func cancelLongbridgeSignIn() {
+        longbridgeCancellation.cancel()
+        cliStatusMessage =
+            "Longbridge sign-in cancellation was requested. Local Paper remains available."
+    }
+
+    func signOutLongbridge() async {
+        let service = services.longbridgeAuthentication
+        let path = cliExecutablePath
+        let timeout = min(120, max(2, processTimeoutSeconds))
+        let state = await Task.detached {
+            service.signOut(
+                configuredPath: path,
+                timeout: timeout,
+                cancellationRequested: { false }
+            )
+        }.value
+        applyConnectionState(state)
+    }
+
+    func updateLongbridge() async {
+        let service = services.longbridgeAuthentication
+        let path = cliExecutablePath
+        let state = await Task.detached {
+            service.update(
+                configuredPath: path,
+                timeout: 300,
+                cancellationRequested: { false }
+            )
+        }.value
+        applyConnectionState(state)
     }
 
     func runReview() {
@@ -918,6 +1025,41 @@ final class StudioModel: ObservableObject {
         }
     }
 
+    private func applyConnectionState(_ state: LongbridgeConnectionState) {
+        cliStatusState = state.status
+        cliVersion = state.cliVersion
+        cliPathDisplay = state.executableURL?.path
+            ?? "System PATH lookup did not resolve an executable"
+        lastCheckDisplay = state.checkedAt.formatted(
+            date: .abbreviated,
+            time: .shortened
+        )
+        dataPermissionsSummary = state.permissionsSummary.isEmpty
+            ? "No advertised market-data permissions"
+            : state.permissionsSummary.joined(separator: ", ")
+        longbridgeEnvironment = state.accountEnvironment
+        longbridgeChannel = state.accountChannel
+        longbridgeConnectivity = state.connectivityReady ? "Ready" : "Unavailable"
+        longbridgeFailureCategory = state.failureCategory.isEmpty
+            ? "None" : state.failureCategory
+        longbridgeAuthorizationURL = state.authorizationURL
+        longbridgeShortCode = state.shortCode
+        cliStatusMessage = state.message
+    }
+
+    private func applyAuthenticationProgress(
+        _ progress: LongbridgeAuthenticationProgress
+    ) {
+        cliStatusState = progress.status
+        longbridgeAuthorizationURL = progress.authorizationURL
+        longbridgeShortCode = progress.shortCode
+        cliStatusMessage = progress.message
+    }
+
+    private func isReadyState(_ state: LongbridgeStatusState) -> Bool {
+        [.readyPaper, .readyLive, .readyUnknownChannel].contains(state)
+    }
+
     private func refreshRealMarketData(
         executableURL: URL,
         capabilities: LongbridgeCapabilities,
@@ -926,8 +1068,7 @@ final class StudioModel: ObservableObject {
         let required: [LongbridgeOperation] = [
             .securityList,
             .currentSnapshot,
-            .historicalBars,
-            .marketStatus
+            .historicalBars
         ]
         guard required.allSatisfy({ operation in
             capabilities.commands.contains(where: { $0.operation == operation })
@@ -962,12 +1103,6 @@ final class StudioModel: ObservableObject {
             executableURL: executableURL,
             capabilities: capabilities,
             symbol: reference.symbol,
-            timeout: timeout
-        )
-        let status = try services.marketDataClient.fetchMarketStatus(
-            executableURL: executableURL,
-            capabilities: capabilities,
-            market: defaultMarket,
             timeout: timeout
         )
         let positions: BrokerPositionSnapshot
@@ -1009,7 +1144,7 @@ final class StudioModel: ObservableObject {
         _ = try services.marketDataCache.storeUniverseSnapshot(universe)
         universeEntries = universe.entries
         dataFreshnessDisplay = "Available \(current.availableTime.formatted(date: .abbreviated, time: .shortened))"
-        marketSession = status.session
+        marketSession = "Provided by quote availability"
         updateCacheSize()
         cliStatusMessage =
             "Read-only market data and the daily universe were refreshed."

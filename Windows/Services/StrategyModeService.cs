@@ -90,7 +90,7 @@ public sealed class RejectingLiveBrokerAdapter : ILiveBrokerAdapter
     public string Submit(StrategyIntentRecord intent)
     {
         SubmissionAttempts += 1;
-        return "Rejected: Live broker submission remains unavailable pending v1.1.3 command verification.";
+        return "Rejected: Live broker submission remains unavailable. v1.1.3 validates authentication and Paper readiness only.";
     }
 }
 

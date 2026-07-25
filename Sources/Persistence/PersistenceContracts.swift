@@ -1,7 +1,7 @@
 import Foundation
 
 struct StoreSchemaVersion: Codable, Equatable {
-    static let current = StoreSchemaVersion(version: 7)
+    static let current = StoreSchemaVersion(version: 8)
 
     let version: Int
 }
@@ -39,6 +39,11 @@ protocol MigrationStore {
     func initializeSchema() throws
     func schemaVersion() throws -> StoreSchemaVersion
     func migrationRecords() throws -> [MigrationRecord]
+}
+
+protocol LongbridgeConnectionStore {
+    func loadLongbridgeConnection() throws -> LongbridgeConnectionMetadata
+    func saveLongbridgeConnection(_ metadata: LongbridgeConnectionMetadata) throws
 }
 
 protocol FactorRepository: AnyObject {

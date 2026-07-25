@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Diagnostics;
 
 namespace CytisusTrading.Windows;
 
@@ -41,6 +42,93 @@ public partial class MainWindow : Window
     private async void RefreshData_Click(object sender, RoutedEventArgs e)
     {
         await _model.RefreshLongbridgeAsync();
+    }
+
+    private async void LongbridgeSignIn_Click(object sender, RoutedEventArgs e)
+    {
+        await _model.SignInLongbridgeAsync();
+    }
+
+    private async void LongbridgeCodeSignIn_Click(object sender, RoutedEventArgs e)
+    {
+        var code = LongbridgeAuthorizationCodeBox.Password;
+        LongbridgeAuthorizationCodeBox.Clear();
+        try
+        {
+            await _model.SignInLongbridgeWithCodeAsync(code);
+        }
+        finally
+        {
+            LongbridgeAuthorizationCodeBox.Clear();
+        }
+    }
+
+    private void LongbridgeCancelSignIn_Click(object sender, RoutedEventArgs e)
+    {
+        _model.CancelLongbridgeSignIn();
+    }
+
+    private async void LongbridgeSignOut_Click(object sender, RoutedEventArgs e)
+    {
+        var result = MessageBox.Show(
+            this,
+            "Sign out of Longbridge Terminal on this device?",
+            "Sign out",
+            MessageBoxButton.OKCancel,
+            MessageBoxImage.Warning);
+        if (result == MessageBoxResult.OK)
+        {
+            await _model.SignOutLongbridgeAsync();
+        }
+    }
+
+    private async void LongbridgeUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        var result = MessageBox.Show(
+            this,
+            "Run the allowlisted Longbridge Terminal update command?",
+            "Update Longbridge Terminal",
+            MessageBoxButton.OKCancel,
+            MessageBoxImage.Question);
+        if (result == MessageBoxResult.OK)
+        {
+            await _model.UpdateLongbridgeAsync();
+        }
+    }
+
+    private void CopyLongbridgeInstall_Click(object sender, RoutedEventArgs e)
+    {
+        Clipboard.SetText(LongbridgeInstallGuidance.WindowsPowerShell);
+    }
+
+    private void OpenLongbridgeRepository_Click(object sender, RoutedEventArgs e)
+    {
+        OpenUrl(LongbridgeInstallGuidance.RepositoryUrl);
+    }
+
+    private void OpenLongbridgeAuthorization_Click(object sender, RoutedEventArgs e)
+    {
+        OpenUrl(_model.LongbridgeAuthorizationUrl);
+    }
+
+    private void CopyLongbridgeShortCode_Click(object sender, RoutedEventArgs e)
+    {
+        if (!string.IsNullOrWhiteSpace(_model.LongbridgeShortCode))
+        {
+            Clipboard.SetText(_model.LongbridgeShortCode);
+        }
+    }
+
+    private static void OpenUrl(string url)
+    {
+        if (Uri.TryCreate(url, UriKind.Absolute, out var parsed) &&
+            parsed.Scheme == Uri.UriSchemeHttps)
+        {
+            Process.Start(new ProcessStartInfo(parsed.AbsoluteUri)
+            {
+                UseShellExecute = true
+            });
+        }
     }
 
     private void RegisterStrategy_Click(object sender, RoutedEventArgs e)

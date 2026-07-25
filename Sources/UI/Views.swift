@@ -70,7 +70,7 @@ struct SidebarView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Cytisus-Trading")
                         .font(.headline.weight(.semibold))
-                    Text("v1.1.2 Automated Operations")
+                    Text("v1.1.3 Automated Operations")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -643,6 +643,8 @@ struct StrategyObservationCard: View {
 
 struct DataUniverseView: View {
     @EnvironmentObject private var model: StudioModel
+    @State private var confirmSignOut = false
+    @State private var confirmUpdate = false
 
     var body: some View {
         ScrollView {
@@ -664,7 +666,7 @@ struct DataUniverseView: View {
                         value: model.cliStatusState.rawValue,
                         detail: model.cliVersion,
                         symbol: "terminal",
-                        tint: model.cliStatusState == .ready ? .green : .orange
+                        tint: model.cliStatusState == .readyPaper ? .green : .orange
                     )
                     MetricCard(
                         title: "Last Check",
@@ -702,6 +704,95 @@ struct DataUniverseView: View {
                         Text("Raw authentication output is never written to logs.")
                             .font(.caption)
                             .foregroundStyle(.green)
+                    }
+                }
+
+                GlassCard {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Longbridge Terminal Connection")
+                            .font(.headline)
+                        HStack(spacing: 24) {
+                            ConnectionValue(
+                                label: "Account Environment",
+                                value: model.longbridgeEnvironment
+                            )
+                            ConnectionValue(
+                                label: "Account Channel",
+                                value: model.longbridgeChannel
+                            )
+                            ConnectionValue(
+                                label: "Connectivity",
+                                value: model.longbridgeConnectivity
+                            )
+                            ConnectionValue(
+                                label: "Failure Category",
+                                value: model.longbridgeFailureCategory
+                            )
+                        }
+                        Text("Local Paper ready")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.green)
+                        Text(
+                            model.cliStatusState == .readyPaper
+                                ? "Longbridge Paper ready"
+                                : "Longbridge Paper blocked"
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        if !model.longbridgeAuthorizationURL.isEmpty {
+                            Text(
+                                "Authorization URL: \(model.longbridgeAuthorizationURL)"
+                            )
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                        }
+                        if !model.longbridgeShortCode.isEmpty {
+                            Text("Short code: \(model.longbridgeShortCode)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .textSelection(.enabled)
+                        }
+                        SecureField(
+                            "One-time authorization code",
+                            text: $model.longbridgeAuthorizationCode
+                        )
+                        .textFieldStyle(.roundedBorder)
+                        HStack {
+                            Button("Check Again") { model.refreshLongbridge() }
+                            Button("Sign In") {
+                                Task { await model.signInLongbridge() }
+                            }
+                            Button("Sign In with Authorization Code") {
+                                Task {
+                                    await model.signInLongbridgeWithCode()
+                                }
+                            }
+                            Button("Cancel Sign In") {
+                                model.cancelLongbridgeSignIn()
+                            }
+                        }
+                        HStack {
+                            Button("Sign Out") { confirmSignOut = true }
+                            Button("Update CLI") { confirmUpdate = true }
+                            Button("Copy Install Command") {
+                                copyText(LongbridgeInstallGuidance.macHomebrew)
+                            }
+                            Button("Open Repository") {
+                                openURL(LongbridgeInstallGuidance.repositoryURL)
+                            }
+                            Button("Open Authorization") {
+                                openURL(model.longbridgeAuthorizationURL)
+                            }
+                            Button("Copy Short Code") {
+                                copyText(model.longbridgeShortCode)
+                            }
+                        }
+                        Text(
+                            "No token, broker secret, raw authentication response, or full account identifier is stored."
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.green)
                     }
                 }
 
@@ -765,6 +856,54 @@ struct DataUniverseView: View {
             }
             .padding(34)
         }
+        .confirmationDialog(
+            "Sign out of Longbridge Terminal on this device?",
+            isPresented: $confirmSignOut
+        ) {
+            Button("Sign Out", role: .destructive) {
+                Task { await model.signOutLongbridge() }
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+        .confirmationDialog(
+            "Run the allowlisted Longbridge Terminal update command?",
+            isPresented: $confirmUpdate
+        ) {
+            Button("Update CLI") {
+                Task { await model.updateLongbridge() }
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+    }
+
+    private func copyText(_ value: String) {
+        guard !value.isEmpty else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(value, forType: .string)
+    }
+
+    private func openURL(_ value: String) {
+        guard let url = URL(string: value),
+              url.scheme == "https" else {
+            return
+        }
+        NSWorkspace.shared.open(url)
+    }
+}
+
+private struct ConnectionValue: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label.uppercased())
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.subheadline.weight(.medium))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

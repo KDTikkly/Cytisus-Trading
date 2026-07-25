@@ -11,6 +11,7 @@ struct AppServices {
     let universeService: UniverseServicing
     let fixtureDataService: LongbridgeDataServicing
     let cliAdapter: LongbridgeCLIAdapting
+    let longbridgeAuthentication: LongbridgeAuthenticationServicing
     let marketDataClient: LongbridgeMarketDataClient
     let strategyStore: StrategyStateStore
     let strategyRegistry: StrategyRegistryServicing
@@ -56,6 +57,12 @@ struct AppServices {
         let universeService = UniverseService()
         let processRunner = LongbridgeProcessRunner()
         let cliAdapter = LongbridgeCLIAdapter(runner: processRunner)
+        let longbridgeAuthentication = LongbridgeAuthenticationService(
+            adapter: cliAdapter,
+            runner: processRunner,
+            store: store,
+            auditStore: store
+        )
         let strategyCodec = StrategyMessageCodec()
         let liveAdapter = RejectingLiveBrokerAdapter()
         let router = StrategyIntentRouter()
@@ -114,6 +121,7 @@ struct AppServices {
                 universeService: universeService
             ),
             cliAdapter: cliAdapter,
+            longbridgeAuthentication: longbridgeAuthentication,
             marketDataClient: CLILongbridgeMarketDataClient(adapter: cliAdapter),
             strategyStore: store,
             strategyRegistry: StrategyRegistryService(),

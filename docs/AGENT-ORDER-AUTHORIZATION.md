@@ -26,4 +26,4 @@ Mismatched, expired, revoked, or over-limit intents are rejected.
 
 An Authorized result is not a broker order. The intent must still pass the existing strategy mode, risk decision, execution gateway, broker adapter, audit, virtual-ledger, and reconciliation controls.
 
-Live broker submission remains rejecting in v1.1.2. Local Paper remains available without the Agent, Quant Worker, model providers, or Longbridge CLI.
+Live broker submission remains rejecting in v1.1.3. Local Paper remains available without the Agent, Quant Worker, model providers, or Longbridge CLI.

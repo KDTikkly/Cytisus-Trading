@@ -6,9 +6,9 @@
 
 Cytisus-Trading is a local desktop front end for automated quantitative operations. It is not a manual trading terminal.
 
-## v1.1.2 implementation status
+## v1.1.3 implementation status
 
-Version 1.1.2 adds a local Algorithm Studio, isolated Quant Worker, truthful compute-provider discovery, deterministic research jobs, versioned projects, ONNX metadata, and bounded Agent proposals on top of the completed v1.1.0 Local Paper and v1.1.1 model-provider foundations. Live broker submission remains intentionally unavailable until v1.1.3 verifies Longbridge Terminal authentication and command mapping.
+Version 1.1.3 repairs Longbridge Terminal discovery, authentication, canonical command mapping, and Paper-account classification on top of the completed Local Paper, model-provider, and Algorithm Studio foundations. Local Paper remains independent, and Live broker submission remains intentionally unavailable.
 
 Currently available:
 
@@ -21,7 +21,9 @@ Currently available:
 - Schema-version and migration foundations.
 - Shared JSON schemas, fixtures, and protocol documents.
 - Capability-aware Longbridge CLI discovery and read-only process controls.
-- Missing, Unauthenticated, Degraded, and Ready CLI states.
+- Missing, Installed, Authorizing, Unauthenticated, RefreshPending, Expired, ReadyPaper, ReadyLive, ReadyUnknownChannel, Degraded, and UpdateRequired CLI states.
+- Device authorization, one-time authorization-code login, explicit logout and update controls, and exact `lb_papertrading` classification.
+- Canonical typed mappings for `auth status`, `check`, `quote`, `kline history`, `security-list`, and `positions` with `--format json`.
 - Deterministic historical bars, current quote, market status, security list, and position fixtures.
 - Point-in-time market metadata and idempotent local JSON caching.
 - Daily universe inclusion, exclusion, and Reduce Only decisions.
@@ -31,7 +33,7 @@ Currently available:
 - The official Cross-Sectional Multi-Factor fixture strategy in Local Paper mode.
 - Schema-generated parameter editing with Low, Medium, and High risk governance, versioning, audit history, and safe-boundary activation.
 - A Global Live Lock that is OFF by default and bounded Live-authorization validation.
-- A process-free rejecting Live adapter pending v1.1.3 Longbridge command verification.
+- A process-free rejecting Live adapter; v1.1.3 does not enable Live submission.
 - Native Dashboard and Strategies screens with health, cycle, signal, target, intent, and runtime state.
 - Typed deterministic Factor DSL implementations on both native platforms.
 - Multi-task Alpha, Risk, Regime, Liquidity, and Execution factor contracts.
@@ -60,7 +62,7 @@ Currently available:
 - A narrow C++ CPU core with a stable C ABI for common quantitative primitives.
 - Versioned algorithm projects and allowlisted, cost-bounded Agent patch proposals.
 - Deterministic backtest, walk-forward, parameter-search, training, checkpoint, ONNX, and execution-simulation job contracts.
-- Synthetic Longbridge account and mapping fixtures for v1.1.3 UI and contract preparation.
+- Synthetic Longbridge authentication, account-channel, and mapping fixtures.
 - SuggestOnly, ConfirmEveryOrder, and BoundedAutonomy Agent-order authorization contracts.
 - A native Algorithm Studio surface on macOS and Windows.
 - English-only ASCII repository validation.
@@ -69,11 +71,11 @@ Not yet available:
 
 - Real broker execution.
 - Broker order submission.
-- Verified Longbridge Terminal authentication and execution command mapping.
+- Real Longbridge Paper or Live broker order submission.
 - Manual order entry.
 - Chat, assistants, knowledge bases, prompt libraries, and model benchmarking.
 - Provider import, export, billing, key rotation, or automatic cost routing.
-- Real Longbridge account discovery or authentication flows.
+- Guaranteed compatibility with future, unverified Longbridge Terminal response shapes.
 - Verified optional accelerator execution in environments where its runtime provider is not installed.
 - A general-purpose code editor, shell, arbitrary filesystem Agent access, or autonomous broker access.
 
@@ -81,13 +83,35 @@ Not yet available:
 
 ## Native desktop editions and packaging
 
-The source version is 1.1.2. The repository owner has deferred new desktop packaging until v1.1.3, so no v1.1.2 DMG, Windows installer, tag, or GitHub Release is published. The latest existing v1.1.0 packages remain:
+The source version is 1.1.3. The release workflow builds and publishes both native desktop artifacts:
 
-- macOS 14 or later: SwiftUI Universal 2 app distributed as `Cytisus-Trading-1.1.0-universal.dmg`.
-- Windows 11 x64: self-contained WPF app distributed as `Cytisus-Trading-1.1.0-win11-x64.exe`.
+- macOS 14 or later: SwiftUI Universal 2 app distributed as `Cytisus-Trading-1.1.3-universal.dmg`.
+- Windows 11 x64: self-contained WPF app with an English install wizard distributed as `Cytisus-Trading-1.1.3-win11-x64.exe`.
 
 Both applications start without Longbridge CLI, a network connection, an account, or credentials.
 Fixture mode is the default. When fixture mode is disabled, Cytisus may invoke only a separately installed, user-authorized Longbridge CLI through its restricted read-only adapter.
+
+## Optional Longbridge Terminal setup
+
+Cytisus does not bundle or download Longbridge Terminal. Install it separately using an official command, then use Check Again or select the executable path in Settings.
+
+macOS:
+
+```text
+brew install --cask longbridge/tap/longbridge-terminal
+curl -sSL https://open.longbridge.cn/longbridge/longbridge-terminal/install | sh
+```
+
+Windows:
+
+```text
+iwr https://open.longbridge.cn/longbridge/longbridge-terminal/install.ps1 | iex
+scoop install https://open.longbridge.cn/longbridge/longbridge-terminal/longbridge.json
+```
+
+Repository: [longbridge-terminal](https://github.com/longbridge/longbridge-terminal)
+
+Longbridge Paper is ready only when CLI 0.20.0 or later reports the exact `lb_papertrading` channel and connectivity succeeds. Local Paper remains available in every CLI state.
 
 ## Architecture
 
@@ -141,10 +165,13 @@ The platforms do not share a compiled runtime. They share schema definitions, fi
 - [ONNX models](docs/ONNX-MODELS.md)
 - [Agent development](docs/AGENT-DEVELOPMENT.md)
 - [Agent order authorization](docs/AGENT-ORDER-AUTHORIZATION.md)
+- [v1.1.3 PDM](docs/PDM-v1.1.3.md)
+- [v1.1.3 implementation prompt](docs/CODEX-v1.1.3-PROMPT.md)
+- [Longbridge authentication troubleshooting](docs/LONGBRIDGE-AUTH-TROUBLESHOOTING.md)
 
 ## Install on macOS
 
-1. Download `Cytisus-Trading-1.1.0-universal.dmg`.
+1. Download `Cytisus-Trading-1.1.3-universal.dmg`.
 2. Open the DMG.
 3. Drag `Cytisus-Trading.app` into Applications.
 4. Open Cytisus-Trading from Applications.
@@ -153,7 +180,7 @@ The public DMG uses ad hoc signing unless release signing variables are supplied
 
 ## Install on Windows 11
 
-1. Download `Cytisus-Trading-1.1.0-win11-x64.exe`.
+1. Download `Cytisus-Trading-1.1.3-win11-x64.exe`.
 2. Run the installer and choose the destination.
 3. Launch Cytisus-Trading from the Start menu.
 
@@ -168,10 +195,10 @@ chmod +x tools/build_dmg.sh
 tools/build_dmg.sh
 ```
 
-The script is prepared for this source version, but it is not run or published before v1.1.3 under the current packaging plan. Its prepared output name is:
+The release workflow runs this script on macOS. Its output name is:
 
 ```text
-dist/Cytisus-Trading-1.1.2-universal.dmg
+dist/Cytisus-Trading-1.1.3-universal.dmg
 ```
 
 For Developer ID signing and Apple notarization:
@@ -190,10 +217,10 @@ Install the .NET 8 SDK and Inno Setup 6 on Windows 11, then run:
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/build_win11.ps1
 ```
 
-The script is prepared for this source version, but it is not run or published before v1.1.3 under the current packaging plan. Its prepared output name is:
+The release workflow runs this script on Windows. Its output name is:
 
 ```text
-dist/Cytisus-Trading-1.1.2-win11-x64.exe
+dist/Cytisus-Trading-1.1.3-win11-x64.exe
 ```
 
 With Inno Setup present, this artifact is a standard English install wizard containing the self-contained single-file application. Without Inno Setup, the local script emits a development single-file fallback. Release CI installs Inno Setup and always builds the wizard.
@@ -213,6 +240,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_prompt4.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_prompt5.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_model_providers.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_v112.ps1 -PythonExecutablePath C:\Path\To\Approved\python.exe
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_v113.ps1
 ```
 
 The Prompt 5 smoke is deliberately small: one complete strategy-intent-to-Local-Paper-fill cycle, one internal-netting case, one partial-fill allocation case, one reconciliation case, one assertion that unavailable Longbridge CLI does not block Local Paper, and one assertion that the Live adapter remains rejecting.
@@ -220,7 +248,7 @@ The Prompt 5 smoke is deliberately small: one complete strategy-intent-to-Local-
 ## Privacy and security
 
 - Fixture mode makes no network request and invokes no CLI.
-- Local CLI mode never reads or stores Longbridge token files.
+- Local CLI mode never reads or stores Longbridge token files. It persists only sanitized environment, channel, check time, CLI version, and permission summaries.
 - Optional broker-position snapshots are used only for Reduce Only universe behavior and are not cached.
 - No tokens, credentials, certificates, or authorization output.
 - Local Paper never invokes Longbridge CLI or a Live adapter.

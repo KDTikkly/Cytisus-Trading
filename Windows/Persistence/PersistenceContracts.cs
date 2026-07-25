@@ -2,7 +2,7 @@ namespace CytisusTrading.Windows;
 
 public sealed record StoreSchemaVersion(int Version)
 {
-    public static StoreSchemaVersion Current { get; } = new(7);
+    public static StoreSchemaVersion Current { get; } = new(8);
 }
 
 public sealed record MigrationRecord(
@@ -34,6 +34,12 @@ public interface IMigrationStore
     void InitializeSchema();
     StoreSchemaVersion GetSchemaVersion();
     IReadOnlyList<MigrationRecord> GetMigrationRecords();
+}
+
+public interface ILongbridgeConnectionStore
+{
+    LongbridgeConnectionMetadata LoadLongbridgeConnection();
+    void SaveLongbridgeConnection(LongbridgeConnectionMetadata metadata);
 }
 
 public interface IFactorRepository
