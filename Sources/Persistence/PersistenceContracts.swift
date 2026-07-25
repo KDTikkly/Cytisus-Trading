@@ -1,7 +1,7 @@
 import Foundation
 
 struct StoreSchemaVersion: Codable, Equatable {
-    static let current = StoreSchemaVersion(version: 4)
+    static let current = StoreSchemaVersion(version: 5)
 
     let version: Int
 }
@@ -80,4 +80,9 @@ protocol FactorResearchStore {
     func saveFactorDefinitions(_ definitions: [FactorDefinition]) throws
     func loadFactorTrials(limit: Int) throws -> [FactorTrial]
     func appendFactorTrial(_ trial: FactorTrial) throws
+}
+
+protocol ExecutionStore {
+    func loadExecutionState() throws -> ExecutionStateSnapshot
+    func saveExecutionState(_ state: ExecutionStateSnapshot) throws
 }

@@ -95,18 +95,18 @@ Each record stores the change identifier, strategy identifier, parameter key, ol
 
 ## Paper and Live modes
 
-- `PaperOnly` is the default for every strategy.
+- `PaperOnly` is the persisted state identifier; its user-facing label is `Local Paper`.
 - The Global Live Lock is `OFF` by default.
 - Turning the lock off returns every selected Live strategy to `PaperOnly`.
 - Live selection requires the global lock, strategy Live support, and a matching enabled authorization within its validity interval.
 - Authorization is bounded by strategy, markets, symbols or universe, capital, strategy allocation, single-position exposure, daily loss, drawdown, frequency, regular-hours permission, parameter version, and time.
-- The Prompt 3 Live adapter is a rejecting stub. No broker submission is implemented.
+- The v1.1.0 Live Longbridge adapter is a process-free rejecting boundary. No real broker submission is implemented.
 
 Live-to-Paper transitions are:
 
 - `StopOpeningRisk`: block new real risk while retaining existing-position management state.
 - `Freeze`: pause strategy activity without generating a real instruction.
-- `ControlledExit`: record an automated exit intent only; no real broker instruction is generated.
+- `ControlledExit`: generate risk-reducing policy intents through the Local Paper gateway; no real broker instruction is generated.
 
 ## Shared state identifiers
 
@@ -134,7 +134,10 @@ Execution records:
 ## Safety contract
 
 - Strategy output creates typed observations, targets, and intents, never broker commands.
-- Paper routing cannot reach the Live adapter.
+- Local Paper routing cannot reach Longbridge CLI or the Live adapter.
+- The sole execution gateway accepts structured `TradeIntent` records and performs ordered mode, authorization, freshness, market, health, capital, position, duplicate, netting, submission, allocation, ledger, reconciliation, and audit stages.
+- Internal transfers preserve strategy ownership and are never represented as broker fills.
+- UI views are read only and cannot construct an arbitrary broker intent.
 - UI views observe typed application state and do not parse protocol messages.
 - Logs include strategy, correlation, and cycle identifiers without sensitive raw output.
-- Factor search, capital allocation, netting, partial-fill handling, and real broker submission remain outside Prompt 3.
+- Real Longbridge broker submission and verified Terminal authentication remain outside v1.1.0 and are deferred to v1.1.3.

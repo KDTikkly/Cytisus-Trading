@@ -26,7 +26,16 @@ public sealed record AppServices(
     IFactorSearchService FactorSearch,
     IFactorLifecycleService FactorLifecycle,
     IRegimeEngine RegimeEngine,
-    IDynamicCapitalAllocator CapitalAllocator)
+    IDynamicCapitalAllocator CapitalAllocator,
+    IExecutionStore ExecutionStore,
+    ExecutionFixtureService ExecutionFixtures,
+    IInternalNettingService InternalNetting,
+    IPartialFillAllocator FillAllocator,
+    IPaperBroker PaperBroker,
+    ILongbridgeLiveBrokerAdapter LiveExecutionAdapter,
+    VirtualLedgerService VirtualLedger,
+    ReconciliationService Reconciliation,
+    ExecutionGateway ExecutionGateway)
 {
     public static AppServices CreateOfflineFixture()
     {
@@ -38,12 +47,30 @@ public sealed record AppServices(
             : settings.CacheDirectory;
         var cache = new JsonMarketDataCache(cacheDirectory);
         var universeService = new UniverseService();
-        var cliAdapter = new LongbridgeCliAdapter(new LongbridgeProcessRunner());
+        var processRunner = new LongbridgeProcessRunner();
+        var cliAdapter = new LongbridgeCliAdapter(processRunner);
         var strategyCodec = new StrategyMessageCodec();
         var liveAdapter = new RejectingLiveBrokerAdapter();
         var intentRouter = new StrategyIntentRouter();
         var factorDSL = new FactorDSLService();
         var researchFixtures = new ResearchFixtureService();
+        var executionFixtures = new ExecutionFixtureService();
+        var internalNetting = new InternalNettingService();
+        var fillAllocator = new PartialFillAllocator();
+        var paperBroker = new DeterministicPaperBroker();
+        var liveExecution = new LongbridgeLiveBrokerAdapter(
+            new LongbridgeLiveCommandFactory());
+        var virtualLedger = new VirtualLedgerService();
+        var reconciliation = new ReconciliationService();
+        var executionGateway = new ExecutionGateway(
+            store,
+            store,
+            internalNetting,
+            fillAllocator,
+            paperBroker,
+            liveExecution,
+            virtualLedger,
+            reconciliation);
         return new AppServices(
             new FixtureFactorRepository(),
             new FixtureFactorGovernanceService(),
@@ -73,6 +100,15 @@ public sealed record AppServices(
             new FactorSearchService(factorDSL, store),
             new FactorLifecycleService(),
             new RegimeEngine(),
-            new DynamicCapitalAllocator());
+            new DynamicCapitalAllocator(),
+            store,
+            executionFixtures,
+            internalNetting,
+            fillAllocator,
+            paperBroker,
+            liveExecution,
+            virtualLedger,
+            reconciliation,
+            executionGateway);
     }
 }

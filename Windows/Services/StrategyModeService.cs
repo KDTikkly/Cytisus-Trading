@@ -28,7 +28,7 @@ public sealed class StrategyModeService : IStrategyModeService
             return new ModeSelectionResult(
                 true,
                 StrategyMode.PaperOnly,
-                "Paper Only mode selected. No Live adapter can be reached.");
+                "Local Paper selected. It does not require or invoke Longbridge CLI.");
         }
         if (!globalLiveLock)
         {
@@ -68,7 +68,7 @@ public sealed class StrategyModeService : IStrategyModeService
         return new ModeSelectionResult(
             true,
             StrategyMode.Live,
-            "Live mode is selected, but broker submission remains disabled until Prompt 5.");
+            "Live mode is selected, but the Longbridge adapter remains intentionally rejecting until v1.1.3 command verification.");
     }
 
     private static ModeSelectionResult Rejected(string message)
@@ -90,7 +90,7 @@ public sealed class RejectingLiveBrokerAdapter : ILiveBrokerAdapter
     public string Submit(StrategyIntentRecord intent)
     {
         SubmissionAttempts += 1;
-        return "Rejected: Live broker submission is disabled until Prompt 5.";
+        return "Rejected: Live broker submission remains unavailable pending v1.1.3 command verification.";
     }
 }
 

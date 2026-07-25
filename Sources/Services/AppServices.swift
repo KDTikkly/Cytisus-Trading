@@ -27,6 +27,15 @@ struct AppServices {
     let factorLifecycle: FactorLifecycleService
     let regimeEngine: RegimeEngine
     let capitalAllocator: DynamicCapitalAllocator
+    let executionStore: ExecutionStore
+    let executionFixtures: ExecutionFixtureService
+    let internalNetting: InternalNettingService
+    let fillAllocator: PartialFillAllocator
+    let paperBroker: DeterministicPaperBroker
+    let liveExecutionAdapter: LongbridgeLiveBrokerAdapter
+    let virtualLedger: VirtualLedgerService
+    let reconciliation: ReconciliationService
+    let executionGateway: ExecutionGateway
 
     static func offlineFixture() -> AppServices {
         let store = JSONFilePersistentStore(rootURL: JSONFilePersistentStore.defaultRootURL())
@@ -37,12 +46,32 @@ struct AppServices {
             : URL(fileURLWithPath: settings.cacheDirectory, isDirectory: true)
         let cache = JSONMarketDataCache(rootURL: cacheURL)
         let universeService = UniverseService()
-        let cliAdapter = LongbridgeCLIAdapter(runner: LongbridgeProcessRunner())
+        let processRunner = LongbridgeProcessRunner()
+        let cliAdapter = LongbridgeCLIAdapter(runner: processRunner)
         let strategyCodec = StrategyMessageCodec()
         let liveAdapter = RejectingLiveBrokerAdapter()
         let router = StrategyIntentRouter()
         let researchFixtures = ResearchFixtureService()
         let factorDSL = FactorDSLService()
+        let executionFixtures = ExecutionFixtureService()
+        let internalNetting = InternalNettingService()
+        let fillAllocator = PartialFillAllocator()
+        let paperBroker = DeterministicPaperBroker()
+        let liveExecution = LongbridgeLiveBrokerAdapter(
+            commandFactory: LongbridgeLiveCommandFactory()
+        )
+        let virtualLedger = VirtualLedgerService()
+        let reconciliation = ReconciliationService()
+        let executionGateway = ExecutionGateway(
+            store: store,
+            auditStore: store,
+            netting: internalNetting,
+            allocator: fillAllocator,
+            paperBroker: paperBroker,
+            liveBroker: liveExecution,
+            ledger: virtualLedger,
+            reconciliation: reconciliation
+        )
 
         return AppServices(
             factorRepository: FixtureFactorRepository(),
@@ -80,7 +109,16 @@ struct AppServices {
             ),
             factorLifecycle: FactorLifecycleService(),
             regimeEngine: RegimeEngine(),
-            capitalAllocator: DynamicCapitalAllocator()
+            capitalAllocator: DynamicCapitalAllocator(),
+            executionStore: store,
+            executionFixtures: executionFixtures,
+            internalNetting: internalNetting,
+            fillAllocator: fillAllocator,
+            paperBroker: paperBroker,
+            liveExecutionAdapter: liveExecution,
+            virtualLedger: virtualLedger,
+            reconciliation: reconciliation,
+            executionGateway: executionGateway
         )
     }
 }

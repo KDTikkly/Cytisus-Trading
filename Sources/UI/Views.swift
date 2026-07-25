@@ -43,6 +43,8 @@ struct RootView: View {
                     case .overview: OverviewView()
                     case .factors: FactorsView()
                     case .lab: LabView()
+                    case .portfolio: PortfolioView()
+                    case .execution: ExecutionView()
                     case .data: DataUniverseView()
                     case .settings: SettingsView()
                     case .logs: LogsView()
@@ -67,7 +69,7 @@ struct SidebarView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Cytisus-Trading")
                         .font(.headline.weight(.semibold))
-                    Text("v1.1 Strategy Runtime")
+                    Text("v1.1 Automated Operations")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -154,7 +156,7 @@ struct OverviewView: View {
                     PageHeader(
                         eyebrow: "Automated Operations",
                         title: "Dashboard",
-                        subtitle: "Strategy runtime health, bounded modes, and deterministic Paper activity. Live broker submission is unavailable."
+                        subtitle: "Strategy runtime health, bounded modes, and deterministic Local Paper activity. Live broker submission is unavailable."
                     )
                     Spacer()
                     Button("Run Paper Cycle") {
@@ -412,7 +414,7 @@ struct LabView: View {
                 PageHeader(
                     eyebrow: "Local Strategy Runtime",
                     title: "Strategies",
-                    subtitle: "Register governed strategy processes, edit schema-defined parameters, and inspect Paper outcomes. No manual execution controls are provided."
+                    subtitle: "Register governed strategy processes, edit schema-defined parameters, and inspect Local Paper outcomes. No manual execution controls are provided."
                 )
 
                 HStack(alignment: .top, spacing: 18) {
@@ -446,7 +448,7 @@ struct LabView: View {
                         VStack(alignment: .leading, spacing: 18) {
                             Text("Mode Governance").font(.headline)
                             HStack {
-                                Button("Use Paper Only") {
+                                Button("Use Local Paper") {
                                     model.requestPaperMode()
                                 }
                                 .buttonStyle(PrimaryGlassButton())
@@ -456,7 +458,7 @@ struct LabView: View {
                                 .buttonStyle(.bordered)
                             }
                             Picker(
-                                "Live-to-Paper transition",
+                                "Live-to-Local-Paper transition",
                                 selection: $model.selectedTransition
                             ) {
                                 ForEach(LiveToPaperTransition.allCases) {
@@ -856,7 +858,7 @@ struct SettingsView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Text(
-                            "Live broker submission remains disabled in this implementation pass."
+                            "Live broker submission remains intentionally rejecting until v1.1.3 command verification."
                         )
                         .font(.caption)
                         .foregroundStyle(.orange)
@@ -991,6 +993,286 @@ struct LogsView: View {
     }
 }
 
+struct PortfolioView: View {
+    @EnvironmentObject private var model: StudioModel
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                PageHeader(
+                    eyebrow: "LOCAL PAPER OWNERSHIP",
+                    title: "Portfolio",
+                    subtitle: model.executionSafetyStatus
+                )
+
+                GlassCard {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("Broker Net Positions").font(.headline)
+                            Spacer()
+                            Button("Run Reconciliation Diagnostic") {
+                                model.runReconciliationDiagnostic()
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
+                        Text(model.persistentExecutionAlert)
+                            .font(.caption)
+                            .foregroundStyle(
+                                model.executionState.riskEvents.isEmpty
+                                    ? .secondary : .red
+                            )
+                        Divider().overlay(.white.opacity(0.08))
+                        ForEach(model.brokerNetPositions) { position in
+                            HStack {
+                                Text(position.symbol).fontWeight(.semibold)
+                                Spacer()
+                                Text(
+                                    position.quantity.formatted(
+                                        .number.precision(
+                                            .fractionLength(0...4)
+                                        )
+                                    )
+                                )
+                                .monospacedDigit()
+                                Text(position.status.rawValue)
+                                    .font(.caption)
+                                    .foregroundStyle(
+                                        position.status == .reconciled
+                                            ? .green : .red
+                                    )
+                                    .frame(width: 90, alignment: .trailing)
+                            }
+                        }
+                    }
+                }
+
+                HStack(alignment: .top, spacing: 16) {
+                    GlassCard {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Strategy Capital Allocation")
+                                .font(.headline)
+                            ForEach(model.strategies) { strategy in
+                                HStack {
+                                    Text(strategy.name).lineLimit(1)
+                                    Spacer()
+                                    Text(strategy.capitalBudgetDisplay)
+                                        .monospacedDigit()
+                                }
+                                .font(.caption)
+                            }
+                        }
+                    }
+                    GlassCard {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Internal Transfers").font(.headline)
+                            if model.executionState.internalTransfers.isEmpty {
+                                Text("No internal transfers.")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            ForEach(
+                                model.executionState.internalTransfers
+                                    .suffix(10)
+                            ) { transfer in
+                                Text(transfer.display)
+                                    .font(.caption.monospaced())
+                                    .lineLimit(1)
+                            }
+                        }
+                    }
+                }
+
+                GlassCard {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Per-Strategy Virtual Ledger")
+                            .font(.headline)
+                        LedgerHeader()
+                        Divider().overlay(.white.opacity(0.08))
+                        ForEach(model.executionState.ledgerPositions) {
+                            position in
+                            HStack(spacing: 12) {
+                                Text(position.strategyId)
+                                    .lineLimit(1)
+                                    .frame(
+                                        maxWidth: .infinity,
+                                        alignment: .leading
+                                    )
+                                Text(position.symbol)
+                                    .frame(width: 75, alignment: .leading)
+                                LedgerNumber(position.targetPosition)
+                                LedgerNumber(position.virtualQuantity)
+                                LedgerNumber(position.costBasis)
+                                LedgerNumber(position.realizedPnl)
+                                LedgerNumber(position.unrealizedPnl)
+                                LedgerNumber(position.capitalUsage)
+                                LedgerNumber(position.riskContribution)
+                            }
+                            .font(.caption)
+                        }
+                    }
+                }
+            }
+            .padding(34)
+        }
+    }
+}
+
+private struct LedgerHeader: View {
+    var body: some View {
+        HStack(spacing: 12) {
+            Text("Strategy").frame(maxWidth: .infinity, alignment: .leading)
+            Text("Symbol").frame(width: 75, alignment: .leading)
+            Text("Target").frame(width: 72, alignment: .trailing)
+            Text("Virtual").frame(width: 72, alignment: .trailing)
+            Text("Cost").frame(width: 72, alignment: .trailing)
+            Text("Realized").frame(width: 72, alignment: .trailing)
+            Text("Unrealized").frame(width: 72, alignment: .trailing)
+            Text("Capital").frame(width: 72, alignment: .trailing)
+            Text("Risk").frame(width: 72, alignment: .trailing)
+        }
+        .font(.caption2.weight(.bold))
+        .foregroundStyle(.secondary)
+    }
+}
+
+private struct LedgerNumber: View {
+    let value: Double
+
+    init(_ value: Double) {
+        self.value = value
+    }
+
+    var body: some View {
+        Text(
+            value.formatted(
+                .number.precision(.fractionLength(0...2))
+            )
+        )
+        .monospacedDigit()
+        .frame(width: 72, alignment: .trailing)
+    }
+}
+
+struct ExecutionView: View {
+    @EnvironmentObject private var model: StudioModel
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                PageHeader(
+                    eyebrow: "DETERMINISTIC EXECUTION RECORD",
+                    title: "Execution",
+                    subtitle: model.executionSafetyStatus
+                )
+
+                HStack(spacing: 14) {
+                    ExecutionCountCard(
+                        title: "INTENTS",
+                        value: model.executionState.intents.count
+                    )
+                    ExecutionCountCard(
+                        title: "DECISIONS",
+                        value: model.executionState.riskDecisions.count
+                    )
+                    ExecutionCountCard(
+                        title: "TRANSFERS",
+                        value: model.executionState.internalTransfers.count
+                    )
+                    ExecutionCountCard(
+                        title: "FILLS",
+                        value: model.executionState.brokerFills.count
+                    )
+                }
+
+                ExecutionListCard(
+                    title: "Trade Intents and Risk Decisions",
+                    rows: model.executionState.intents.suffix(12).map {
+                        "\($0.intentId) | \($0.strategyId) | \($0.symbol) | quantity \($0.requestedQuantity) | cycle \($0.cycleId)"
+                    } + model.executionState.riskDecisions.suffix(12).map {
+                        "\($0.decisionId) | \($0.outcome.rawValue) | intent \($0.intentId) | \($0.reason)"
+                    }
+                )
+                ExecutionListCard(
+                    title: "Internal Transfers, Orders, and Fills",
+                    rows: model.executionState.internalTransfers.suffix(12)
+                        .map(\.display) +
+                        model.executionState.brokerOrders.suffix(12).map {
+                            "\($0.orderId) | \($0.state.rawValue) | \($0.side.rawValue) \($0.quantity) \($0.symbol) | correlation \($0.correlationId)"
+                        } +
+                        model.executionState.brokerFills.suffix(12).map {
+                            "\($0.fillId) | \($0.side.rawValue) \($0.quantity) @ \($0.price) | order \($0.orderId)"
+                        }
+                )
+                ExecutionListCard(
+                    title: "Virtual Allocations and Shortfalls",
+                    rows: model.executionState.virtualAllocations.suffix(12)
+                        .map {
+                            "\($0.allocationId) | \($0.strategyId) | \($0.quantity) \($0.symbol) | fill \($0.fillId)"
+                        } +
+                        model.executionState.allocationShortfalls.suffix(12)
+                        .map {
+                            "\($0.shortfallId) | \($0.strategyId) | unfilled \($0.unfilledQuantity) | \($0.reason)"
+                        }
+                )
+                ExecutionListCard(
+                    title: "Reconciliation Lifecycle",
+                    rows: model.executionState.reconciliations.suffix(12)
+                        .map {
+                            "\($0.reconciliationId) | \($0.symbol) | \($0.status.rawValue) | difference \($0.difference) | correlation \($0.correlationId)"
+                        }
+                )
+            }
+            .padding(34)
+        }
+    }
+}
+
+private struct ExecutionCountCard: View {
+    let title: String
+    let value: Int
+
+    var body: some View {
+        GlassCard(padding: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(title)
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.secondary)
+                Text(String(value))
+                    .font(.title2.weight(.semibold))
+                    .monospacedDigit()
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+private struct ExecutionListCard: View {
+    let title: String
+    let rows: [String]
+
+    var body: some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(title).font(.headline)
+                if rows.isEmpty {
+                    Text("No records.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(Array(rows.enumerated()), id: \.offset) {
+                        _, row in
+                        Text(row)
+                            .font(.caption.monospaced())
+                            .foregroundStyle(.white.opacity(0.84))
+                            .textSelection(.enabled)
+                        Divider().overlay(.white.opacity(0.05))
+                    }
+                }
+            }
+        }
+    }
+}
+
 struct PrivacyView: View {
     @EnvironmentObject private var model: StudioModel
 
@@ -1012,10 +1294,10 @@ struct PrivacyView: View {
                 GlassCard {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Release Boundary").font(.headline)
-                        PrivacyLine(label: "Includes", value: "Native UI, fixture data, a read-only CLI adapter, local cache, and daily universe decisions")
-                        PrivacyLine(label: "Excludes", value: "Broker credentials, order submission, real orders, P&L, and account bindings")
-                        PrivacyLine(label: "Storage", value: "Non-sensitive settings, market cache, universe, logs, and audit data stay local")
-                        PrivacyLine(label: "Trading", value: "No order, cancellation, account configuration, or fund-management interfaces")
+                        PrivacyLine(label: "Includes", value: "Native UI, Local Paper execution records, fixture data, local cache, and daily universe decisions")
+                        PrivacyLine(label: "Excludes", value: "Broker credentials, real broker submission, real orders, account P&L, and account bindings")
+                        PrivacyLine(label: "Storage", value: "Non-sensitive settings, Local Paper ledger, market cache, logs, and audit data stay local")
+                        PrivacyLine(label: "Trading", value: "Local Paper only. Live submission is rejecting and no real broker process is started")
                         Divider().overlay(.white.opacity(0.08))
                         Label("Suitable for demos, reviews, and UI prototyping. Not investment advice.", systemImage: "checkmark.shield.fill")
                             .font(.subheadline.weight(.semibold))

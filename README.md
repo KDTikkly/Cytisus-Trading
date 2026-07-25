@@ -8,7 +8,7 @@ Cytisus-Trading is a local desktop front end for automated quantitative operatio
 
 ## v1.1 implementation status
 
-Version 1.1.0 is in progress. Prompt 4 adds deterministic factor research, lifecycle controls, regime probabilities, and dynamic strategy capital budgets while keeping Live broker submission unavailable.
+Version 1.1.0 completes the native Local Paper automated execution path. Live broker submission remains intentionally unavailable until v1.1.3 verifies Longbridge Terminal authentication and command mapping.
 
 Currently available:
 
@@ -28,10 +28,10 @@ Currently available:
 - Native Data and Universe, Settings, and structured Logs screens.
 - Official and third-party strategy registries with manifest and parameter-schema validation.
 - Bounded no-shell strategy processes with NDJSON messaging, heartbeats, graceful shutdown, and structured observability.
-- The official Cross-Sectional Multi-Factor fixture strategy in Paper Only mode.
+- The official Cross-Sectional Multi-Factor fixture strategy in Local Paper mode.
 - Schema-generated parameter editing with Low, Medium, and High risk governance, versioning, audit history, and safe-boundary activation.
 - A Global Live Lock that is OFF by default and bounded Live-authorization validation.
-- A rejecting Live adapter that prevents broker submission during this implementation pass.
+- A process-free rejecting Live adapter pending v1.1.3 Longbridge command verification.
 - Native Dashboard and Strategies screens with health, cycle, signal, target, intent, and runtime state.
 - Typed deterministic Factor DSL implementations on both native platforms.
 - Multi-task Alpha, Risk, Regime, Liquidity, and Execution factor contracts.
@@ -41,16 +41,23 @@ Currently available:
 - Deterministic Trend, Range, High Volatility, and Crisis probabilities with uncertainty.
 - Dynamic strategy capital budgets with capped alpha tilt, correlation, drawdown, capacity, liquidity, and turnover controls.
 - Native factor research, regime, and allocator explanations.
+- A sole execution gateway with ordered risk gates, duplicate-intent rejection, and audit records.
+- A deterministic Local Paper Broker with accepted, rejected, full-fill, partial-fill, expiry, slippage, and fee behavior.
+- Internal netting with separate Internal Transfer records and residual broker demand.
+- Deterministic partial-fill allocation, minimum-fill handling, full-or-zero behavior, and Allocation Shortfall records.
+- Per-strategy virtual ledgers with ownership, cost basis, realized and unrealized profit and loss, capital usage, and risk contribution.
+- Fixture-based reconciliation, persistent critical risk events, symbol risk blocks, and non-trading diagnostics.
+- Native read-only Portfolio and Execution screens on macOS and Windows.
 - English-only ASCII repository validation.
 
 Not yet available:
 
-- Final portfolio construction, internal netting, and partial-fill allocation.
 - Real broker execution.
 - Broker order submission.
+- Verified Longbridge Terminal authentication and execution command mapping.
 - Manual order entry.
 
-`Live` can be selected only when the Global Live Lock and a bounded authorization both pass validation. The Live broker adapter still rejects every submission, and no UI path can create a manual order.
+`Live` can be selected only when the Global Live Lock and a bounded authorization both pass validation. The Live Longbridge adapter still rejects every submission without starting a process, and no UI path can create a manual order. Local Paper does not require Longbridge CLI, authentication, connectivity, or an account.
 
 ## Native desktop editions
 
@@ -114,9 +121,10 @@ The public DMG uses ad hoc signing unless release signing variables are supplied
 ## Install on Windows 11
 
 1. Download `Cytisus-Trading-1.1.0-win11-x64.exe`.
-2. Run the executable directly.
+2. Run the installer and choose the destination.
+3. Launch Cytisus-Trading from the Start menu.
 
-The Windows executable is self-contained and does not require a separate .NET installation. Unsigned builds can trigger Microsoft Defender SmartScreen. Verify the release source and checksum before running the file.
+The installed Windows application is self-contained and does not require a separate .NET installation. The release workflow supports Authenticode signing when repository signing secrets are configured. Unsigned builds can trigger Microsoft Defender SmartScreen; a clean source tree alone cannot establish Microsoft reputation.
 
 ## Build the macOS DMG
 
@@ -143,7 +151,7 @@ tools/build_dmg.sh
 
 ## Build the Windows 11 executable
 
-Install the .NET 8 SDK on Windows 11, then run:
+Install the .NET 8 SDK and Inno Setup 6 on Windows 11, then run:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/build_win11.ps1
@@ -155,6 +163,10 @@ Output:
 dist/Cytisus-Trading-1.1.0-win11-x64.exe
 ```
 
+With Inno Setup present, this artifact is a standard English install wizard containing the self-contained single-file application. Without Inno Setup, the local script emits a development single-file fallback. Release CI installs Inno Setup and always builds the wizard.
+
+Authenticode is optional and requires repository-controlled certificate secrets. Configure `WINDOWS_SIGNING_CERTIFICATE_BASE64`, `WINDOWS_SIGNING_CERTIFICATE_PASSWORD`, and optionally `WINDOWS_SIGNING_TIMESTAMP_URL` to sign both the installed application and installer. Signing is required for publisher identity, but Microsoft SmartScreen reputation is established externally over time and cannot be guaranteed by source code.
+
 ## Focused checks
 
 Run:
@@ -165,9 +177,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_json.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_prompt2.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_prompt3.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_prompt4.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_prompt5.ps1
 ```
 
-The Windows application also supports `--prompt4-smoke`. The Prompt 4 smoke covers DSL temporal safety and reproducibility, bounded beam search, failed-trial retention, lifecycle guards, normalized regime probabilities, uncertainty-driven risk contraction, capped alpha tilt, and deterministic allocation.
+The Prompt 5 smoke is deliberately small: one complete strategy-intent-to-Local-Paper-fill cycle, one internal-netting case, one partial-fill allocation case, one reconciliation case, one assertion that unavailable Longbridge CLI does not block Local Paper, and one assertion that the Live adapter remains rejecting.
 
 ## Privacy and security
 
@@ -175,8 +188,9 @@ The Windows application also supports `--prompt4-smoke`. The Prompt 4 smoke cove
 - Local CLI mode never reads or stores Longbridge token files.
 - Optional broker-position snapshots are used only for Reduce Only universe behavior and are not cached.
 - No tokens, credentials, certificates, or authorization output.
-- No Live broker submission.
-- Registered strategy manifests and state, parameter history, bounded Live authorizations, factor definitions and trials, non-sensitive settings, market cache records, universe snapshots, operational logs, and audit events are stored locally.
+- Local Paper never invokes Longbridge CLI or a Live adapter.
+- Live broker submission remains unavailable and process-free.
+- Registered strategy manifests and state, Local Paper execution records, virtual ledgers, parameter history, bounded Live authorizations, factor definitions and trials, non-sensitive settings, market cache records, universe snapshots, operational logs, and audit events are stored locally.
 - Factor demo state resets deterministically from repository fixtures.
 
 See [PRIVACY.md](PRIVACY.md) and [SANITIZATION.json](SANITIZATION.json).

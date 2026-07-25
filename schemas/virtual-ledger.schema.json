@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/KDTikkly/Cytisus-Trading/schemas/virtual-ledger.schema.json",
+  "title": "Cytisus Virtual Ledger Position",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "strategy_id",
+    "symbol",
+    "target_position",
+    "virtual_quantity",
+    "cost_basis",
+    "realized_pnl",
+    "unrealized_pnl",
+    "capital_usage",
+    "risk_contribution",
+    "intent_ids",
+    "allocation_ids",
+    "internal_transfer_ids",
+    "updated_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "strategy_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "symbol": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target_position": {
+      "type": "number"
+    },
+    "virtual_quantity": {
+      "type": "number"
+    },
+    "cost_basis": {
+      "type": "number"
+    },
+    "realized_pnl": {
+      "type": "number"
+    },
+    "unrealized_pnl": {
+      "type": "number"
+    },
+    "capital_usage": {
+      "type": "number",
+      "minimum": 0
+    },
+    "risk_contribution": {
+      "type": "number",
+      "minimum": 0
+    },
+    "intent_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "allocation_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "internal_transfer_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -2,7 +2,7 @@ namespace CytisusTrading.Windows;
 
 public sealed record StoreSchemaVersion(int Version)
 {
-    public static StoreSchemaVersion Current { get; } = new(4);
+    public static StoreSchemaVersion Current { get; } = new(5);
 }
 
 public sealed record MigrationRecord(
@@ -77,4 +77,10 @@ public interface IFactorResearchStore
     void SaveFactorDefinitions(IReadOnlyList<FactorDefinition> definitions);
     IReadOnlyList<FactorTrial> LoadFactorTrials(int limit);
     void AppendFactorTrial(FactorTrial trial);
+}
+
+public interface IExecutionStore
+{
+    ExecutionStateSnapshot LoadExecutionState();
+    void SaveExecutionState(ExecutionStateSnapshot state);
 }

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/KDTikkly/Cytisus-Trading/schemas/reconciliation-event.schema.json",
+  "title": "Cytisus Reconciliation Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "reconciliation_id",
+    "symbol",
+    "virtual_quantity",
+    "broker_quantity",
+    "difference",
+    "status",
+    "blocks_new_risk",
+    "diagnostic",
+    "correlation_id",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "reconciliation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "symbol": {
+      "type": "string",
+      "minLength": 1
+    },
+    "virtual_quantity": {
+      "type": "number"
+    },
+    "broker_quantity": {
+      "type": "number"
+    },
+    "difference": {
+      "type": "number"
+    },
+    "status": {
+      "enum": [
+        "Reconciled",
+        "Mismatch"
+      ]
+    },
+    "blocks_new_risk": {
+      "type": "boolean"
+    },
+    "diagnostic": {
+      "type": "string",
+      "minLength": 1
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

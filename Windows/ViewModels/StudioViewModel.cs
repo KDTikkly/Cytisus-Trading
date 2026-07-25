@@ -37,9 +37,9 @@ public sealed class StudioViewModel : ObservableObject
     private StrategyItemViewModel? _selectedStrategy;
     private string _strategyManifestPath = string.Empty;
     private string _strategyStatusMessage =
-        "Official fixture strategy is ready in Paper Only.";
+        "Official fixture strategy is ready in Local Paper.";
     private string _latestStrategyAlert =
-        "Live broker submission is disabled until Prompt 5.";
+        "Local Paper is available without Longbridge CLI. Live remains rejecting.";
     private string _logSearchText = string.Empty;
     private string _selectedLogSeverity = "All";
     private LiveToPaperTransition _selectedTransition =
@@ -49,6 +49,8 @@ public sealed class StudioViewModel : ObservableObject
     private NormalizedResearchDataset? _researchDataset;
     private RegimeSnapshot? _regimeSnapshot;
     private CapitalAllocationResult? _capitalAllocation;
+    private ExecutionStateSnapshot _executionState =
+        ExecutionStateSnapshot.Empty;
     private string _candidateSearchStatus =
         "Tiny deterministic search has not run.";
 
@@ -90,6 +92,7 @@ public sealed class StudioViewModel : ObservableObject
         }
         InitializeStrategies();
         InitializeResearch();
+        InitializeExecution();
 
         AppendLog(
             ApplicationLogLevel.Info,
@@ -118,6 +121,54 @@ public sealed class StudioViewModel : ObservableObject
         new();
     public ObservableCollection<string> LogSeverityOptions { get; } =
         new(new[] { "All", "Debug", "Info", "Warning", "Error", "Critical" });
+
+    public IReadOnlyList<TradeIntent> ExecutionIntents =>
+        _executionState.Intents;
+    public IReadOnlyList<RiskDecision> ExecutionRiskDecisions =>
+        _executionState.RiskDecisions;
+    public IReadOnlyList<InternalTransfer> ExecutionTransfers =>
+        _executionState.InternalTransfers;
+    public IReadOnlyList<BrokerOrder> ExecutionOrders =>
+        _executionState.BrokerOrders;
+    public IReadOnlyList<BrokerFill> ExecutionFills =>
+        _executionState.BrokerFills;
+    public IReadOnlyList<VirtualAllocation> ExecutionAllocations =>
+        _executionState.VirtualAllocations;
+    public IReadOnlyList<AllocationShortfall> ExecutionShortfalls =>
+        _executionState.AllocationShortfalls;
+    public IReadOnlyList<VirtualLedgerPosition> VirtualLedgerPositions =>
+        _executionState.LedgerPositions;
+    public IReadOnlyList<ReconciliationEvent> ReconciliationEvents =>
+        _executionState.Reconciliations;
+    public IReadOnlyList<CriticalRiskEvent> CriticalRiskEvents =>
+        _executionState.RiskEvents;
+    public IReadOnlyList<BrokerNetPositionView> BrokerNetPositions =>
+        _executionState.LedgerPositions
+            .GroupBy(position => position.Symbol, StringComparer.Ordinal)
+            .Select(group =>
+            {
+                var latest = _executionState.Reconciliations
+                    .LastOrDefault(item => item.Symbol == group.Key);
+                return new BrokerNetPositionView(
+                    group.Key,
+                    latest?.BrokerQuantity ??
+                        group.Sum(position =>
+                            position.VirtualQuantity),
+                    latest?.Status ??
+                        ReconciliationStatus.Reconciled);
+            })
+            .OrderBy(item => item.Symbol, StringComparer.Ordinal)
+            .ToArray();
+    public string ExecutionSafetyStatus =>
+        "Local Paper is independent from Longbridge CLI. Live submission is intentionally rejecting.";
+    public string PersistentExecutionAlert =>
+        _executionState.BlockedSymbols.Count == 0
+            ? "No unresolved reconciliation risk event."
+            : _executionState.RiskEvents.LastOrDefault(item =>
+                _executionState.BlockedSymbols.Contains(
+                    item.Symbol,
+                    StringComparer.Ordinal))?.Message ??
+              "An unresolved reconciliation risk event blocks new risk.";
 
     public string CandidateSearchStatus
     {
@@ -168,10 +219,11 @@ public sealed class StudioViewModel : ObservableObject
                     strategy.Mode = StrategyMode.PaperOnly;
                     strategy.LiveToPaperTransition =
                         LiveToPaperTransition.StopOpeningRisk;
+                    strategy.BlocksNewRisk = true;
                     SaveStrategy(strategy);
                 }
                 LatestStrategyAlert =
-                    "Global Live Lock is OFF. All strategies are Paper Only.";
+                    "Global Live Lock is OFF. All strategies use Local Paper.";
             }
             PersistSettings();
             Raise(nameof(GlobalLiveLockStatus));
@@ -189,7 +241,7 @@ public sealed class StudioViewModel : ObservableObject
 
     public string GlobalLiveLockStatus => GlobalLiveLock
         ? "ON: authorized strategies may select Live mode"
-        : "OFF: every strategy remains Paper Only";
+        : "OFF: every strategy remains in Local Paper";
     public string GlobalLiveLockLabel => GlobalLiveLock ? "ON" : "OFF";
 
     public StrategyItemViewModel? SelectedStrategy
@@ -622,7 +674,7 @@ public sealed class StudioViewModel : ObservableObject
         {
             strategy.RuntimeState = StrategyRuntimeState.Ready;
             StrategyStatusMessage =
-                "Official strategy is ready. Run a deterministic Paper cycle.";
+                "Official strategy is ready. Run a deterministic Local Paper cycle.";
             SaveStrategy(strategy);
             return;
         }
@@ -730,7 +782,7 @@ public sealed class StudioViewModel : ObservableObject
         if (strategy.Mode != StrategyMode.PaperOnly)
         {
             LatestStrategyAlert =
-                "The fixture Paper cycle cannot run while Live mode is selected.";
+                "The Local Paper cycle cannot run while Live mode is selected.";
             return;
         }
         if (strategy.Manifest.Source != StrategySource.Official)
@@ -783,9 +835,10 @@ public sealed class StudioViewModel : ObservableObject
             }
             SaveStrategy(strategy);
             StrategyStatusMessage =
-                "Deterministic Paper cycle completed through the NDJSON protocol.";
+                "Deterministic Local Paper cycle completed through the NDJSON protocol and execution gateway.";
             LatestStrategyAlert =
-                "Paper intent recorded. No Live adapter was invoked.";
+                "Local Paper intents were risk-checked, filled, allocated, and reconciled without invoking Longbridge CLI.";
+            ProcessOfficialLocalPaperIntents(strategy, result.Intents);
             AppendAudit(
                 "PaperStrategyCycleCompleted",
                 new Dictionary<string, string>
@@ -807,9 +860,38 @@ public sealed class StudioViewModel : ObservableObject
             strategy.Health = HealthState.Unhealthy;
             strategy.BlocksNewRisk = true;
             LatestStrategyAlert =
-                $"Paper cycle rejected: {SensitiveDataRedactor.Redact(exception.Message)}";
+                $"Local Paper cycle rejected: {SensitiveDataRedactor.Redact(exception.Message)}";
             SaveStrategy(strategy);
         }
+    }
+
+    public void RunReconciliationDiagnostic()
+    {
+        var brokerPositions = _executionState.LedgerPositions
+            .GroupBy(position => position.Symbol, StringComparer.Ordinal)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Sum(position => position.VirtualQuantity),
+                StringComparer.Ordinal);
+        var result = _services.Reconciliation.Reconcile(
+            _executionState.LedgerPositions,
+            brokerPositions,
+            "diagnostic-local-paper",
+            DateTimeOffset.UtcNow);
+        var mismatchCount = result.Events.Count(item =>
+            item.Status == ReconciliationStatus.Mismatch);
+        LatestStrategyAlert = mismatchCount == 0
+            ? "Local Paper reconciliation diagnostic passed without trading."
+            : $"Reconciliation diagnostic found {mismatchCount} mismatch(es).";
+        AppendAudit(
+            "LocalPaperReconciliationDiagnostic",
+            new Dictionary<string, string>
+            {
+                ["mismatch_count"] =
+                    mismatchCount.ToString(EnglishCulture),
+                ["trading_action"] = "false"
+            },
+            AuditEventCategory.Reconciliation);
     }
 
     public void ApplyParameterChange(StrategyParameterViewModel parameter)
@@ -906,7 +988,7 @@ public sealed class StudioViewModel : ObservableObject
         strategy.Mode = result.Mode;
         StrategyStatusMessage = result.Message;
         LatestStrategyAlert = result.Accepted
-            ? "Live selected, but the broker adapter remains a rejecting stub."
+            ? "Live selected, but the Longbridge adapter remains intentionally rejecting."
             : result.Message;
         SaveStrategy(strategy);
         AppendModeAudit(strategy, result);
@@ -920,6 +1002,7 @@ public sealed class StudioViewModel : ObservableObject
         {
             return;
         }
+        var wasLive = strategy.Mode == StrategyMode.Live;
         var result = _services.StrategyModeService.SelectMode(
             StrategyMode.PaperOnly,
             GlobalLiveLock,
@@ -930,6 +1013,7 @@ public sealed class StudioViewModel : ObservableObject
             DateTimeOffset.UtcNow);
         strategy.Mode = StrategyMode.PaperOnly;
         strategy.LiveToPaperTransition = SelectedTransition;
+        strategy.BlocksNewRisk = true;
         if (SelectedTransition == LiveToPaperTransition.Freeze)
         {
             strategy.RuntimeState = StrategyRuntimeState.Paused;
@@ -938,13 +1022,19 @@ public sealed class StudioViewModel : ObservableObject
         LatestStrategyAlert = SelectedTransition switch
         {
             LiveToPaperTransition.StopOpeningRisk =>
-                "Paper Only: new real risk is blocked; existing-position management state is retained.",
+                "Local Paper: new risk is blocked while existing virtual positions remain manageable.",
             LiveToPaperTransition.Freeze =>
-                "Paper Only: strategy is frozen. No orders were generated.",
+                "Local Paper: the strategy is frozen and no order was generated.",
             LiveToPaperTransition.ControlledExit =>
-                "Paper Only: controlled automated exit is recorded as intent only; no real order was generated.",
+                "Local Paper: controlled exit policy is ready.",
             _ => result.Message
         };
+        if (wasLive &&
+            SelectedTransition ==
+                LiveToPaperTransition.ControlledExit)
+        {
+            RunControlledLocalPaperExit(strategy);
+        }
         SaveStrategy(strategy);
         AppendModeAudit(strategy, result);
         RaiseDashboard();
@@ -1507,6 +1597,280 @@ public sealed class StudioViewModel : ObservableObject
         RaiseDashboard();
     }
 
+    private void InitializeExecution()
+    {
+        try
+        {
+            _executionState = _services.ExecutionStore.LoadExecutionState();
+            if (_executionState.Intents.Count == 0 &&
+                _executionState.LedgerPositions.Count == 0)
+            {
+                var fixture =
+                    _services.ExecutionFixtures.LoadPaperGatewayFixture();
+                var seeded = ExecutionStateSnapshot.Empty with
+                {
+                    LedgerPositions = fixture.StartingLedger
+                        .Select(item => new VirtualLedgerPosition(
+                            1,
+                            item.StrategyId,
+                            fixture.Symbol,
+                            item.VirtualQuantity,
+                            item.VirtualQuantity,
+                            item.CostBasis,
+                            0,
+                            (fixture.ReferencePrice - item.CostBasis) *
+                                item.VirtualQuantity,
+                            item.VirtualQuantity * fixture.ReferencePrice,
+                            0,
+                            Array.Empty<string>(),
+                            Array.Empty<string>(),
+                            Array.Empty<string>(),
+                            fixture.AsOf))
+                        .ToArray()
+                };
+                _services.ExecutionStore.SaveExecutionState(seeded);
+                var contexts = fixture.Intents
+                    .Select(intent => intent.StrategyId)
+                    .Distinct(StringComparer.Ordinal)
+                    .ToDictionary(
+                        strategyId => strategyId,
+                        _ => LocalPaperContext(
+                            fixture.Market,
+                            fixture.AsOf,
+                            1_000_000m,
+                            1),
+                        StringComparer.Ordinal);
+                var result = _services.ExecutionGateway.Process(
+                    fixture.Intents,
+                    contexts,
+                    fixture.ReferencePrice,
+                    fixture.ReferencePriceSource,
+                    new PaperBrokerConfiguration(
+                        fixture.PaperFillRatio,
+                        2,
+                        0.005m,
+                        0.25m,
+                        false,
+                        false),
+                    RejectingLiveConfiguration(),
+                    new Dictionary<string, decimal>(
+                        StringComparer.Ordinal)
+                    {
+                        [fixture.Symbol] =
+                            fixture.StartingBrokerQuantity
+                    });
+                _executionState = result.State;
+            }
+            RaiseExecution();
+        }
+        catch (Exception exception)
+        {
+            LatestStrategyAlert =
+                "Local Paper fixture initialization failed safely: " +
+                SensitiveDataRedactor.Redact(exception.Message);
+        }
+    }
+
+    private void ProcessOfficialLocalPaperIntents(
+        StrategyItemViewModel strategy,
+        IReadOnlyList<StrategyIntentRecord> records)
+    {
+        if (records.Count == 0)
+        {
+            return;
+        }
+        var fixture = _services.ExecutionFixtures.LoadPaperGatewayFixture();
+        var capitalBudget = Math.Max(
+            (decimal)strategy.CapitalBudget,
+            100_000m);
+        var existingBySymbol = _executionState.LedgerPositions
+            .Where(position =>
+                position.StrategyId == strategy.StrategyId)
+            .ToDictionary(
+                position => position.Symbol,
+                position => position.VirtualQuantity,
+                StringComparer.Ordinal);
+        var intents = records.Select(record =>
+        {
+            var desiredQuantity =
+                capitalBudget *
+                (decimal)record.TargetWeight /
+                fixture.ReferencePrice;
+            var requestedQuantity = desiredQuantity -
+                existingBySymbol.GetValueOrDefault(record.Symbol);
+            return new TradeIntent(
+                1,
+                record.IntentId,
+                strategy.StrategyId,
+                strategy.Manifest.Version,
+                record.CycleId,
+                $"{DefaultMarket}-{record.Timestamp:yyyy-MM-dd}",
+                record.Symbol,
+                Math.Round(requestedQuantity, 4),
+                record.Priority,
+                record.AllowPartial,
+                0.0001m,
+                60,
+                record.ReasonCode,
+                strategy.ParameterVersion,
+                record.Timestamp);
+        })
+        .Where(intent => intent.AbsoluteQuantity > 0.0001m)
+        .ToArray();
+        if (intents.Length == 0)
+        {
+            return;
+        }
+        var now = DateTimeOffset.UtcNow;
+        var contexts = new Dictionary<string, ExecutionGatewayContext>(
+            StringComparer.Ordinal)
+        {
+            [strategy.StrategyId] = LocalPaperContext(
+                DefaultMarket,
+                now,
+                capitalBudget,
+                strategy.ParameterVersion,
+                strategy.BlocksNewRisk,
+                strategy.LiveToPaperTransition)
+        };
+        var brokerPositions = _executionState.LedgerPositions
+            .GroupBy(position => position.Symbol, StringComparer.Ordinal)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Sum(position => position.VirtualQuantity),
+                StringComparer.Ordinal);
+        var gatewayResult = _services.ExecutionGateway.Process(
+            intents,
+            contexts,
+            fixture.ReferencePrice,
+            fixture.ReferencePriceSource,
+            new PaperBrokerConfiguration(
+                1,
+                2,
+                0.005m,
+                0.25m,
+                false,
+                false),
+            RejectingLiveConfiguration(),
+            brokerPositions);
+        _executionState = gatewayResult.State;
+        RaiseExecution();
+    }
+
+    private static ExecutionGatewayContext LocalPaperContext(
+        string market,
+        DateTimeOffset now,
+        decimal capitalBudget,
+        int parameterVersion,
+        bool transitionActive = false,
+        LiveToPaperTransition transitionPolicy =
+            LiveToPaperTransition.StopOpeningRisk)
+    {
+        return new ExecutionGatewayContext(
+            StrategyMode.PaperOnly,
+            false,
+            null,
+            true,
+            true,
+            HealthState.Healthy,
+            capitalBudget,
+            capitalBudget,
+            false,
+            false,
+            true,
+            parameterVersion,
+            market,
+            now,
+            TransitionActive: transitionActive,
+            TransitionPolicy: transitionPolicy);
+    }
+
+    private void RunControlledLocalPaperExit(
+        StrategyItemViewModel strategy)
+    {
+        var positions = _executionState.LedgerPositions
+            .Where(item =>
+                item.StrategyId == strategy.StrategyId &&
+                item.VirtualQuantity != 0)
+            .ToArray();
+        if (positions.Length == 0)
+        {
+            LatestStrategyAlert =
+                "Local Paper controlled exit completed with no virtual position to close.";
+            return;
+        }
+        var fixture = _services.ExecutionFixtures
+            .LoadPaperGatewayFixture();
+        var now = DateTimeOffset.UtcNow;
+        var cycleId =
+            $"local-paper-controlled-exit-{now.ToUnixTimeMilliseconds()}";
+        var intents = positions.Select((position, index) =>
+            new TradeIntent(
+                1,
+                $"{cycleId}-{index + 1}",
+                strategy.StrategyId,
+                strategy.Manifest.Version,
+                cycleId,
+                $"{DefaultMarket}-{now:yyyy-MM-dd}",
+                position.Symbol,
+                -position.VirtualQuantity,
+                int.MaxValue - index,
+                false,
+                Math.Abs(position.VirtualQuantity),
+                60,
+                "live_to_local_paper_controlled_exit",
+                strategy.ParameterVersion,
+                now))
+            .ToArray();
+        var brokerPositions = _executionState.LedgerPositions
+            .GroupBy(item => item.Symbol, StringComparer.Ordinal)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Sum(item => item.VirtualQuantity),
+                StringComparer.Ordinal);
+        var exposure = positions.Sum(item =>
+            Math.Abs(item.VirtualQuantity) *
+            fixture.ReferencePrice);
+        var result = _services.ExecutionGateway.Process(
+            intents,
+            new Dictionary<string, ExecutionGatewayContext>(
+                StringComparer.Ordinal)
+            {
+                [strategy.StrategyId] = LocalPaperContext(
+                    DefaultMarket,
+                    now,
+                    Math.Max(exposure, 1m),
+                    strategy.ParameterVersion,
+                    true,
+                    LiveToPaperTransition.ControlledExit)
+            },
+            fixture.ReferencePrice,
+            fixture.ReferencePriceSource,
+            new PaperBrokerConfiguration(
+                1,
+                2,
+                0.005m,
+                0.25m,
+                false,
+                false),
+            RejectingLiveConfiguration(),
+            brokerPositions);
+        _executionState = result.State;
+        LatestStrategyAlert =
+            "Local Paper controlled exit generated policy intents, simulated fills, and reconciled the virtual ledger. No real order was sent.";
+        RaiseExecution();
+    }
+
+    private LiveAdapterConfiguration RejectingLiveConfiguration()
+    {
+        return new LiveAdapterConfiguration(
+            false,
+            true,
+            string.Empty,
+            TimeSpan.FromSeconds(5),
+            _services.ExecutionFixtures.LoadExecutionCapability());
+    }
+
     private void InitializeResearch()
     {
         try
@@ -1899,6 +2263,22 @@ public sealed class StudioViewModel : ObservableObject
         Raise(nameof(CurrentStrategyMode));
     }
 
+    private void RaiseExecution()
+    {
+        Raise(nameof(ExecutionIntents));
+        Raise(nameof(ExecutionRiskDecisions));
+        Raise(nameof(ExecutionTransfers));
+        Raise(nameof(ExecutionOrders));
+        Raise(nameof(ExecutionFills));
+        Raise(nameof(ExecutionAllocations));
+        Raise(nameof(ExecutionShortfalls));
+        Raise(nameof(VirtualLedgerPositions));
+        Raise(nameof(BrokerNetPositions));
+        Raise(nameof(ReconciliationEvents));
+        Raise(nameof(CriticalRiskEvents));
+        Raise(nameof(PersistentExecutionAlert));
+    }
+
     private static void ReplaceCollection<T>(
         ObservableCollection<T> collection,
         IEnumerable<T> values)
@@ -1921,3 +2301,8 @@ public sealed class StudioViewModel : ObservableObject
         return options;
     }
 }
+
+public sealed record BrokerNetPositionView(
+    string Symbol,
+    decimal Quantity,
+    ReconciliationStatus Status);

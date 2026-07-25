@@ -603,7 +603,7 @@ final class StrategyModeService: StrategyModeServicing {
             return ModeSelectionResult(
                 accepted: true,
                 mode: .paperOnly,
-                message: "Paper Only mode selected. No Live adapter can be reached."
+                message: "Local Paper selected. It does not require or invoke Longbridge CLI."
             )
         }
         guard globalLiveLock else {
@@ -637,7 +637,7 @@ final class StrategyModeService: StrategyModeServicing {
         return ModeSelectionResult(
             accepted: true,
             mode: .live,
-            message: "Live mode is selected, but broker submission remains disabled until Prompt 5."
+            message: "Live mode is selected, but the Longbridge adapter remains intentionally rejecting until v1.1.3 command verification."
         )
     }
 
@@ -660,7 +660,7 @@ final class RejectingLiveBrokerAdapter: LiveBrokerAdapting {
 
     func submit(_ intent: StrategyIntentRecord) -> String {
         submissionAttempts += 1
-        return "Rejected: Live broker submission is disabled until Prompt 5."
+        return "Rejected: Live broker submission remains unavailable pending v1.1.3 command verification."
     }
 }
 
@@ -788,7 +788,7 @@ final class OfficialFixtureStrategyRuntime: OfficialStrategyRuntimeServicing {
                 liveAdapter: liveAdapter
             ) == "PaperLifecycleRecorded" else {
                 throw StrategyProtocolError.runtime(
-                    "Paper mode reached a Live adapter."
+                    "Local Paper reached a Live adapter."
                 )
             }
         }

@@ -1469,3 +1469,11 @@ v1.1 is complete only when:
 - Windows release build succeeds.
 - README and privacy documents describe actual v1.1 behavior.
 - The final report identifies any unimplemented limitation honestly.
+
+## 37. Implemented v1.1.0 release boundary
+
+The user-facing label for the serialized `PaperOnly` state is `Local Paper`. Local Paper is fully independent from Longbridge CLI installation, authentication, connectivity, capability support, and account availability.
+
+v1.1.0 implements the sole execution gateway, deterministic Local Paper Broker, internal netting, partial-fill allocation, virtual strategy ledger, reconciliation risk blocks, persistent alerts, non-trading diagnostics, and read-only Portfolio and Execution views on both native platforms.
+
+The Live Longbridge adapter is an intentional process-free rejecting boundary in v1.1.0. Real order submission was not validated. Longbridge Terminal authentication, verified command mapping, and any separate Longbridge Paper account channel are deferred to v1.1.3.

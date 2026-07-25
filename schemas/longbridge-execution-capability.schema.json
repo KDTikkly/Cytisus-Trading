@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/KDTikkly/Cytisus-Trading/schemas/longbridge-execution-capability.schema.json",
+  "title": "Cytisus Longbridge Execution Capability",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source_version",
+    "synthetic_fixture",
+    "supports_machine_readable_output",
+    "supports_order_submission",
+    "argument_template",
+    "message"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "source_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "synthetic_fixture": {
+      "type": "boolean"
+    },
+    "supports_machine_readable_output": {
+      "type": "boolean"
+    },
+    "supports_order_submission": {
+      "type": "boolean"
+    },
+    "argument_template": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 256
+      }
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

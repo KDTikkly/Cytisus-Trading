@@ -11,7 +11,8 @@ public sealed class JsonFilePersistentStore :
     IAuditEventStore,
     IMigrationStore,
     IStrategyStateStore,
-    IFactorResearchStore
+    IFactorResearchStore,
+    IExecutionStore
 {
     private readonly string _rootDirectory;
     private readonly object _gate = new();
@@ -35,6 +36,8 @@ public sealed class JsonFilePersistentStore :
         Path.Combine(_rootDirectory, "factor-definitions.json");
     private string FactorTrialsPath =>
         Path.Combine(_rootDirectory, "factor-trials.ndjson");
+    private string ExecutionStatePath =>
+        Path.Combine(_rootDirectory, "execution-state.json");
 
     public JsonFilePersistentStore(string rootDirectory)
     {
@@ -347,6 +350,24 @@ public sealed class JsonFilePersistentStore :
     public void AppendFactorTrial(FactorTrial trial)
     {
         AppendLine(FactorTrialsPath, trial);
+    }
+
+    public ExecutionStateSnapshot LoadExecutionState()
+    {
+        lock (_gate)
+        {
+            return File.Exists(ExecutionStatePath)
+                ? ReadDocument<ExecutionStateSnapshot>(ExecutionStatePath)
+                : ExecutionStateSnapshot.Empty;
+        }
+    }
+
+    public void SaveExecutionState(ExecutionStateSnapshot state)
+    {
+        lock (_gate)
+        {
+            WriteDocument(ExecutionStatePath, state);
+        }
     }
 
     private static JsonSerializerOptions CreateOptions(bool writeIndented)

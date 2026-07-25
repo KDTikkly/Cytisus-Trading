@@ -141,7 +141,7 @@ public sealed class OfficialFixtureStrategyRuntime :
                     StringComparison.Ordinal))
             {
                 throw new InvalidOperationException(
-                    "Paper mode reached a Live adapter.");
+                    "Local Paper reached a Live adapter.");
             }
         }
 
@@ -170,10 +170,10 @@ public sealed class OfficialFixtureStrategyRuntime :
                 "official-paper-cycle.ndjson",
                 StringComparison.OrdinalIgnoreCase))
             ?? throw new FileNotFoundException(
-                "Official Paper cycle fixture is unavailable.");
+                "Official Local Paper cycle fixture is unavailable.");
         using var stream = _assembly.GetManifestResourceStream(resourceName)
             ?? throw new FileNotFoundException(
-                "Official Paper cycle fixture stream is unavailable.");
+                "Official Local Paper cycle fixture stream is unavailable.");
         using var reader = new StreamReader(
             stream,
             Encoding.UTF8,

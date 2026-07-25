@@ -88,7 +88,7 @@
                             <TextBlock Text="Cytisus-Trading"
                                        FontWeight="SemiBold"
                                        FontSize="15" />
-                            <TextBlock Text="v1.1 Data Foundation"
+                            <TextBlock Text="v1.1 Automated Operations"
                                        Foreground="{StaticResource SecondaryTextBrush}"
                                        FontSize="11"
                                        Margin="0,3,0,0" />
@@ -180,6 +180,62 @@
                             </Grid>
                         </Button>
 
+                        <Button x:Name="PortfolioNav"
+                                Tag="Portfolio"
+                                Style="{StaticResource NavButton}"
+                                Click="NavButton_Click"
+                                Margin="0,0,0,5">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="34" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="24"
+                                        Height="24"
+                                        CornerRadius="7"
+                                        Background="#1854D38A"
+                                        HorizontalAlignment="Left">
+                                    <TextBlock Text="04"
+                                               Foreground="#FF54D38A"
+                                               FontSize="10"
+                                               FontWeight="Bold"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Grid.Column="1"
+                                           Text="Portfolio"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+
+                        <Button x:Name="ExecutionNav"
+                                Tag="Execution"
+                                Style="{StaticResource NavButton}"
+                                Click="NavButton_Click"
+                                Margin="0,0,0,5">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="34" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="24"
+                                        Height="24"
+                                        CornerRadius="7"
+                                        Background="#18A68BFA"
+                                        HorizontalAlignment="Left">
+                                    <TextBlock Text="05"
+                                               Foreground="{StaticResource PurpleBrush}"
+                                               FontSize="10"
+                                               FontWeight="Bold"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Grid.Column="1"
+                                           Text="Execution"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+
                         <Button x:Name="DataNav"
                                 Tag="Data"
                                 Style="{StaticResource NavButton}"
@@ -195,7 +251,7 @@
                                         CornerRadius="7"
                                         Background="#1855D7F1"
                                         HorizontalAlignment="Left">
-                                    <TextBlock Text="04"
+                                    <TextBlock Text="06"
                                                Foreground="{StaticResource AccentBrush}"
                                                FontSize="10"
                                                FontWeight="Bold"
@@ -223,7 +279,7 @@
                                         CornerRadius="7"
                                         Background="#18F7B955"
                                         HorizontalAlignment="Left">
-                                    <TextBlock Text="05"
+                                    <TextBlock Text="07"
                                                Foreground="#FFF7B955"
                                                FontSize="10"
                                                FontWeight="Bold"
@@ -251,7 +307,7 @@
                                         CornerRadius="7"
                                         Background="#18A68BFA"
                                         HorizontalAlignment="Left">
-                                    <TextBlock Text="06"
+                                    <TextBlock Text="08"
                                                Foreground="{StaticResource PurpleBrush}"
                                                FontSize="10"
                                                FontWeight="Bold"
@@ -278,7 +334,7 @@
                                         CornerRadius="7"
                                         Background="#1854D38A"
                                         HorizontalAlignment="Left">
-                                    <TextBlock Text="07"
+                                    <TextBlock Text="09"
                                                Foreground="#FF54D38A"
                                                FontSize="10"
                                                FontWeight="Bold"
@@ -336,7 +392,7 @@
                                            Style="{StaticResource EyebrowText}" />
                                 <TextBlock Text="Dashboard"
                                            Style="{StaticResource PageTitle}" />
-                                <TextBlock Text="Strategy runtime health, bounded modes, and deterministic Paper activity. Live broker submission is unavailable."
+                                <TextBlock Text="Strategy runtime health, bounded modes, and deterministic Local Paper activity. Live broker submission is unavailable."
                                            Style="{StaticResource BodySecondary}" />
                             </StackPanel>
                             <Button Grid.Column="1"
@@ -350,7 +406,7 @@
                         <UniformGrid Columns="4" Margin="0,0,0,18">
                             <Border Style="{StaticResource CardBorder}" Margin="0,0,12,0">
                                 <StackPanel>
-                                    <TextBlock Text="PAPER STRATEGIES"
+                                    <TextBlock Text="LOCAL PAPER STRATEGIES"
                                                Foreground="{StaticResource SecondaryTextBrush}"
                                                FontSize="10"
                                                FontWeight="Bold" />
@@ -819,7 +875,7 @@
                                    Style="{StaticResource EyebrowText}" />
                         <TextBlock Text="Strategies"
                                    Style="{StaticResource PageTitle}" />
-                        <TextBlock Text="Register governed strategy processes, edit schema-defined parameters, and inspect Paper outcomes. No manual order entry is provided."
+                        <TextBlock Text="Register governed strategy processes, edit schema-defined parameters, and inspect Local Paper outcomes. No manual order entry is provided."
                                    Style="{StaticResource BodySecondary}"
                                    Margin="0,0,0,22" />
 
@@ -883,7 +939,7 @@
                                                 Click="StopStrategy_Click"
                                                 Margin="0,0,7,7" />
                                     </WrapPanel>
-                                    <Button Content="Run Deterministic Paper Cycle"
+                                    <Button Content="Run Deterministic Local Paper Cycle"
                                             Style="{StaticResource PrimaryButton}"
                                             Click="RunPaperCycle_Click"
                                             Margin="0,0,0,16" />
@@ -906,7 +962,7 @@
                                                FontWeight="SemiBold"
                                                Margin="0,0,0,12" />
                                     <StackPanel Orientation="Horizontal">
-                                        <Button Content="Use Paper Only"
+                                        <Button Content="Use Local Paper"
                                                 Style="{StaticResource PrimaryButton}"
                                                 Click="UsePaper_Click"
                                                 Margin="0,0,8,0" />
@@ -922,7 +978,7 @@
                                                Style="{StaticResource BodySecondary}"
                                                TextWrapping="Wrap"
                                                Margin="0,5,0,0" />
-                                    <TextBlock Text="Live-to-Paper transition"
+                                    <TextBlock Text="Live-to-Local-Paper transition"
                                                FontSize="11"
                                                FontWeight="SemiBold"
                                                Margin="0,15,0,6" />
@@ -1084,6 +1140,382 @@
                                 </StackPanel>
                             </Border>
                         </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <ScrollViewer x:Name="PortfolioPanel"
+                              Visibility="Collapsed"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="34,30,34,38">
+                        <Grid Margin="0,0,0,22">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="LOCAL PAPER OWNERSHIP"
+                                           Style="{StaticResource EyebrowText}" />
+                                <TextBlock Text="Portfolio"
+                                           Style="{StaticResource PageTitle}" />
+                                <TextBlock Text="{Binding ExecutionSafetyStatus}"
+                                           Style="{StaticResource BodySecondary}" />
+                            </StackPanel>
+                            <Button Grid.Column="1"
+                                    Content="Run Reconciliation Diagnostic"
+                                    Style="{StaticResource PrimaryButton}"
+                                    Click="RunReconciliationDiagnostic_Click"
+                                    VerticalAlignment="Bottom"
+                                    Margin="24,0,0,2" />
+                        </Grid>
+
+                        <Border Style="{StaticResource CardBorder}"
+                                Margin="0,0,0,18">
+                            <StackPanel>
+                                <TextBlock Text="Persistent Risk Alert"
+                                           FontSize="14"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding PersistentExecutionAlert}"
+                                           Style="{StaticResource BodySecondary}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,7,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardBorder}"
+                                Padding="0"
+                                Margin="0,0,0,18">
+                            <StackPanel>
+                                <TextBlock Text="Broker Net Positions"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Margin="18,16,18,12" />
+                                <DataGrid ItemsSource="{Binding BrokerNetPositions}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          CanUserAddRows="False"
+                                          Background="Transparent"
+                                          BorderThickness="0"
+                                          MaxHeight="220">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Symbol"
+                                                            Binding="{Binding Symbol}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Quantity"
+                                                            Binding="{Binding Quantity}"
+                                                            Width="180" />
+                                        <DataGridTextColumn Header="Reconciliation"
+                                                            Binding="{Binding Status}"
+                                                            Width="180" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <Grid Margin="0,0,0,18">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0"
+                                    Style="{StaticResource CardBorder}"
+                                    Padding="0"
+                                    Margin="0,0,9,0">
+                                <StackPanel>
+                                    <TextBlock Text="Strategy Capital Allocation"
+                                               FontSize="15"
+                                               FontWeight="SemiBold"
+                                               Margin="18,16,18,12" />
+                                    <DataGrid ItemsSource="{Binding Strategies}"
+                                              AutoGenerateColumns="False"
+                                              IsReadOnly="True"
+                                              CanUserAddRows="False"
+                                              Background="Transparent"
+                                              BorderThickness="0"
+                                              MaxHeight="220">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Strategy"
+                                                                Binding="{Binding Name}"
+                                                                Width="*" />
+                                            <DataGridTextColumn Header="Budget"
+                                                                Binding="{Binding CapitalBudgetDisplay}"
+                                                                Width="110" />
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="1"
+                                    Style="{StaticResource CardBorder}"
+                                    Padding="0"
+                                    Margin="9,0,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Internal Transfers"
+                                               FontSize="15"
+                                               FontWeight="SemiBold"
+                                               Margin="18,16,18,12" />
+                                    <DataGrid ItemsSource="{Binding ExecutionTransfers}"
+                                              AutoGenerateColumns="False"
+                                              IsReadOnly="True"
+                                              CanUserAddRows="False"
+                                              Background="Transparent"
+                                              BorderThickness="0"
+                                              MaxHeight="220">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Symbol"
+                                                                Binding="{Binding Symbol}"
+                                                                Width="85" />
+                                            <DataGridTextColumn Header="Seller"
+                                                                Binding="{Binding SellerStrategyId}"
+                                                                Width="*" />
+                                            <DataGridTextColumn Header="Buyer"
+                                                                Binding="{Binding BuyerStrategyId}"
+                                                                Width="*" />
+                                            <DataGridTextColumn Header="Quantity"
+                                                                Binding="{Binding Quantity}"
+                                                                Width="85" />
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <Border Style="{StaticResource CardBorder}" Padding="0">
+                            <StackPanel>
+                                <TextBlock Text="Per-Strategy Virtual Ledger"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Margin="18,16,18,12" />
+                                <DataGrid ItemsSource="{Binding VirtualLedgerPositions}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          CanUserAddRows="False"
+                                          Background="Transparent"
+                                          BorderThickness="0"
+                                          MaxHeight="390">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Strategy"
+                                                            Binding="{Binding StrategyId}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Symbol"
+                                                            Binding="{Binding Symbol}"
+                                                            Width="90" />
+                                        <DataGridTextColumn Header="Target"
+                                                            Binding="{Binding TargetPosition}"
+                                                            Width="80" />
+                                        <DataGridTextColumn Header="Virtual"
+                                                            Binding="{Binding VirtualQuantity}"
+                                                            Width="80" />
+                                        <DataGridTextColumn Header="Cost Basis"
+                                                            Binding="{Binding CostBasis}"
+                                                            Width="85" />
+                                        <DataGridTextColumn Header="Realized"
+                                                            Binding="{Binding RealizedPnl}"
+                                                            Width="85" />
+                                        <DataGridTextColumn Header="Unrealized"
+                                                            Binding="{Binding UnrealizedPnl}"
+                                                            Width="85" />
+                                        <DataGridTextColumn Header="Capital"
+                                                            Binding="{Binding CapitalUsage}"
+                                                            Width="85" />
+                                        <DataGridTextColumn Header="Risk"
+                                                            Binding="{Binding RiskContribution}"
+                                                            Width="80" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <ScrollViewer x:Name="ExecutionPanel"
+                              Visibility="Collapsed"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="34,30,34,38">
+                        <TextBlock Text="DETERMINISTIC EXECUTION RECORD"
+                                   Style="{StaticResource EyebrowText}" />
+                        <TextBlock Text="Execution"
+                                   Style="{StaticResource PageTitle}" />
+                        <TextBlock Text="{Binding ExecutionSafetyStatus}"
+                                   Style="{StaticResource BodySecondary}"
+                                   Margin="0,0,0,22" />
+
+                        <UniformGrid Columns="4" Margin="0,0,0,18">
+                            <Border Style="{StaticResource CardBorder}" Margin="0,0,10,0">
+                                <StackPanel>
+                                    <TextBlock Text="INTENTS" Style="{StaticResource EyebrowText}" />
+                                    <TextBlock Text="{Binding ExecutionIntents.Count}" FontSize="24" Margin="0,9,0,0" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource CardBorder}" Margin="4,0,6,0">
+                                <StackPanel>
+                                    <TextBlock Text="DECISIONS" Style="{StaticResource EyebrowText}" />
+                                    <TextBlock Text="{Binding ExecutionRiskDecisions.Count}" FontSize="24" Margin="0,9,0,0" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource CardBorder}" Margin="6,0,4,0">
+                                <StackPanel>
+                                    <TextBlock Text="TRANSFERS" Style="{StaticResource EyebrowText}" />
+                                    <TextBlock Text="{Binding ExecutionTransfers.Count}" FontSize="24" Margin="0,9,0,0" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource CardBorder}" Margin="10,0,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="FILLS" Style="{StaticResource EyebrowText}" />
+                                    <TextBlock Text="{Binding ExecutionFills.Count}" FontSize="24" Margin="0,9,0,0" />
+                                </StackPanel>
+                            </Border>
+                        </UniformGrid>
+
+                        <Border Style="{StaticResource CardBorder}" Padding="0" Margin="0,0,0,18">
+                            <StackPanel>
+                                <TextBlock Text="Trade Intents and Ordered Risk Decisions"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Margin="18,16,18,12" />
+                                <DataGrid ItemsSource="{Binding ExecutionIntents}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          CanUserAddRows="False"
+                                          Background="Transparent"
+                                          BorderThickness="0"
+                                          MaxHeight="240">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Intent" Binding="{Binding IntentId}" Width="*" />
+                                        <DataGridTextColumn Header="Strategy" Binding="{Binding StrategyId}" Width="180" />
+                                        <DataGridTextColumn Header="Symbol" Binding="{Binding Symbol}" Width="85" />
+                                        <DataGridTextColumn Header="Quantity" Binding="{Binding RequestedQuantity}" Width="90" />
+                                        <DataGridTextColumn Header="Priority" Binding="{Binding Priority}" Width="70" />
+                                        <DataGridTextColumn Header="Cycle" Binding="{Binding CycleId}" Width="180" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <DataGrid ItemsSource="{Binding ExecutionRiskDecisions}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          CanUserAddRows="False"
+                                          Background="Transparent"
+                                          BorderThickness="0"
+                                          MaxHeight="240">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Decision" Binding="{Binding DecisionId}" Width="*" />
+                                        <DataGridTextColumn Header="Intent" Binding="{Binding IntentId}" Width="*" />
+                                        <DataGridTextColumn Header="Outcome" Binding="{Binding Outcome}" Width="90" />
+                                        <DataGridTextColumn Header="Reason" Binding="{Binding Reason}" Width="2*" />
+                                        <DataGridTextColumn Header="Correlation" Binding="{Binding CorrelationId}" Width="*" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardBorder}" Padding="0" Margin="0,0,0,18">
+                            <StackPanel>
+                                <TextBlock Text="Internal Netting, Broker Orders, and Local Paper Fills"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Margin="18,16,18,12" />
+                                <DataGrid ItemsSource="{Binding ExecutionTransfers}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          CanUserAddRows="False"
+                                          Background="Transparent"
+                                          BorderThickness="0"
+                                          MaxHeight="200">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Transfer" Binding="{Binding TransferId}" Width="*" />
+                                        <DataGridTextColumn Header="Seller" Binding="{Binding SellerStrategyId}" Width="180" />
+                                        <DataGridTextColumn Header="Buyer" Binding="{Binding BuyerStrategyId}" Width="180" />
+                                        <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity}" Width="90" />
+                                        <DataGridTextColumn Header="Reference" Binding="{Binding ReferencePriceSource}" Width="180" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <DataGrid ItemsSource="{Binding ExecutionOrders}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          CanUserAddRows="False"
+                                          Background="Transparent"
+                                          BorderThickness="0"
+                                          MaxHeight="200">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Order" Binding="{Binding OrderId}" Width="*" />
+                                        <DataGridTextColumn Header="Mode" Binding="{Binding ModeLabel}" Width="100" />
+                                        <DataGridTextColumn Header="State" Binding="{Binding State}" Width="110" />
+                                        <DataGridTextColumn Header="Side" Binding="{Binding Side}" Width="70" />
+                                        <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity}" Width="90" />
+                                        <DataGridTextColumn Header="Correlation" Binding="{Binding CorrelationId}" Width="*" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <DataGrid ItemsSource="{Binding ExecutionFills}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          CanUserAddRows="False"
+                                          Background="Transparent"
+                                          BorderThickness="0"
+                                          MaxHeight="200">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Fill" Binding="{Binding FillId}" Width="*" />
+                                        <DataGridTextColumn Header="Order" Binding="{Binding OrderId}" Width="*" />
+                                        <DataGridTextColumn Header="Side" Binding="{Binding Side}" Width="70" />
+                                        <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity}" Width="90" />
+                                        <DataGridTextColumn Header="Price" Binding="{Binding Price}" Width="90" />
+                                        <DataGridTextColumn Header="Fee" Binding="{Binding FeeEstimate}" Width="80" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardBorder}" Padding="0">
+                            <StackPanel>
+                                <TextBlock Text="Virtual Allocations, Shortfalls, and Reconciliation"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Margin="18,16,18,12" />
+                                <DataGrid ItemsSource="{Binding ExecutionAllocations}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          CanUserAddRows="False"
+                                          Background="Transparent"
+                                          BorderThickness="0"
+                                          MaxHeight="200">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Allocation" Binding="{Binding AllocationId}" Width="*" />
+                                        <DataGridTextColumn Header="Strategy" Binding="{Binding StrategyId}" Width="180" />
+                                        <DataGridTextColumn Header="Intent" Binding="{Binding IntentId}" Width="*" />
+                                        <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity}" Width="90" />
+                                        <DataGridTextColumn Header="Fill" Binding="{Binding FillId}" Width="*" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <DataGrid ItemsSource="{Binding ExecutionShortfalls}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          CanUserAddRows="False"
+                                          Background="Transparent"
+                                          BorderThickness="0"
+                                          MaxHeight="180">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Shortfall" Binding="{Binding ShortfallId}" Width="*" />
+                                        <DataGridTextColumn Header="Strategy" Binding="{Binding StrategyId}" Width="180" />
+                                        <DataGridTextColumn Header="Unfilled" Binding="{Binding UnfilledQuantity}" Width="90" />
+                                        <DataGridTextColumn Header="Reason" Binding="{Binding Reason}" Width="2*" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <DataGrid ItemsSource="{Binding ReconciliationEvents}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          CanUserAddRows="False"
+                                          Background="Transparent"
+                                          BorderThickness="0"
+                                          MaxHeight="200">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Reconciliation" Binding="{Binding ReconciliationId}" Width="*" />
+                                        <DataGridTextColumn Header="Symbol" Binding="{Binding Symbol}" Width="85" />
+                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100" />
+                                        <DataGridTextColumn Header="Difference" Binding="{Binding Difference}" Width="90" />
+                                        <DataGridTextColumn Header="Diagnostic" Binding="{Binding Diagnostic}" Width="2*" />
+                                        <DataGridTextColumn Header="Correlation" Binding="{Binding CorrelationId}" Width="*" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
 
@@ -1341,7 +1773,7 @@
                                            Style="{StaticResource BodySecondary}"
                                            TextWrapping="Wrap"
                                            Margin="0,6,0,0" />
-                                <TextBlock Text="Live broker submission remains disabled in this implementation pass."
+                                <TextBlock Text="Live broker submission remains intentionally rejecting until v1.1.3 command verification."
                                            Foreground="#FFF7B955"
                                            FontSize="11"
                                            Margin="0,5,0,0" />
@@ -1520,7 +1952,7 @@
                                                FontSize="10"
                                                FontWeight="Bold" />
                                     <TextBlock Grid.Column="1"
-                                               Text="Native UI, fixture data, a read-only CLI adapter, local cache, and daily universe decisions"
+                                               Text="Native UI, Local Paper execution records, fixture data, local cache, and daily universe decisions"
                                                Style="{StaticResource BodySecondary}" />
                                 </Grid>
 
@@ -1534,7 +1966,7 @@
                                                FontSize="10"
                                                FontWeight="Bold" />
                                     <TextBlock Grid.Column="1"
-                                               Text="Broker credentials, order submission, real orders, profit and loss, and account bindings"
+                                               Text="Broker credentials, real broker submission, real orders, account profit and loss, and account bindings"
                                                Style="{StaticResource BodySecondary}" />
                                 </Grid>
 
@@ -1548,7 +1980,7 @@
                                                FontSize="10"
                                                FontWeight="Bold" />
                                     <TextBlock Grid.Column="1"
-                                               Text="Non-sensitive settings, market cache, universe, logs, and audit data stay local"
+                                               Text="Non-sensitive settings, Local Paper ledger, market cache, logs, and audit data stay local"
                                                Style="{StaticResource BodySecondary}" />
                                 </Grid>
 
@@ -1562,7 +1994,7 @@
                                                FontSize="10"
                                                FontWeight="Bold" />
                                     <TextBlock Grid.Column="1"
-                                               Text="No order, cancellation, account configuration, or fund-management interfaces"
+                                               Text="Local Paper only. Live submission is rejecting and no real broker process is started"
                                                Style="{StaticResource BodySecondary}" />
                                 </Grid>
 

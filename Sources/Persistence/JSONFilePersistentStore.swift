@@ -5,7 +5,7 @@ enum PersistentStoreError: Error {
     case invalidJSONLine
 }
 
-final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEventStore, MigrationStore, StrategyStateStore, FactorResearchStore {
+final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEventStore, MigrationStore, StrategyStateStore, FactorResearchStore, ExecutionStore {
     private let rootURL: URL
     private let fileManager: FileManager
     private let encoder: JSONEncoder
@@ -26,6 +26,9 @@ final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEv
     }
     private var factorTrialsURL: URL {
         rootURL.appendingPathComponent("factor-trials.ndjson")
+    }
+    private var executionStateURL: URL {
+        rootURL.appendingPathComponent("execution-state.json")
     }
 
     init(rootURL: URL, fileManager: FileManager = .default) {
@@ -227,6 +230,20 @@ final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEv
 
     func appendFactorTrial(_ trial: FactorTrial) throws {
         try appendLine(trial, to: factorTrialsURL)
+    }
+
+    func loadExecutionState() throws -> ExecutionStateSnapshot {
+        guard fileManager.fileExists(atPath: executionStateURL.path) else {
+            return .empty
+        }
+        return try read(
+            ExecutionStateSnapshot.self,
+            from: executionStateURL
+        )
+    }
+
+    func saveExecutionState(_ state: ExecutionStateSnapshot) throws {
+        try write(state, to: executionStateURL)
     }
 
     private func read<T: Decodable>(_ type: T.Type, from url: URL) throws -> T {

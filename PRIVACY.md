@@ -1,6 +1,6 @@
 # Cytisus-Trading Privacy Statement
 
-Cytisus-Trading 1.1.0 is under active implementation. Prompt 4 adds local deterministic factor research, lifecycle evidence, regime probabilities, and strategy capital budgets. Fixture mode remains the default, and Live broker submission remains unavailable.
+Cytisus-Trading 1.1.0 implements a local deterministic automated execution path. Fixture mode remains the default, Local Paper is independent from Longbridge CLI, and Live broker submission remains unavailable.
 
 ## Current behavior
 
@@ -12,12 +12,12 @@ Cytisus-Trading 1.1.0 is under active implementation. Prompt 4 adds local determ
 - Repository fixtures contain only fictional market, factor, and position data.
 - Official and registered third-party strategies run as explicit local processes without a shell. They do not receive credentials or direct CLI access.
 - Strategy messages are size-bounded, typed, and checked for prohibited sensitive payload keys before they are logged or accepted.
-- Paper strategy intents remain local records and cannot reach the Live adapter.
-- The Global Live Lock is off by default. A bounded local authorization record is required for Live selection, but the Live adapter still rejects submission.
-- The app has no order, cancellation, fund-management, or account-configuration capability.
+- Local Paper intents, simulated orders, fills, allocations, and virtual positions remain local and cannot reach Longbridge CLI or the Live adapter.
+- The Global Live Lock is off by default. A bounded local authorization record is required for Live selection, but the Live adapter rejects without starting a process.
+- The app has no real broker order, discretionary cancellation, fund-management, or account-configuration capability.
 - Factor candidates are evaluated locally from one normalized source snapshot. Candidate search does not invoke Longbridge CLI, a network service, an LLM, or executable factor code.
 - Factor definitions and all trial results, including failures, are stored locally. They contain dataset and universe versions but no broker credentials or account identifiers.
-- Regime and capital-allocation results are deterministic local recommendations. They cannot submit or net broker orders.
+- Regime and capital-allocation results feed only the deterministic Local Paper execution gateway in this release.
 - Live broker submission is unavailable.
 
 ## Local persistence
@@ -34,6 +34,7 @@ The v1.1 foundation stores only:
 - Historical market bars and current snapshots.
 - Daily universe snapshots.
 - Factor definitions and append-only factor trial records.
+- Local Paper intents, decisions, internal transfers, simulated broker orders and fills, virtual allocations, shortfalls, virtual ledger positions, reconciliation events, and critical risk events.
 
 These files remain on the local device. They must not contain credentials, full account identifiers, raw authentication output, broker-position snapshots, or real broker instructions.
 

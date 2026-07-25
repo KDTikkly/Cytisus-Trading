@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "source_version": "synthetic-help-fixture-1.1.0",
+  "synthetic_fixture": true,
+  "supports_machine_readable_output": true,
+  "supports_order_submission": true,
+  "argument_template": [
+    "synthetic-order-submit",
+    "--symbol",
+    "{symbol}",
+    "--side",
+    "{side}",
+    "--quantity",
+    "{quantity}",
+    "--client-order-id",
+    "{correlation_id}"
+  ],
+  "message": "Synthetic typed template for isolated command-construction tests only. It is not a verified Longbridge Terminal command."
+}

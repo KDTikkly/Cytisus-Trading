@@ -2,11 +2,12 @@ Cytisus-Trading 1.1.0
 
 IMPLEMENTATION STATUS
 
-v1.1 implementation is in progress. This build starts in offline fixture mode.
+v1.1 Local Paper implementation is complete. This build starts in offline fixture mode.
 Read-only Longbridge CLI discovery, market fixtures, local caching, and daily
-universe snapshots are available. Deterministic Paper strategy cycles, factor
+universe snapshots are available. Deterministic Local Paper strategy cycles, factor
 research, regime probabilities, and governed strategy capital budgets are
-available. Final portfolio construction, broker orders, and Live execution are
+available. Internal netting, partial-fill allocation, the virtual ledger, and
+fixture reconciliation are available. Real broker orders and Live execution are
 not available.
 
 MACOS
@@ -17,7 +18,8 @@ MACOS
 WINDOWS 11
 
 1. Download "Cytisus-Trading-1.1.0-win11-x64.exe".
-2. Run the executable directly. No separate .NET runtime is required.
+2. Run the installer and choose the destination.
+3. Launch Cytisus-Trading from the Start menu. No separate .NET runtime is required.
 
 NOTES
 
@@ -29,4 +31,5 @@ NOTES
 - Local CLI mode uses only a separately installed, user-authorized Longbridge CLI.
 - Non-sensitive settings, market cache records, universe snapshots, application
   logs, audit events, factor definitions, and trial records are stored locally.
-- The app contains fictional fixtures and cannot execute trades.
+- Local Paper is independent from Longbridge CLI and cannot send real trades.
+- The Live Longbridge adapter rejects without starting a process.

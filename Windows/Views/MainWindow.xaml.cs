@@ -94,6 +94,13 @@ public partial class MainWindow : Window
         _model.RequestPaperMode();
     }
 
+    private void RunReconciliationDiagnostic_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        _model.RunReconciliationDiagnostic();
+    }
+
     private void StopRiskTransition_Checked(
         object sender,
         RoutedEventArgs e)
@@ -122,6 +129,8 @@ public partial class MainWindow : Window
         OverviewPanel.Visibility = section == "Overview" ? Visibility.Visible : Visibility.Collapsed;
         FactorsPanel.Visibility = section == "Factors" ? Visibility.Visible : Visibility.Collapsed;
         LabPanel.Visibility = section == "Lab" ? Visibility.Visible : Visibility.Collapsed;
+        PortfolioPanel.Visibility = section == "Portfolio" ? Visibility.Visible : Visibility.Collapsed;
+        ExecutionPanel.Visibility = section == "Execution" ? Visibility.Visible : Visibility.Collapsed;
         DataPanel.Visibility = section == "Data" ? Visibility.Visible : Visibility.Collapsed;
         SettingsPanel.Visibility = section == "Settings" ? Visibility.Visible : Visibility.Collapsed;
         LogsPanel.Visibility = section == "Logs" ? Visibility.Visible : Visibility.Collapsed;
@@ -132,6 +141,8 @@ public partial class MainWindow : Window
                      OverviewNav,
                      FactorsNav,
                      LabNav,
+                     PortfolioNav,
+                     ExecutionNav,
                      DataNav,
                      SettingsNav,
                      LogsNav,

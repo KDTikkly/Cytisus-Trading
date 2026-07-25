@@ -127,3 +127,7 @@ Syntax and temporal safety
 Evidence includes coverage, missing rate, task metric, stability, turnover, cost proxy, capacity proxy, existing-factor correlation, neighboring-horizon stability, counterfactual marginal contribution, OOS-window count, and multiple-testing penalty.
 
 Every attempted candidate is appended to the Trial Registry, including rejected and quarantined trials. Normal operation does not delete failed trials. Look-ahead bias, data contamination, train-test leakage, unreproducible output, a definition error, or a missing trial record requires global quarantine.
+
+## Execution integration
+
+Factor outputs never create broker commands. Lifecycle-approved strategy targets and governed capital budgets may produce structured trade intents. The sole execution gateway owns risk decisions, Local Paper netting, simulated fills, virtual allocations, ledger updates, and reconciliation. Factor search has no direct access to Longbridge CLI or either execution adapter.

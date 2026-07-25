@@ -5,6 +5,8 @@ enum StudioSection: String, CaseIterable, Identifiable {
     case overview = "Dashboard"
     case factors = "Factor Lifecycle"
     case lab = "Strategies"
+    case portfolio = "Portfolio"
+    case execution = "Execution"
     case data = "Data and Universe"
     case settings = "Settings"
     case logs = "Logs"
@@ -17,12 +19,22 @@ enum StudioSection: String, CaseIterable, Identifiable {
         case .overview: return "sparkles.rectangle.stack"
         case .factors: return "point.3.connected.trianglepath.dotted"
         case .lab: return "slider.horizontal.3"
+        case .portfolio: return "chart.pie"
+        case .execution: return "arrow.left.arrow.right.square"
         case .data: return "externaldrive.connected.to.line.below"
         case .settings: return "gearshape"
         case .logs: return "list.bullet.rectangle"
         case .privacy: return "lock.shield"
         }
     }
+}
+
+struct BrokerNetPositionSnapshot: Identifiable {
+    let symbol: String
+    let quantity: Double
+    let status: ReconciliationStatus
+
+    var id: String { symbol }
 }
 
 @MainActor
@@ -66,10 +78,11 @@ final class StudioModel: ObservableObject {
                 for strategy in strategies where strategy.mode == .live {
                     strategy.mode = .paperOnly
                     strategy.liveToPaperTransition = .stopOpeningRisk
+                    strategy.blocksNewRisk = true
                     saveStrategy(strategy)
                 }
                 latestStrategyAlert =
-                    "Global Live Lock is OFF. All strategies are Paper Only."
+                    "Global Live Lock is OFF. All strategies use Local Paper."
             }
             persistSettings()
             appendAudit(
@@ -97,9 +110,9 @@ final class StudioModel: ObservableObject {
     @Published var selectedStrategyID = ""
     @Published var strategyManifestPath = ""
     @Published private(set) var strategyStatusMessage =
-        "Official fixture strategy is ready in Paper Only."
+        "Official fixture strategy is ready in Local Paper."
     @Published private(set) var latestStrategyAlert =
-        "Live broker submission is disabled until Prompt 5."
+        "Local Paper is available without Longbridge CLI. Live remains rejecting."
     @Published var selectedTransition: LiveToPaperTransition = .stopOpeningRisk
     @Published var logSearchText = ""
     @Published var selectedLogSeverity: ApplicationLogLevel?
@@ -109,6 +122,7 @@ final class StudioModel: ObservableObject {
         "Tiny deterministic research search is ready."
     @Published private(set) var regimeSnapshot: RegimeSnapshot?
     @Published private(set) var capitalAllocation: CapitalAllocationResult?
+    @Published private(set) var executionState = ExecutionStateSnapshot.empty
 
     let liveExecutionAvailable = false
 
@@ -137,6 +151,7 @@ final class StudioModel: ObservableObject {
         applicationLogs = (try? services.logStore.loadLogs(limit: 50)) ?? []
         initializeStrategies()
         initializeResearch()
+        initializeExecution()
 
         appendLog(
             level: .info,
@@ -189,7 +204,7 @@ final class StudioModel: ObservableObject {
     var globalLiveLockStatus: String {
         globalLiveLock
             ? "ON: authorized strategies may select Live mode"
-            : "OFF: every strategy remains Paper Only"
+            : "OFF: every strategy remains in Local Paper"
     }
 
     var latestCycleDisplay: String {
@@ -284,6 +299,37 @@ final class StudioModel: ObservableObject {
         return "Risk budget \(allocation.totalRiskBudget.formatted(.currency(code: "USD").precision(.fractionLength(0)))) after regime uncertainty and capacity controls."
     }
 
+    var brokerNetPositions: [BrokerNetPositionSnapshot] {
+        Dictionary(
+            grouping: executionState.ledgerPositions,
+            by: \.symbol
+        ).map { symbol, positions in
+            let latest = executionState.reconciliations
+                .last(where: { $0.symbol == symbol })
+            return BrokerNetPositionSnapshot(
+                symbol: symbol,
+                quantity: latest?.brokerQuantity ??
+                    positions.map(\.virtualQuantity).reduce(0, +),
+                status: latest?.status ?? .reconciled
+            )
+        }
+        .sorted { $0.symbol < $1.symbol }
+    }
+
+    var persistentExecutionAlert: String {
+        guard !executionState.blockedSymbols.isEmpty else {
+            return "No unresolved reconciliation risk event."
+        }
+        return executionState.riskEvents.last(where: {
+            executionState.blockedSymbols.contains($0.symbol)
+        })?.message ??
+            "An unresolved reconciliation risk event blocks new risk."
+    }
+
+    var executionSafetyStatus: String {
+        "Local Paper is independent from Longbridge CLI. Live submission is intentionally rejecting."
+    }
+
     func runTinyFactorSearch() {
         guard let dataset = researchDataset else {
             factorSearchStatus =
@@ -373,7 +419,7 @@ final class StudioModel: ObservableObject {
         if strategy.manifest.source == .official {
             strategy.runtimeState = .ready
             strategyStatusMessage =
-                "Official strategy is ready. Run a deterministic Paper cycle."
+                "Official strategy is ready. Run a deterministic Local Paper cycle."
             saveStrategy(strategy)
             return
         }
@@ -453,7 +499,7 @@ final class StudioModel: ObservableObject {
         guard let strategy = selectedStrategy else { return }
         guard strategy.mode == .paperOnly else {
             latestStrategyAlert =
-                "The fixture Paper cycle cannot run while Live mode is selected."
+                "The Local Paper cycle cannot run while Live mode is selected."
             return
         }
         guard strategy.manifest.source == .official else {
@@ -495,9 +541,13 @@ final class StudioModel: ObservableObject {
                 )
             }
             strategyStatusMessage =
-                "Deterministic Paper cycle completed through the NDJSON protocol."
+                "Deterministic Local Paper cycle completed through the NDJSON protocol and execution gateway."
             latestStrategyAlert =
-                "Paper intent recorded. No Live adapter was invoked."
+                "Local Paper intents were risk-checked, filled, allocated, and reconciled without invoking Longbridge CLI."
+            try processOfficialLocalPaperIntents(
+                strategy: strategy,
+                records: result.intents
+            )
             appendAudit(
                 action: "PaperStrategyCycleCompleted",
                 context: [
@@ -515,9 +565,38 @@ final class StudioModel: ObservableObject {
             strategy.health = .unhealthy
             strategy.blocksNewRisk = true
             latestStrategyAlert =
-                "Paper cycle rejected: \(SensitiveDataRedactor.redact(error.localizedDescription))"
+                "Local Paper cycle rejected: \(SensitiveDataRedactor.redact(error.localizedDescription))"
         }
         saveStrategy(strategy)
+    }
+
+    func runReconciliationDiagnostic() {
+        let brokerPositions = Dictionary(
+            grouping: executionState.ledgerPositions,
+            by: \.symbol
+        ).mapValues { positions in
+            positions.map(\.virtualQuantity).reduce(0, +)
+        }
+        let result = services.reconciliation.reconcile(
+            positions: executionState.ledgerPositions,
+            brokerPositions: brokerPositions,
+            correlationId: "diagnostic-local-paper",
+            now: Date()
+        )
+        let mismatches = result.events.filter {
+            $0.status == .mismatch
+        }.count
+        latestStrategyAlert = mismatches == 0
+            ? "Local Paper reconciliation diagnostic passed without trading."
+            : "Reconciliation diagnostic found \(mismatches) mismatch(es)."
+        appendAudit(
+            action: "LocalPaperReconciliationDiagnostic",
+            context: [
+                "mismatch_count": String(mismatches),
+                "trading_action": "false"
+            ],
+            category: .reconciliation
+        )
     }
 
     func applyParameterChange(_ parameter: StrategyParameterModel) {
@@ -598,7 +677,7 @@ final class StudioModel: ObservableObject {
         strategy.mode = result.mode
         strategyStatusMessage = result.message
         latestStrategyAlert = result.accepted
-            ? "Live selected, but the broker adapter remains a rejecting stub."
+            ? "Live selected, but the Longbridge adapter remains intentionally rejecting."
             : result.message
         saveStrategy(strategy)
         appendModeAudit(strategy: strategy, result: result)
@@ -606,6 +685,7 @@ final class StudioModel: ObservableObject {
 
     func requestPaperMode() {
         guard let strategy = selectedStrategy else { return }
+        let wasLive = strategy.mode == .live
         let result = services.strategyModeService.selectMode(
             requestedMode: .paperOnly,
             globalLiveLock: globalLiveLock,
@@ -617,19 +697,28 @@ final class StudioModel: ObservableObject {
         )
         strategy.mode = .paperOnly
         strategy.liveToPaperTransition = selectedTransition
+        strategy.blocksNewRisk = true
         if selectedTransition == .freeze {
             strategy.runtimeState = .paused
         }
         switch selectedTransition {
         case .stopOpeningRisk:
             latestStrategyAlert =
-                "Paper Only: new real risk is blocked; existing-position management state is retained."
+                "Local Paper: new risk is blocked while existing virtual positions remain manageable."
         case .freeze:
             latestStrategyAlert =
-                "Paper Only: strategy is frozen. No orders were generated."
+                "Local Paper: the strategy is frozen and no order was generated."
         case .controlledExit:
             latestStrategyAlert =
-                "Paper Only: controlled automated exit is recorded as intent only; no real order was generated."
+                "Local Paper: controlled exit policy is ready."
+        }
+        if wasLive && selectedTransition == .controlledExit {
+            do {
+                try runControlledLocalPaperExit(strategy: strategy)
+            } catch {
+                latestStrategyAlert =
+                    "Local Paper controlled exit failed safely: \(SensitiveDataRedactor.redact(error.localizedDescription))"
+            }
         }
         strategyStatusMessage = result.message
         saveStrategy(strategy)
@@ -874,6 +963,282 @@ final class StudioModel: ObservableObject {
         cacheSizeDisplay = bytes < 1024
             ? "\(bytes) bytes"
             : String(format: "%.1f KB", Double(bytes) / 1024)
+    }
+
+    private func initializeExecution() {
+        do {
+            executionState = try services.executionStore.loadExecutionState()
+            if executionState.intents.isEmpty &&
+                executionState.ledgerPositions.isEmpty {
+                let fixture = try services.executionFixtures
+                    .loadPaperGatewayFixture()
+                var seeded = ExecutionStateSnapshot.empty
+                seeded.ledgerPositions = fixture.startingLedger.map {
+                    VirtualLedgerPosition(
+                        schemaVersion: 1,
+                        strategyId: $0.strategyId,
+                        symbol: fixture.symbol,
+                        targetPosition: $0.virtualQuantity,
+                        virtualQuantity: $0.virtualQuantity,
+                        costBasis: $0.costBasis,
+                        realizedPnl: 0,
+                        unrealizedPnl:
+                            (fixture.referencePrice - $0.costBasis) *
+                            $0.virtualQuantity,
+                        capitalUsage:
+                            $0.virtualQuantity * fixture.referencePrice,
+                        riskContribution: 0,
+                        intentIds: [],
+                        allocationIds: [],
+                        internalTransferIds: [],
+                        updatedAt: fixture.asOf
+                    )
+                }
+                try services.executionStore.saveExecutionState(seeded)
+                let contexts = Dictionary(
+                    uniqueKeysWithValues: Set(
+                        fixture.intents.map(\.strategyId)
+                    ).map {
+                        (
+                            $0,
+                            localPaperContext(
+                                market: fixture.market,
+                                now: fixture.asOf,
+                                capitalBudget: 1_000_000,
+                                parameterVersion: 1
+                            )
+                        )
+                    }
+                )
+                let result = try services.executionGateway.process(
+                    intents: fixture.intents,
+                    contexts: contexts,
+                    referencePrice: fixture.referencePrice,
+                    referencePriceSource:
+                        fixture.referencePriceSource,
+                    paperConfiguration: PaperBrokerConfiguration(
+                        fillRatio: fixture.paperFillRatio,
+                        slippageBasisPoints: 2,
+                        feePerUnit: 0.005,
+                        minimumFee: 0.25,
+                        rejectOrders: false,
+                        expireOrders: false
+                    ),
+                    liveConfiguration:
+                        try rejectingLiveConfiguration(),
+                    brokerPositions: [
+                        fixture.symbol:
+                            fixture.startingBrokerQuantity
+                    ]
+                )
+                executionState = result.state
+            }
+        } catch {
+            latestStrategyAlert =
+                "Local Paper fixture initialization failed safely: \(SensitiveDataRedactor.redact(error.localizedDescription))"
+        }
+    }
+
+    private func processOfficialLocalPaperIntents(
+        strategy: StrategyItemModel,
+        records: [StrategyIntentRecord]
+    ) throws {
+        guard !records.isEmpty else { return }
+        let fixture = try services.executionFixtures
+            .loadPaperGatewayFixture()
+        let capitalBudget = max(strategy.capitalBudget, 100_000)
+        let existing = Dictionary(
+            uniqueKeysWithValues: executionState.ledgerPositions
+                .filter { $0.strategyId == strategy.strategyId }
+                .map { ($0.symbol, $0.virtualQuantity) }
+        )
+        let intents = records.compactMap { record -> TradeIntent? in
+            let desired =
+                capitalBudget * record.targetWeight /
+                fixture.referencePrice
+            let requested = desired - (existing[record.symbol] ?? 0)
+            guard abs(requested) > 0.0001 else { return nil }
+            return TradeIntent(
+                schemaVersion: 1,
+                intentId: record.intentId,
+                strategyId: strategy.strategyId,
+                strategyVersion: strategy.manifest.version,
+                cycleId: record.cycleId,
+                settlementCycle:
+                    "\(defaultMarket)-\(Self.dayString(record.timestamp))",
+                symbol: record.symbol,
+                requestedQuantity:
+                    (requested * 10_000).rounded() / 10_000,
+                priority: record.priority,
+                allowPartial: record.allowPartial,
+                minimumEffectiveFill: 0.0001,
+                timeToLiveSeconds: 60,
+                reasonCode: record.reasonCode,
+                parameterVersion: strategy.parameterVersion,
+                createdAt: record.timestamp
+            )
+        }
+        guard !intents.isEmpty else { return }
+        let brokerPositions = Dictionary(
+            grouping: executionState.ledgerPositions,
+            by: \.symbol
+        ).mapValues { $0.map(\.virtualQuantity).reduce(0, +) }
+        let now = Date()
+        let result = try services.executionGateway.process(
+            intents: intents,
+            contexts: [
+                strategy.strategyId: localPaperContext(
+                    market: defaultMarket,
+                    now: now,
+                    capitalBudget: capitalBudget,
+                    parameterVersion: strategy.parameterVersion,
+                    transitionActive: strategy.blocksNewRisk,
+                    transitionPolicy:
+                        strategy.liveToPaperTransition
+                )
+            ],
+            referencePrice: fixture.referencePrice,
+            referencePriceSource: fixture.referencePriceSource,
+            paperConfiguration: PaperBrokerConfiguration(
+                fillRatio: 1,
+                slippageBasisPoints: 2,
+                feePerUnit: 0.005,
+                minimumFee: 0.25,
+                rejectOrders: false,
+                expireOrders: false
+            ),
+            liveConfiguration: try rejectingLiveConfiguration(),
+            brokerPositions: brokerPositions
+        )
+        executionState = result.state
+    }
+
+    private func localPaperContext(
+        market: String,
+        now: Date,
+        capitalBudget: Double,
+        parameterVersion: Int,
+        transitionActive: Bool = false,
+        transitionPolicy: LiveToPaperTransition = .stopOpeningRisk
+    ) -> ExecutionGatewayContext {
+        ExecutionGatewayContext(
+            mode: .paperOnly,
+            globalLiveLock: false,
+            authorization: nil,
+            dataFresh: true,
+            marketAllowed: true,
+            strategyHealth: .healthy,
+            capitalBudget: capitalBudget,
+            maximumPositionExposure: capitalBudget,
+            cliReady: false,
+            liveAdapterEnabled: false,
+            fixtureMode: true,
+            parameterVersion: parameterVersion,
+            market: market,
+            now: now,
+            dailyLoss: 0,
+            drawdown: 0,
+            outsideRegularHours: false,
+            transitionActive: transitionActive,
+            transitionPolicy: transitionPolicy
+        )
+    }
+
+    private func runControlledLocalPaperExit(
+        strategy: StrategyItemModel
+    ) throws {
+        let positions = executionState.ledgerPositions.filter {
+            $0.strategyId == strategy.strategyId &&
+                $0.virtualQuantity != 0
+        }
+        guard !positions.isEmpty else {
+            latestStrategyAlert =
+                "Local Paper controlled exit completed with no virtual position to close."
+            return
+        }
+        let fixture = try services.executionFixtures
+            .loadPaperGatewayFixture()
+        let now = Date()
+        let cycleId =
+            "local-paper-controlled-exit-\(Int(now.timeIntervalSince1970 * 1000))"
+        let intents = positions.enumerated().map { index, position in
+            TradeIntent(
+                schemaVersion: 1,
+                intentId: "\(cycleId)-\(index + 1)",
+                strategyId: strategy.strategyId,
+                strategyVersion: strategy.manifest.version,
+                cycleId: cycleId,
+                settlementCycle:
+                    "\(defaultMarket)-\(Self.dayString(now))",
+                symbol: position.symbol,
+                requestedQuantity: -position.virtualQuantity,
+                priority: Int.max - index,
+                allowPartial: false,
+                minimumEffectiveFill:
+                    abs(position.virtualQuantity),
+                timeToLiveSeconds: 60,
+                reasonCode:
+                    "live_to_local_paper_controlled_exit",
+                parameterVersion: strategy.parameterVersion,
+                createdAt: now
+            )
+        }
+        let brokerPositions = Dictionary(
+            grouping: executionState.ledgerPositions,
+            by: \.symbol
+        ).mapValues { $0.map(\.virtualQuantity).reduce(0, +) }
+        let exposure = positions.map {
+            abs($0.virtualQuantity) * fixture.referencePrice
+        }.reduce(0, +)
+        let result = try services.executionGateway.process(
+            intents: intents,
+            contexts: [
+                strategy.strategyId: localPaperContext(
+                    market: defaultMarket,
+                    now: now,
+                    capitalBudget: max(exposure, 1),
+                    parameterVersion: strategy.parameterVersion,
+                    transitionActive: true,
+                    transitionPolicy: .controlledExit
+                )
+            ],
+            referencePrice: fixture.referencePrice,
+            referencePriceSource: fixture.referencePriceSource,
+            paperConfiguration: PaperBrokerConfiguration(
+                fillRatio: 1,
+                slippageBasisPoints: 2,
+                feePerUnit: 0.005,
+                minimumFee: 0.25,
+                rejectOrders: false,
+                expireOrders: false
+            ),
+            liveConfiguration: try rejectingLiveConfiguration(),
+            brokerPositions: brokerPositions
+        )
+        executionState = result.state
+        latestStrategyAlert =
+            "Local Paper controlled exit generated policy intents, simulated fills, and reconciled the virtual ledger. No real order was sent."
+    }
+
+    private func rejectingLiveConfiguration() throws
+        -> LiveAdapterConfiguration {
+        LiveAdapterConfiguration(
+            enabled: false,
+            fixtureMode: true,
+            executableURL: nil,
+            timeout: 5,
+            capability: try services.executionFixtures
+                .loadExecutionCapability()
+        )
+    }
+
+    private static func dayString(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: date)
     }
 
     private func initializeResearch() {

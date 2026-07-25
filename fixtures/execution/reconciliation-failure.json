@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-07-24T21:10:06Z",
+  "symbol": "AAPL.US",
+  "virtual_quantity": 100.0,
+  "broker_quantity": 99.0,
+  "expected_status": "Mismatch",
+  "expected_blocks_new_risk": true
+}

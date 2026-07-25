@@ -1,8 +1,8 @@
 {
   "artifact": "Cytisus-Trading",
   "version": "1.1.0",
-  "implementation_stage": "Prompt 4 factor research, regime, and dynamic allocation",
-  "implementation_in_progress": true,
+  "implementation_stage": "Prompt 5 Local Paper execution, virtual ledger, and cross-platform release",
+  "implementation_in_progress": false,
   "language": "en",
   "platforms": [
     "macOS",
@@ -14,25 +14,27 @@
   "local_cli_process_access": true,
   "longbridge_integration": "read-only data",
   "strategy_execution": true,
-  "strategy_execution_scope": "local governed processes and deterministic Paper intents",
+  "strategy_execution_scope": "local governed processes and deterministic Local Paper execution",
   "strategy_direct_cli_access": false,
   "global_live_lock_default": false,
-  "live_adapter": "rejecting stub",
+  "live_adapter": "process-free rejecting boundary pending v1.1.3 command verification",
   "factor_search": true,
   "factor_search_scope": "bounded deterministic local fixture research",
   "portfolio_allocation": true,
-  "portfolio_allocation_scope": "local strategy capital budgets without orders or netting",
+  "portfolio_allocation_scope": "local strategy capital budgets, internal netting, and virtual ownership",
   "broker_integrations": [
     "Longbridge CLI read-only data adapter"
   ],
   "account_identifiers": false,
-  "positions_or_orders": false,
+  "synthetic_local_paper_positions_and_orders": true,
+  "real_positions_or_orders": false,
   "tokens_or_api_keys": false,
   "personal_paths": false,
   "repository_sample_data_only": true,
   "runtime_real_market_data_optional": true,
   "live_execution": false,
   "trade_execution": false,
+  "local_paper_execution": true,
   "local_persistence": [
     "non-sensitive settings",
     "schema and migration versions",
@@ -42,6 +44,7 @@
     "parameter change history",
     "bounded Live authorizations without credentials",
     "factor definitions and append-only trial records",
+    "Local Paper execution state and virtual ledger",
     "application logs",
     "audit events"
   ]
