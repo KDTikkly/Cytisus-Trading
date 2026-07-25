@@ -779,7 +779,8 @@ enum LongbridgeAuthStatusParser {
                 ["authenticated", "ready", "active"].contains(status),
             refreshPending: findBool(values, key: "refresh_pending") ??
                 ["refreshpending", "refresh_pending"].contains(status),
-            expired: findBool(values, key: "expired") ?? status == "expired",
+            expired: findBool(values, key: "expired") ??
+                (status == "expired"),
             environment: findString(
                 values,
                 keys: ["account_environment", "environment"]
