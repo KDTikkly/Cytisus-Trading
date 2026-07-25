@@ -1,6 +1,6 @@
 # Cytisus-Trading Privacy Statement
 
-Cytisus-Trading 1.1.4 retains bounded Longbridge Terminal authentication and Paper-channel readiness and fixes Windows front-end startup. Fixture mode remains the default, Local Paper is independent from Longbridge CLI, model providers, and the Quant Worker, and Live broker submission remains unavailable.
+Cytisus-Trading 1.1.5 retains bounded Longbridge Terminal authentication and Paper-channel readiness and fixes Windows control contrast. Fixture mode remains the default, Local Paper is independent from Longbridge CLI, model providers, and the Quant Worker, and Live broker submission remains unavailable.
 
 ## Current behavior
 
@@ -60,6 +60,6 @@ API keys must not be included in issues, logs, screenshots, diagnostic exports, 
 
 Future prompts will update this statement only when their behavior is implemented. The completed v1.1 PDM is a product plan and does not describe current functionality by itself.
 
-The v1.1.4 release packages the native macOS and Windows applications. Publisher signing, notarization, and platform reputation depend on repository-owner certificates and external trust services.
+The v1.1.5 release packages the native macOS and Windows applications. Publisher signing, notarization, and platform reputation depend on repository-owner certificates and external trust services.
 
 Cytisus-Trading is intended for automated quantitative operations development and review. It is not a manual trading terminal and is not investment advice.

@@ -6,9 +6,9 @@
 
 Cytisus-Trading is a local desktop front end for automated quantitative operations. It is not a manual trading terminal.
 
-## v1.1.4 implementation status
+## v1.1.5 implementation status
 
-Version 1.1.4 fixes the Windows front-end startup crash while retaining the v1.1.3 Longbridge Terminal discovery, authentication, canonical command mapping, and Paper-account classification. Local Paper remains independent, and Live broker submission remains intentionally unavailable.
+Version 1.1.5 fixes contrast for native Windows controls and retains the v1.1.4 startup repair. Local Paper remains independent, and Live broker submission remains intentionally unavailable.
 
 Currently available:
 
@@ -83,10 +83,10 @@ Not yet available:
 
 ## Native desktop editions and packaging
 
-The source version is 1.1.4. The release workflow builds and publishes both native desktop artifacts:
+The source version is 1.1.5. The release workflow builds and publishes both native desktop artifacts:
 
-- macOS 14 or later: SwiftUI Universal 2 app distributed as `Cytisus-Trading-1.1.4-universal.dmg`.
-- Windows 11 x64: self-contained WPF app with an English install wizard distributed as `Cytisus-Trading-1.1.4-win11-x64.exe`.
+- macOS 14 or later: SwiftUI Universal 2 app distributed as `Cytisus-Trading-1.1.5-universal.dmg`.
+- Windows 11 x64: self-contained WPF app with an English install wizard distributed as `Cytisus-Trading-1.1.5-win11-x64.exe`.
 
 Both applications start without Longbridge CLI, a network connection, an account, or credentials.
 Fixture mode is the default. When fixture mode is disabled, Cytisus may invoke only a separately installed, user-authorized Longbridge CLI through its restricted read-only adapter.
@@ -171,7 +171,7 @@ The platforms do not share a compiled runtime. They share schema definitions, fi
 
 ## Install on macOS
 
-1. Download `Cytisus-Trading-1.1.4-universal.dmg`.
+1. Download `Cytisus-Trading-1.1.5-universal.dmg`.
 2. Open the DMG.
 3. Drag `Cytisus-Trading.app` into Applications.
 4. Open Cytisus-Trading from Applications.
@@ -180,7 +180,7 @@ The public DMG uses ad hoc signing unless release signing variables are supplied
 
 ## Install on Windows 11
 
-1. Download `Cytisus-Trading-1.1.4-win11-x64.exe`.
+1. Download `Cytisus-Trading-1.1.5-win11-x64.exe`.
 2. Run the installer and choose the destination.
 3. Launch Cytisus-Trading from the Start menu.
 
@@ -198,7 +198,7 @@ tools/build_dmg.sh
 The release workflow runs this script on macOS. Its output name is:
 
 ```text
-dist/Cytisus-Trading-1.1.4-universal.dmg
+dist/Cytisus-Trading-1.1.5-universal.dmg
 ```
 
 For Developer ID signing and Apple notarization:
@@ -220,7 +220,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/build_win11.ps1
 The release workflow runs this script on Windows. Its output name is:
 
 ```text
-dist/Cytisus-Trading-1.1.4-win11-x64.exe
+dist/Cytisus-Trading-1.1.5-win11-x64.exe
 ```
 
 With Inno Setup present, this artifact is a standard English install wizard containing the self-contained single-file application. Without Inno Setup, the local script emits a development single-file fallback. Release CI installs Inno Setup and always builds the wizard.

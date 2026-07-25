@@ -136,6 +136,41 @@
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
 
+        <Style TargetType="{x:Type Button}">
+            <Setter Property="Foreground" Value="#FF111827" />
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Foreground" Value="#FF4B5563" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="{x:Type TextBox}">
+            <Setter Property="Foreground" Value="#FF111827" />
+            <Setter Property="Background" Value="#FFFFFFFF" />
+        </Style>
+
+        <Style TargetType="{x:Type PasswordBox}">
+            <Setter Property="Foreground" Value="#FF111827" />
+            <Setter Property="Background" Value="#FFFFFFFF" />
+        </Style>
+
+        <Style TargetType="{x:Type ComboBox}">
+            <Setter Property="Foreground" Value="#FF111827" />
+            <Setter Property="Background" Value="#FFFFFFFF" />
+        </Style>
+
+        <Style TargetType="{x:Type ComboBoxItem}">
+            <Setter Property="Foreground" Value="#FF111827" />
+            <Setter Property="Background" Value="#FFFFFFFF" />
+        </Style>
+
+        <Style TargetType="{x:Type DataGridColumnHeader}">
+            <Setter Property="Foreground" Value="#FF111827" />
+            <Setter Property="Background" Value="#FFE5E7EB" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
         <Style TargetType="{x:Type Slider}">
             <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
         </Style>
