@@ -103,11 +103,18 @@ final class StudioModel: ObservableObject {
     @Published var selectedTransition: LiveToPaperTransition = .stopOpeningRisk
     @Published var logSearchText = ""
     @Published var selectedLogSeverity: ApplicationLogLevel?
+    @Published private(set) var researchFactors: [FactorResearchSummary] = []
+    @Published private(set) var recentFactorTrials: [FactorTrial] = []
+    @Published private(set) var factorSearchStatus =
+        "Tiny deterministic research search is ready."
+    @Published private(set) var regimeSnapshot: RegimeSnapshot?
+    @Published private(set) var capitalAllocation: CapitalAllocationResult?
 
     let liveExecutionAvailable = false
 
     private let services: AppServices
     private var externalRuntimes: [String: ExternalStrategyRuntime] = [:]
+    private var researchDataset: NormalizedResearchDataset?
 
     init(services: AppServices = .offlineFixture()) {
         self.services = services
@@ -129,6 +136,7 @@ final class StudioModel: ObservableObject {
         factors = (try? services.factorRepository.loadFactors()) ?? []
         applicationLogs = (try? services.logStore.loadLogs(limit: 50)) ?? []
         initializeStrategies()
+        initializeResearch()
 
         appendLog(
             level: .info,
@@ -231,6 +239,84 @@ final class StudioModel: ObservableObject {
         fixtureMode
             ? "Fixture mode is ON. No CLI, account, or network is used."
             : "Fixture mode is OFF. Only the selected local CLI may be inspected."
+    }
+
+    var regimeTrendDisplay: String {
+        (regimeSnapshot?.trend ?? 0).formatted(
+            .percent.precision(.fractionLength(0))
+        )
+    }
+
+    var regimeRangeDisplay: String {
+        (regimeSnapshot?.range ?? 0).formatted(
+            .percent.precision(.fractionLength(0))
+        )
+    }
+
+    var regimeHighVolatilityDisplay: String {
+        (regimeSnapshot?.highVolatility ?? 0).formatted(
+            .percent.precision(.fractionLength(0))
+        )
+    }
+
+    var regimeCrisisDisplay: String {
+        (regimeSnapshot?.crisis ?? 0).formatted(
+            .percent.precision(.fractionLength(0))
+        )
+    }
+
+    var regimeUncertaintyDisplay: String {
+        (regimeSnapshot?.uncertainty ?? 0).formatted(
+            .percent.precision(.fractionLength(0))
+        )
+    }
+
+    var regimeRiskDisplay: String {
+        (regimeSnapshot?.riskMultiplier ?? 0).formatted(
+            .percent.precision(.fractionLength(0))
+        )
+    }
+
+    var allocatorSummary: String {
+        guard let allocation = capitalAllocation else {
+            return "No allocator result is available."
+        }
+        return "Risk budget \(allocation.totalRiskBudget.formatted(.currency(code: "USD").precision(.fractionLength(0)))) after regime uncertainty and capacity controls."
+    }
+
+    func runTinyFactorSearch() {
+        guard let dataset = researchDataset else {
+            factorSearchStatus =
+                "Research fixtures are unavailable; no trial was run."
+            return
+        }
+        do {
+            let definitions = try services.factorResearchStore
+                .loadFactorDefinitions()
+            let result = try services.factorSearch.runTinySearch(
+                dataset: dataset,
+                existingDefinitions: definitions,
+                configuration: .tiny
+            )
+            researchFactors = result.summaries
+            recentFactorTrials = Array(result.trials.reversed())
+            factorSearchStatus = result.status
+            appendAudit(
+                action: "TinyFactorSearchCompleted",
+                context: [
+                    "evaluated": String(result.evaluatedCount),
+                    "candidates": String(result.candidateCount),
+                    "rejected": String(result.rejectedCount),
+                    "quarantined": String(result.quarantinedCount),
+                    "network_used": "false",
+                    "cli_used": "false"
+                ],
+                category: .factorLifecycle
+            )
+        } catch {
+            factorSearchStatus =
+                "Factor search failed: \(SensitiveDataRedactor.redact(error.localizedDescription))"
+        }
     }
 
     var processTimeoutDisplay: String {
@@ -788,6 +874,71 @@ final class StudioModel: ObservableObject {
         cacheSizeDisplay = bytes < 1024
             ? "\(bytes) bytes"
             : String(format: "%.1f KB", Double(bytes) / 1024)
+    }
+
+    private func initializeResearch() {
+        do {
+            let marketSnapshot = try services.fixtureDataService
+                .loadFixtureSnapshot()
+            let dataset = try services.researchFixtures.buildDataset(
+                from: marketSnapshot
+            )
+            researchDataset = dataset
+            var definitions = try services.factorResearchStore
+                .loadFactorDefinitions()
+            if definitions.isEmpty {
+                definitions = try services.researchFixtures
+                    .loadFactorDefinitions()
+                try services.factorResearchStore.saveFactorDefinitions(
+                    definitions
+                )
+            }
+            let trials = try services.factorResearchStore.loadFactorTrials(
+                limit: 200
+            )
+            researchFactors = services.factorSearch.initialSummaries(
+                definitions: definitions,
+                trials: trials
+            )
+            recentFactorTrials = Array(trials.reversed())
+
+            let fixture = try services.researchFixtures
+                .loadRegimeAllocationFixture()
+            let regime = services.regimeEngine.evaluate(
+                fixture.regimeInput,
+                asOf: dataset.createdAt
+            )
+            regimeSnapshot = regime
+            let allocation = services.capitalAllocator.allocate(
+                totalCapital: fixture.totalCapital,
+                baseRiskFraction: fixture.baseRiskFraction,
+                regime: regime,
+                strategies: fixture.strategies
+            )
+            capitalAllocation = allocation
+            applyCapitalAllocations(allocation.allocations)
+        } catch {
+            factorSearchStatus =
+                "Research initialization failed: \(SensitiveDataRedactor.redact(error.localizedDescription))"
+        }
+    }
+
+    private func applyCapitalAllocations(
+        _ allocations: [StrategyCapitalAllocation]
+    ) {
+        let indexed = Dictionary(
+            uniqueKeysWithValues: allocations.map {
+                ($0.strategyId, $0)
+            }
+        )
+        for strategy in strategies {
+            guard let allocation = indexed[strategy.strategyId] else {
+                continue
+            }
+            strategy.capitalBudget = allocation.capitalBudget
+            strategy.capitalAllocationExplanation =
+                allocation.explanationText
+        }
     }
 
     private func initializeStrategies() {

@@ -1,0 +1,98 @@
+[
+  {
+    "schema_version": 1,
+    "factor_id": "medium-term-momentum",
+    "factor_type": "Alpha",
+    "target": "forward_cross_sectional_return",
+    "horizon": "20d",
+    "universe": "fixture-liquid-equities",
+    "required_data": [
+      "close",
+      "returns"
+    ],
+    "update_frequency": "Daily",
+    "version": 1,
+    "state": "Active",
+    "expression": "zscore(delta(close,20))",
+    "strategy_states": {
+      "cross-sectional-multifactor": "Active"
+    }
+  },
+  {
+    "schema_version": 1,
+    "factor_id": "realized-risk",
+    "factor_type": "Risk",
+    "target": "forward_realized_volatility",
+    "horizon": "20d",
+    "universe": "fixture-liquid-equities",
+    "required_data": [
+      "returns"
+    ],
+    "update_frequency": "Daily",
+    "version": 1,
+    "state": "Active",
+    "expression": "rolling_std(returns,20)",
+    "strategy_states": {
+      "cross-sectional-multifactor": "Active"
+    }
+  },
+  {
+    "schema_version": 1,
+    "factor_id": "trend-regime-fit",
+    "factor_type": "Regime",
+    "target": "trend_regime_probability",
+    "horizon": "60d",
+    "universe": "fixture-liquid-equities",
+    "required_data": [
+      "returns",
+      "market_return"
+    ],
+    "update_frequency": "Daily",
+    "version": 1,
+    "state": "Shadow",
+    "expression": "rolling_beta(returns,market_return,60)",
+    "strategy_states": {
+      "cross-sectional-multifactor": "Shadow"
+    }
+  },
+  {
+    "schema_version": 1,
+    "factor_id": "volume-capacity",
+    "factor_type": "Liquidity",
+    "target": "forward_capacity",
+    "horizon": "5d",
+    "universe": "fixture-liquid-equities",
+    "required_data": [
+      "close",
+      "volume"
+    ],
+    "update_frequency": "Daily",
+    "version": 1,
+    "state": "Active",
+    "expression": "safe_divide(volume,rolling_mean(volume,5))",
+    "strategy_states": {
+      "cross-sectional-multifactor": "Active"
+    }
+  },
+  {
+    "schema_version": 1,
+    "factor_id": "execution-liquidity",
+    "factor_type": "Execution",
+    "target": "fill_probability",
+    "horizon": "1d",
+    "universe": "fixture-liquid-equities",
+    "required_data": [
+      "high",
+      "low",
+      "close",
+      "volume"
+    ],
+    "update_frequency": "Daily",
+    "version": 1,
+    "state": "Candidate",
+    "expression": "safe_divide(volume,max(delta(high,1),delta(low,1)))",
+    "strategy_states": {
+      "cross-sectional-multifactor": "Candidate"
+    }
+  }
+]

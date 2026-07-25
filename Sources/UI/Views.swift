@@ -171,6 +171,31 @@ struct OverviewView: View {
                 }
 
                 HStack(spacing: 16) {
+                    MetricCard(title: "Trend", value: model.regimeTrendDisplay, detail: "Ensemble probability", symbol: "arrow.up.right", tint: .green)
+                    MetricCard(title: "Range", value: model.regimeRangeDisplay, detail: "Ensemble probability", symbol: "arrow.left.and.right", tint: .cyan)
+                    MetricCard(title: "High Volatility", value: model.regimeHighVolatilityDisplay, detail: "Ensemble probability", symbol: "waveform.path", tint: .orange)
+                    MetricCard(title: "Crisis", value: model.regimeCrisisDisplay, detail: "Ensemble probability", symbol: "exclamationmark.triangle", tint: .red)
+                }
+
+                GlassCard {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("Dynamic Capital Allocator").font(.headline)
+                            Text(model.allocatorSummary)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 3) {
+                            Text("Uncertainty \(model.regimeUncertaintyDisplay)")
+                            Text("Risk multiplier \(model.regimeRiskDisplay)")
+                        }
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.orange)
+                    }
+                }
+
+                HStack(spacing: 16) {
                     GlassCard {
                         VStack(alignment: .leading, spacing: 18) {
                             HStack {
@@ -255,82 +280,126 @@ struct FactorsView: View {
     @EnvironmentObject private var model: StudioModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
-            HStack(alignment: .bottom) {
-                PageHeader(
-                    eyebrow: "Factor Governance",
-                    title: "Factor Lifecycle",
-                    subtitle: "Use frozen out-of-sample evidence to control admission, downgrade, and retirement."
-                )
-                Spacer()
-                if let date = model.lastReview {
-                    Text("Last review \(date.formatted(date: .omitted, time: .shortened))")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-                Button("Reset") { model.resetDemo() }
-                    .buttonStyle(.borderless)
-                Button("Generate Review Proposal") { model.runReview() }
-                    .buttonStyle(PrimaryGlassButton())
-            }
-
-            GlassCard(padding: 0) {
-                VStack(spacing: 0) {
-                    HStack {
-                        Text("Factor").frame(maxWidth: .infinity, alignment: .leading)
-                        Text("State").frame(width: 120, alignment: .leading)
-                        Text("IC").frame(width: 62, alignment: .trailing)
-                        Text("IR").frame(width: 62, alignment: .trailing)
-                        Text("Coverage").frame(width: 70, alignment: .trailing)
-                        Text("Weight").frame(width: 70, alignment: .trailing)
-                        Text("OOS").frame(width: 58, alignment: .trailing)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                HStack(alignment: .bottom) {
+                    PageHeader(
+                        eyebrow: "Factor Governance",
+                        title: "Research and Lifecycle",
+                        subtitle: "Typed deterministic factors, retained trials, task evidence, neighboring-horizon stability, and governed lifecycle state."
+                    )
+                    Spacer()
+                    Button("Run Tiny Fixture Search") {
+                        model.runTinyFactorSearch()
                     }
-                    .font(.caption.weight(.semibold))
+                    .buttonStyle(PrimaryGlassButton())
+                }
+
+                Text(model.factorSearchStatus)
+                    .font(.caption)
                     .foregroundStyle(.secondary)
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 14)
 
-                    Divider().overlay(.white.opacity(0.07))
+                GlassCard(padding: 0) {
+                    VStack(spacing: 0) {
+                        HStack {
+                            Text("Factor").frame(maxWidth: .infinity, alignment: .leading)
+                            Text("Task").frame(width: 76, alignment: .leading)
+                            Text("Horizon").frame(width: 64)
+                            Text("Global").frame(width: 92, alignment: .leading)
+                            Text("Strategy").frame(width: 92, alignment: .leading)
+                            Text("Trials").frame(width: 48, alignment: .trailing)
+                            Text("OOS evidence").frame(width: 170, alignment: .trailing)
+                            Text("Marginal").frame(width: 72, alignment: .trailing)
+                        }
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 14)
+                        Divider().overlay(.white.opacity(0.07))
 
-                    ForEach(Array(model.factors.enumerated()), id: \.element.id) { index, factor in
-                        VStack(spacing: 0) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack(spacing: 7) {
-                                        Text(factor.name).font(.subheadline.weight(.semibold))
-                                        Text(factor.category)
-                                            .font(.caption2.weight(.medium))
-                                            .foregroundStyle(.cyan)
-                                            .padding(.horizontal, 6).padding(.vertical, 3)
-                                            .background(.cyan.opacity(0.10), in: Capsule())
+                        ForEach(Array(model.researchFactors.enumerated()), id: \.element.id) { index, factor in
+                            VStack(spacing: 0) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text(factor.name.capitalized)
+                                            .font(.subheadline.weight(.semibold))
+                                        Text(factor.stateReason)
+                                            .font(.caption2)
+                                            .foregroundStyle(.secondary)
+                                            .lineLimit(1)
                                     }
-                                    Text(factor.reason).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    Text(factor.definition.factorType.rawValue)
+                                        .frame(width: 76, alignment: .leading)
+                                    Text(factor.definition.horizon).frame(width: 64)
+                                    StatusPill(state: factor.globalState)
+                                        .frame(width: 92, alignment: .leading)
+                                    StatusPill(state: factor.strategyState)
+                                        .frame(width: 92, alignment: .leading)
+                                    Text("\(factor.trialCount)")
+                                        .frame(width: 48, alignment: .trailing)
+                                    Text(factor.oosEvidence)
+                                        .frame(width: 170, alignment: .trailing)
+                                    Text(
+                                        factor.evidence.marginalContribution.formatted(
+                                            .number.precision(.fractionLength(3))
+                                        )
+                                    )
+                                    .frame(width: 72, alignment: .trailing)
                                 }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                StatusPill(state: factor.state).frame(width: 120, alignment: .leading)
-                                Text(factor.ic.formatted(.number.precision(.fractionLength(3)))).frame(width: 62, alignment: .trailing)
-                                Text(factor.ir.formatted(.number.precision(.fractionLength(2)))).frame(width: 62, alignment: .trailing)
-                                Text(factor.coverage.formatted(.percent.precision(.fractionLength(0)))).frame(width: 70, alignment: .trailing)
-                                Text(factor.weight.formatted(.percent.precision(.fractionLength(0)))).frame(width: 70, alignment: .trailing)
-                                Text("\(factor.evidenceWindows)").frame(width: 58, alignment: .trailing)
-                            }
-                            .font(.system(.subheadline, design: .rounded))
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 13)
-                            if index < model.factors.count - 1 {
-                                Divider().overlay(.white.opacity(0.055)).padding(.leading, 18)
+                                .font(.caption)
+                                .padding(.horizontal, 18)
+                                .padding(.vertical, 12)
+                                if index < model.researchFactors.count - 1 {
+                                    Divider().overlay(.white.opacity(0.055))
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            HStack(spacing: 10) {
-                Image(systemName: "info.circle.fill").foregroundStyle(.cyan)
-                Text("Run the proposal twice to promote the shadow factor and retire the weak factor. Fixture factor state remains local.")
-                    .font(.caption).foregroundStyle(.secondary)
+                GlassCard {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Retained Trial Registry").font(.headline)
+                        if model.recentFactorTrials.isEmpty {
+                            Text("No research trials have run. Definitions remain fixture-backed.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        ForEach(model.recentFactorTrials.prefix(12)) { trial in
+                            HStack {
+                                Text(trial.factorFamily)
+                                    .frame(width: 180, alignment: .leading)
+                                Text(trial.result.rawValue)
+                                    .foregroundStyle(
+                                        trial.result == .candidate
+                                            ? .green
+                                            : trial.result == .quarantined
+                                                ? .red
+                                                : .orange
+                                    )
+                                    .frame(width: 90, alignment: .leading)
+                                Text(trial.expression)
+                                    .lineLimit(1)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                Text(trial.rejectionReason ?? "Passed current candidate gates")
+                                    .lineLimit(1)
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: 280, alignment: .leading)
+                            }
+                            .font(.caption)
+                        }
+                    }
+                }
+
+                HStack(spacing: 10) {
+                    Image(systemName: "info.circle.fill").foregroundStyle(.cyan)
+                    Text("Every attempted candidate is retained. Quarantine is global; regime-specific weakness contracts affected strategy risk without globally retiring the factor.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
             }
+            .padding(34)
         }
-        .padding(34)
     }
 }
 
@@ -440,6 +509,13 @@ struct StrategyDetailView: View {
                             Text(strategy.lastHeartbeatDisplay)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
+                            Text("Capital budget \(strategy.capitalBudgetDisplay)")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.cyan)
+                            Text(strategy.capitalAllocationExplanation)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(2)
                         }
                         Spacer()
                         HStack {

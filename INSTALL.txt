@@ -4,8 +4,10 @@ IMPLEMENTATION STATUS
 
 v1.1 implementation is in progress. This build starts in offline fixture mode.
 Read-only Longbridge CLI discovery, market fixtures, local caching, and daily
-universe snapshots are available. Strategy execution, portfolio allocation,
-broker orders, and Live execution are not available.
+universe snapshots are available. Deterministic Paper strategy cycles, factor
+research, regime probabilities, and governed strategy capital budgets are
+available. Final portfolio construction, broker orders, and Live execution are
+not available.
 
 MACOS
 
@@ -26,5 +28,5 @@ NOTES
 - Fixture mode makes no network requests and stores no credentials.
 - Local CLI mode uses only a separately installed, user-authorized Longbridge CLI.
 - Non-sensitive settings, market cache records, universe snapshots, application
-  logs, and audit events are stored locally.
+  logs, audit events, factor definitions, and trial records are stored locally.
 - The app contains fictional fixtures and cannot execute trades.

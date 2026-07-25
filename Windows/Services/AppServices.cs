@@ -19,7 +19,14 @@ public sealed record AppServices(
     StrategyMessageCodec StrategyMessageCodec,
     ILiveBrokerAdapter LiveBrokerAdapter,
     StrategyIntentRouter StrategyIntentRouter,
-    IOfficialStrategyRuntime OfficialStrategyRuntime)
+    IOfficialStrategyRuntime OfficialStrategyRuntime,
+    IFactorResearchStore FactorResearchStore,
+    IResearchFixtureService ResearchFixtures,
+    IFactorDSLService FactorDSL,
+    IFactorSearchService FactorSearch,
+    IFactorLifecycleService FactorLifecycle,
+    IRegimeEngine RegimeEngine,
+    IDynamicCapitalAllocator CapitalAllocator)
 {
     public static AppServices CreateOfflineFixture()
     {
@@ -35,6 +42,8 @@ public sealed record AppServices(
         var strategyCodec = new StrategyMessageCodec();
         var liveAdapter = new RejectingLiveBrokerAdapter();
         var intentRouter = new StrategyIntentRouter();
+        var factorDSL = new FactorDSLService();
+        var researchFixtures = new ResearchFixtureService();
         return new AppServices(
             new FixtureFactorRepository(),
             new FixtureFactorGovernanceService(),
@@ -57,6 +66,13 @@ public sealed record AppServices(
             new OfficialFixtureStrategyRuntime(
                 strategyCodec,
                 intentRouter,
-                liveAdapter));
+                liveAdapter),
+            store,
+            researchFixtures,
+            factorDSL,
+            new FactorSearchService(factorDSL, store),
+            new FactorLifecycleService(),
+            new RegimeEngine(),
+            new DynamicCapitalAllocator());
     }
 }

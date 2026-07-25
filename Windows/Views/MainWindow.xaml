@@ -413,6 +413,90 @@
                             </Border>
                         </UniformGrid>
 
+                        <UniformGrid Columns="4" Margin="0,0,0,18">
+                            <Border Style="{StaticResource CardBorder}" Margin="0,0,10,0">
+                                <StackPanel>
+                                    <TextBlock Text="REGIME: TREND"
+                                               Foreground="{StaticResource SecondaryTextBrush}"
+                                               FontSize="10"
+                                               FontWeight="Bold" />
+                                    <TextBlock Text="{Binding TrendProbability}"
+                                               FontSize="22"
+                                               FontWeight="SemiBold"
+                                               Margin="0,10,0,3" />
+                                    <TextBlock Text="{Binding RegimeUncertainty, StringFormat=Uncertainty {0}}"
+                                               Style="{StaticResource BodySecondary}"
+                                               FontSize="10" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource CardBorder}" Margin="3,0,7,0">
+                                <StackPanel>
+                                    <TextBlock Text="REGIME: RANGE"
+                                               Foreground="{StaticResource SecondaryTextBrush}"
+                                               FontSize="10"
+                                               FontWeight="Bold" />
+                                    <TextBlock Text="{Binding RangeProbability}"
+                                               FontSize="22"
+                                               FontWeight="SemiBold"
+                                               Margin="0,10,0,3" />
+                                    <TextBlock Text="Probabilistic ensemble"
+                                               Style="{StaticResource BodySecondary}"
+                                               FontSize="10" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource CardBorder}" Margin="7,0,3,0">
+                                <StackPanel>
+                                    <TextBlock Text="REGIME: HIGH VOL"
+                                               Foreground="{StaticResource SecondaryTextBrush}"
+                                               FontSize="10"
+                                               FontWeight="Bold" />
+                                    <TextBlock Text="{Binding HighVolatilityProbability}"
+                                               FontSize="22"
+                                               FontWeight="SemiBold"
+                                               Margin="0,10,0,3" />
+                                    <TextBlock Text="Risk contraction input"
+                                               Style="{StaticResource BodySecondary}"
+                                               FontSize="10" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource CardBorder}" Margin="10,0,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="REGIME: CRISIS"
+                                               Foreground="{StaticResource SecondaryTextBrush}"
+                                               FontSize="10"
+                                               FontWeight="Bold" />
+                                    <TextBlock Text="{Binding CrisisProbability}"
+                                               FontSize="22"
+                                               FontWeight="SemiBold"
+                                               Margin="0,10,0,3" />
+                                    <TextBlock Text="{Binding PortfolioRiskDisplay, StringFormat=Risk multiplier {0}}"
+                                               Style="{StaticResource BodySecondary}"
+                                               FontSize="10" />
+                                </StackPanel>
+                            </Border>
+                        </UniformGrid>
+
+                        <Border Style="{StaticResource CardBorder}"
+                                Margin="0,0,0,18">
+                            <Grid>
+                                <StackPanel>
+                                    <TextBlock Text="Dynamic Capital Allocator"
+                                               FontSize="14"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding AllocatorSummary}"
+                                               Style="{StaticResource BodySecondary}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,5,0,0" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding CapitalUsageDisplay}"
+                                           Foreground="#FF54D38A"
+                                           FontSize="22"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Right"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                        </Border>
+
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -600,188 +684,129 @@
                                            Style="{StaticResource EyebrowText}" />
                                 <TextBlock Text="Factor Lifecycle"
                                            Style="{StaticResource PageTitle}" />
-                                <TextBlock Text="Use frozen out-of-sample evidence to control admission, downgrade, and retirement."
+                                <TextBlock Text="Multi-task evidence, deterministic candidate search, strategy-level state, and global safety governance."
                                            Style="{StaticResource BodySecondary}" />
                             </StackPanel>
                             <StackPanel Grid.Column="1"
                                         Orientation="Horizontal"
                                         VerticalAlignment="Bottom"
                                         Margin="20,0,0,2">
-                                <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
-                                    <TextBlock Text="{Binding LastReviewLabel}"
+                                <StackPanel VerticalAlignment="Center"
+                                            Margin="0,0,12,0"
+                                            MaxWidth="430">
+                                    <TextBlock Text="{Binding CandidateSearchStatus}"
                                                Style="{StaticResource BodySecondary}"
                                                FontSize="10"
+                                               TextWrapping="Wrap"
                                                HorizontalAlignment="Right" />
                                 </StackPanel>
-                                <Button Content="Reset"
-                                        Style="{StaticResource SecondaryButton}"
-                                        Click="Reset_Click"
-                                        Margin="0,0,9,0" />
-                                <Button Content="Generate Review Proposal"
+                                <Button Content="Run Tiny Candidate Search"
                                         Style="{StaticResource PrimaryButton}"
-                                        Click="RunReview_Click" />
+                                        Click="RunFactorSearch_Click" />
                             </StackPanel>
                         </Grid>
 
                         <Border Style="{StaticResource CardBorder}" Padding="0">
                             <StackPanel>
-                                <Grid Margin="18,14">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="120" />
-                                        <ColumnDefinition Width="60" />
-                                        <ColumnDefinition Width="60" />
-                                        <ColumnDefinition Width="80" />
-                                        <ColumnDefinition Width="70" />
-                                        <ColumnDefinition Width="50" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="FACTOR"
-                                               Foreground="{StaticResource SecondaryTextBrush}"
-                                               FontSize="10"
-                                               FontWeight="Bold" />
-                                    <TextBlock Grid.Column="1"
-                                               Text="STATE"
-                                               Foreground="{StaticResource SecondaryTextBrush}"
-                                               FontSize="10"
-                                               FontWeight="Bold" />
-                                    <TextBlock Grid.Column="2"
-                                               Text="IC"
-                                               Foreground="{StaticResource SecondaryTextBrush}"
-                                               FontSize="10"
-                                               FontWeight="Bold"
-                                               HorizontalAlignment="Right" />
-                                    <TextBlock Grid.Column="3"
-                                               Text="IR"
-                                               Foreground="{StaticResource SecondaryTextBrush}"
-                                               FontSize="10"
-                                               FontWeight="Bold"
-                                               HorizontalAlignment="Right" />
-                                    <TextBlock Grid.Column="4"
-                                               Text="COVERAGE"
-                                               Foreground="{StaticResource SecondaryTextBrush}"
-                                               FontSize="10"
-                                               FontWeight="Bold"
-                                               HorizontalAlignment="Right" />
-                                    <TextBlock Grid.Column="5"
-                                               Text="WEIGHT"
-                                               Foreground="{StaticResource SecondaryTextBrush}"
-                                               FontSize="10"
-                                               FontWeight="Bold"
-                                               HorizontalAlignment="Right" />
-                                    <TextBlock Grid.Column="6"
-                                               Text="OOS"
-                                               Foreground="{StaticResource SecondaryTextBrush}"
-                                               FontSize="10"
-                                               FontWeight="Bold"
-                                               HorizontalAlignment="Right" />
-                                </Grid>
-
-                                <Border Height="1" Background="#20FFFFFF" />
-
-                                <ItemsControl ItemsSource="{Binding Factors}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border BorderBrush="#16FFFFFF"
-                                                    BorderThickness="0,0,0,1"
-                                                    Padding="18,12">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="120" />
-                                                        <ColumnDefinition Width="60" />
-                                                        <ColumnDefinition Width="60" />
-                                                        <ColumnDefinition Width="80" />
-                                                        <ColumnDefinition Width="70" />
-                                                        <ColumnDefinition Width="50" />
-                                                    </Grid.ColumnDefinitions>
-
-                                                    <StackPanel>
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <TextBlock Text="{Binding Name}"
-                                                                       FontSize="12"
-                                                                       FontWeight="SemiBold"
-                                                                       VerticalAlignment="Center" />
-                                                            <Border Background="#1855D7F1"
-                                                                    CornerRadius="6"
-                                                                    Padding="6,2"
-                                                                    Margin="8,0,0,0">
-                                                                <TextBlock Text="{Binding Category}"
-                                                                           Foreground="{StaticResource AccentBrush}"
-                                                                           FontSize="9"
-                                                                           FontWeight="SemiBold" />
-                                                            </Border>
-                                                        </StackPanel>
-                                                        <TextBlock Text="{Binding Reason}"
-                                                                   Style="{StaticResource BodySecondary}"
-                                                                   FontSize="10"
-                                                                   Margin="0,5,12,0"
-                                                                   TextTrimming="CharacterEllipsis"
-                                                                   TextWrapping="NoWrap" />
-                                                    </StackPanel>
-
-                                                    <Border Grid.Column="1"
-                                                            Background="{Binding State, Converter={StaticResource FactorStateBrushConverter}, ConverterParameter=Background}"
-                                                            BorderBrush="{Binding State, Converter={StaticResource FactorStateBrushConverter}}"
-                                                            BorderThickness="1"
-                                                            CornerRadius="10"
-                                                            Padding="8,4"
-                                                            HorizontalAlignment="Left"
-                                                            VerticalAlignment="Center">
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <Ellipse Width="6"
-                                                                     Height="6"
-                                                                     Fill="{Binding State, Converter={StaticResource FactorStateBrushConverter}}"
-                                                                     Margin="0,0,6,0"
-                                                                     VerticalAlignment="Center" />
-                                                            <TextBlock Text="{Binding StateLabel}"
-                                                                       Foreground="{Binding State, Converter={StaticResource FactorStateBrushConverter}}"
-                                                                       FontSize="10"
-                                                                       FontWeight="SemiBold" />
-                                                        </StackPanel>
-                                                    </Border>
-
-                                                    <TextBlock Grid.Column="2"
-                                                               Text="{Binding IcDisplay}"
-                                                               FontFamily="Cascadia Mono, Consolas"
-                                                               FontSize="11"
-                                                               HorizontalAlignment="Right"
-                                                               VerticalAlignment="Center" />
-                                                    <TextBlock Grid.Column="3"
-                                                               Text="{Binding IrDisplay}"
-                                                               FontFamily="Cascadia Mono, Consolas"
-                                                               FontSize="11"
-                                                               HorizontalAlignment="Right"
-                                                               VerticalAlignment="Center" />
-                                                    <TextBlock Grid.Column="4"
-                                                               Text="{Binding CoverageDisplay}"
-                                                               FontFamily="Cascadia Mono, Consolas"
-                                                               FontSize="11"
-                                                               HorizontalAlignment="Right"
-                                                               VerticalAlignment="Center" />
-                                                    <TextBlock Grid.Column="5"
-                                                               Text="{Binding WeightDisplay}"
-                                                               FontFamily="Cascadia Mono, Consolas"
-                                                               FontSize="11"
-                                                               HorizontalAlignment="Right"
-                                                               VerticalAlignment="Center" />
-                                                    <TextBlock Grid.Column="6"
-                                                               Text="{Binding EvidenceWindows}"
-                                                               FontFamily="Cascadia Mono, Consolas"
-                                                               FontSize="11"
-                                                               HorizontalAlignment="Right"
-                                                               VerticalAlignment="Center" />
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                <TextBlock Text="Factor Evidence"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Margin="18,16,18,10" />
+                                <DataGrid ItemsSource="{Binding ResearchFactors}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          CanUserAddRows="False"
+                                          CanUserDeleteRows="False"
+                                          HeadersVisibility="Column"
+                                          GridLinesVisibility="Horizontal"
+                                          Background="Transparent"
+                                          Foreground="{StaticResource PrimaryTextBrush}"
+                                          BorderThickness="0"
+                                          RowBackground="#09000000"
+                                          AlternatingRowBackground="#12FFFFFF"
+                                          HorizontalGridLinesBrush="#18FFFFFF"
+                                          MaxHeight="370">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Factor"
+                                                            Binding="{Binding FactorId}"
+                                                            Width="180" />
+                                        <DataGridTextColumn Header="Type"
+                                                            Binding="{Binding FactorType}"
+                                                            Width="75" />
+                                        <DataGridTextColumn Header="Horizon"
+                                                            Binding="{Binding Horizon}"
+                                                            Width="65" />
+                                        <DataGridTextColumn Header="Global"
+                                                            Binding="{Binding GlobalStateLabel}"
+                                                            Width="85" />
+                                        <DataGridTextColumn Header="Strategy"
+                                                            Binding="{Binding StrategyStateLabel}"
+                                                            Width="85" />
+                                        <DataGridTextColumn Header="Trials"
+                                                            Binding="{Binding TrialCount}"
+                                                            Width="55" />
+                                        <DataGridTextColumn Header="OOS Evidence"
+                                                            Binding="{Binding OosEvidence}"
+                                                            Width="170" />
+                                        <DataGridTextColumn Header="Regime Evidence"
+                                                            Binding="{Binding RegimeEvidence}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Marginal"
+                                                            Binding="{Binding MarginalContribution}"
+                                                            Width="70" />
+                                        <DataGridTextColumn Header="Reason"
+                                                            Binding="{Binding StateReason}"
+                                                            Width="240" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
                             </StackPanel>
                         </Border>
 
-                        <TextBlock Text="Run the proposal twice to promote the shadow factor and retire the weak factor. Fixture factor state remains local."
-                                   Style="{StaticResource BodySecondary}"
-                                   FontSize="11"
-                                   Margin="4,15,0,0" />
+                        <Border Style="{StaticResource CardBorder}"
+                                Margin="0,18,0,0"
+                                Padding="0">
+                            <StackPanel>
+                                <TextBlock Text="Trial Registry (accepted and failed)"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Margin="18,16,18,10" />
+                                <DataGrid ItemsSource="{Binding RecentFactorTrials}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          CanUserAddRows="False"
+                                          CanUserDeleteRows="False"
+                                          HeadersVisibility="Column"
+                                          GridLinesVisibility="Horizontal"
+                                          Background="Transparent"
+                                          Foreground="{StaticResource PrimaryTextBrush}"
+                                          BorderThickness="0"
+                                          MaxHeight="250">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Trial"
+                                                            Binding="{Binding TrialId}"
+                                                            Width="165" />
+                                        <DataGridTextColumn Header="Family"
+                                                            Binding="{Binding FactorFamily}"
+                                                            Width="170" />
+                                        <DataGridTextColumn Header="Expression"
+                                                            Binding="{Binding Expression}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Generation"
+                                                            Binding="{Binding Generation}"
+                                                            Width="75" />
+                                        <DataGridTextColumn Header="OOS"
+                                                            Binding="{Binding OosWindows}"
+                                                            Width="50" />
+                                        <DataGridTextColumn Header="Result"
+                                                            Binding="{Binding Result}"
+                                                            Width="90" />
+                                        <DataGridTextColumn Header="Rejection"
+                                                            Binding="{Binding RejectionReason}"
+                                                            Width="280" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
 
@@ -829,7 +854,17 @@
                                                Margin="0,3,0,0" />
                                     <TextBlock Text="{Binding SelectedStrategy.LastHeartbeatDisplay}"
                                                Style="{StaticResource BodySecondary}"
-                                               Margin="0,3,0,14" />
+                                               Margin="0,3,0,0" />
+                                    <TextBlock Text="{Binding SelectedStrategy.CapitalBudgetDisplay, StringFormat=Capital budget: {0}}"
+                                               Foreground="#FF54D38A"
+                                               FontSize="11"
+                                               FontWeight="SemiBold"
+                                               Margin="0,7,0,0" />
+                                    <TextBlock Text="{Binding SelectedStrategy.AllocationExplanation}"
+                                               Style="{StaticResource BodySecondary}"
+                                               FontSize="10"
+                                               TextWrapping="Wrap"
+                                               Margin="0,4,0,14" />
                                     <WrapPanel Margin="0,0,0,14">
                                         <Button Content="Start"
                                                 Style="{StaticResource PrimaryButton}"

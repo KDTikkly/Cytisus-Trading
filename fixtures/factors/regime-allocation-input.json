@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "regime_input": {
+    "trend_strength": 0.68,
+    "range_score": 0.24,
+    "realized_volatility": 0.36,
+    "cross_asset_risk": 0.31,
+    "strategy_reported_fit": {
+      "Trend": 0.72,
+      "Range": 0.35,
+      "HighVolatility": 0.42,
+      "Crisis": 0.18
+    }
+  },
+  "total_capital": 100000.0,
+  "base_risk_fraction": 0.65,
+  "strategies": [
+    {
+      "strategy_id": "cross-sectional-multifactor",
+      "health": "Healthy",
+      "is_new": false,
+      "long_term_oos": 0.68,
+      "recent_live": 0.0,
+      "recent_paper": 0.61,
+      "signal_strength": 0.58,
+      "regime_fit": 0.72,
+      "confidence_calibration": 0.70,
+      "data_quality": 0.94,
+      "model_uncertainty": 0.22,
+      "volatility": 0.18,
+      "average_correlation": 0.28,
+      "drawdown": 0.04,
+      "capacity": 0.90,
+      "liquidity": 0.95,
+      "current_weight": 0.55
+    },
+    {
+      "strategy_id": "fixture-defensive",
+      "health": "Healthy",
+      "is_new": true,
+      "long_term_oos": 0.42,
+      "recent_live": 0.0,
+      "recent_paper": 0.48,
+      "signal_strength": 0.36,
+      "regime_fit": 0.44,
+      "confidence_calibration": 0.58,
+      "data_quality": 0.89,
+      "model_uncertainty": 0.38,
+      "volatility": 0.12,
+      "average_correlation": 0.18,
+      "drawdown": 0.02,
+      "capacity": 0.84,
+      "liquidity": 0.88,
+      "current_weight": 0.45
+    }
+  ]
+}

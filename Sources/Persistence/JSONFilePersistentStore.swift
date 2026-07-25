@@ -5,7 +5,7 @@ enum PersistentStoreError: Error {
     case invalidJSONLine
 }
 
-final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEventStore, MigrationStore, StrategyStateStore {
+final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEventStore, MigrationStore, StrategyStateStore, FactorResearchStore {
     private let rootURL: URL
     private let fileManager: FileManager
     private let encoder: JSONEncoder
@@ -21,6 +21,12 @@ final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEv
     private var strategyStatesURL: URL { rootURL.appendingPathComponent("strategy-states.json") }
     private var parameterChangesURL: URL { rootURL.appendingPathComponent("strategy-parameter-changes.ndjson") }
     private var liveAuthorizationsURL: URL { rootURL.appendingPathComponent("live-authorizations.json") }
+    private var factorDefinitionsURL: URL {
+        rootURL.appendingPathComponent("factor-definitions.json")
+    }
+    private var factorTrialsURL: URL {
+        rootURL.appendingPathComponent("factor-trials.ndjson")
+    }
 
     init(rootURL: URL, fileManager: FileManager = .default) {
         self.rootURL = rootURL
@@ -189,6 +195,38 @@ final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEv
             values.sorted { $0.authorizationId < $1.authorizationId },
             to: liveAuthorizationsURL
         )
+    }
+
+    func loadFactorDefinitions() throws -> [FactorDefinition] {
+        guard fileManager.fileExists(atPath: factorDefinitionsURL.path) else {
+            return []
+        }
+        return try read([FactorDefinition].self, from: factorDefinitionsURL)
+    }
+
+    func saveFactorDefinitions(_ definitions: [FactorDefinition]) throws {
+        try write(
+            definitions.sorted { $0.factorId < $1.factorId },
+            to: factorDefinitionsURL
+        )
+    }
+
+    func loadFactorTrials(limit: Int) throws -> [FactorTrial] {
+        guard fileManager.fileExists(atPath: factorTrialsURL.path) else {
+            return []
+        }
+        let content = try String(contentsOf: factorTrialsURL, encoding: .utf8)
+        return try content.split(separator: "\n").suffix(max(0, limit)).map {
+            line in
+            guard let data = String(line).data(using: .utf8) else {
+                throw PersistentStoreError.invalidJSONLine
+            }
+            return try decoder.decode(FactorTrial.self, from: data)
+        }
+    }
+
+    func appendFactorTrial(_ trial: FactorTrial) throws {
+        try appendLine(trial, to: factorTrialsURL)
     }
 
     private func read<T: Decodable>(_ type: T.Type, from url: URL) throws -> T {

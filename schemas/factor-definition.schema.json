@@ -92,6 +92,20 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 2048
+    },
+    "strategy_states": {
+      "type": "object",
+      "additionalProperties": {
+        "enum": [
+          "Candidate",
+          "Shadow",
+          "Active",
+          "Reduced",
+          "Probation",
+          "Retired",
+          "Quarantined"
+        ]
+      }
     }
   }
 }

@@ -10,7 +10,8 @@ public sealed class JsonFilePersistentStore :
     IApplicationLogStore,
     IAuditEventStore,
     IMigrationStore,
-    IStrategyStateStore
+    IStrategyStateStore,
+    IFactorResearchStore
 {
     private readonly string _rootDirectory;
     private readonly object _gate = new();
@@ -30,6 +31,10 @@ public sealed class JsonFilePersistentStore :
         Path.Combine(_rootDirectory, "parameter-changes.ndjson");
     private string LiveAuthorizationsPath =>
         Path.Combine(_rootDirectory, "live-authorizations.json");
+    private string FactorDefinitionsPath =>
+        Path.Combine(_rootDirectory, "factor-definitions.json");
+    private string FactorTrialsPath =>
+        Path.Combine(_rootDirectory, "factor-trials.ndjson");
 
     public JsonFilePersistentStore(string rootDirectory)
     {
@@ -295,6 +300,53 @@ public sealed class JsonFilePersistentStore :
             }
             WriteDocument(LiveAuthorizationsPath, authorizations);
         }
+    }
+
+    public IReadOnlyList<FactorDefinition> LoadFactorDefinitions()
+    {
+        lock (_gate)
+        {
+            return File.Exists(FactorDefinitionsPath)
+                ? ReadDocument<List<FactorDefinition>>(FactorDefinitionsPath)
+                : Array.Empty<FactorDefinition>();
+        }
+    }
+
+    public void SaveFactorDefinitions(
+        IReadOnlyList<FactorDefinition> definitions)
+    {
+        lock (_gate)
+        {
+            WriteDocument(
+                FactorDefinitionsPath,
+                definitions
+                    .OrderBy(definition => definition.FactorId)
+                    .ToArray());
+        }
+    }
+
+    public IReadOnlyList<FactorTrial> LoadFactorTrials(int limit)
+    {
+        lock (_gate)
+        {
+            if (!File.Exists(FactorTrialsPath))
+            {
+                return Array.Empty<FactorTrial>();
+            }
+            return File.ReadLines(FactorTrialsPath, Encoding.UTF8)
+                .Where(line => !string.IsNullOrWhiteSpace(line))
+                .TakeLast(Math.Max(0, limit))
+                .Select(line => JsonSerializer.Deserialize<FactorTrial>(
+                    line,
+                    _lineOptions) ?? throw new InvalidDataException(
+                    "Invalid factor-trial JSON line."))
+                .ToArray();
+        }
+    }
+
+    public void AppendFactorTrial(FactorTrial trial)
+    {
+        AppendLine(FactorTrialsPath, trial);
     }
 
     private static JsonSerializerOptions CreateOptions(bool writeIndented)

@@ -75,6 +75,9 @@ public sealed class StrategyItemViewModel : ObservableObject
     private int _parameterVersion;
     private bool _blocksNewRisk;
     private LiveToPaperTransition _transition;
+    private double _capitalBudget;
+    private string _allocationExplanation =
+        "Allocation has not been calculated.";
 
     public StrategyItemViewModel(
         StrategyManifest manifest,
@@ -170,6 +173,29 @@ public sealed class StrategyItemViewModel : ObservableObject
     public ObservableCollection<StrategyTarget> Targets { get; } = new();
     public ObservableCollection<StrategyIntentRecord> Intents { get; } = new();
     public ObservableCollection<StrategyCycleSummary> Cycles { get; } = new();
+
+    public double CapitalBudget
+    {
+        get => _capitalBudget;
+        set
+        {
+            if (Set(ref _capitalBudget, value))
+            {
+                Raise(nameof(CapitalBudgetDisplay));
+            }
+        }
+    }
+
+    public string CapitalBudgetDisplay =>
+        CapitalBudget.ToString(
+            "C0",
+            System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+
+    public string AllocationExplanation
+    {
+        get => _allocationExplanation;
+        set => Set(ref _allocationExplanation, value);
+    }
 
     public StrategyPersistentState PersistentState()
     {

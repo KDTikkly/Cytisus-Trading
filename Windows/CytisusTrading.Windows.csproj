@@ -25,9 +25,8 @@
   <ItemGroup>
     <Resource Include="..\Resources\ProductLogo.png" Link="Resources\ProductLogo.png" />
     <Resource Include="..\Resources\ProductIcon.ico" Link="Resources\ProductIcon.ico" />
-    <EmbeddedResource Include="..\fixtures\factors\demo-factors.json">
-      <Link>fixtures\factors\demo-factors.json</Link>
-      <LogicalName>CytisusTrading.fixtures.factors.demo-factors.json</LogicalName>
+    <EmbeddedResource Include="..\fixtures\factors\*.json">
+      <Link>fixtures\factors\%(Filename)%(Extension)</Link>
     </EmbeddedResource>
     <EmbeddedResource Include="..\fixtures\longbridge\*.json">
       <Link>fixtures\longbridge\%(Filename)%(Extension)</Link>

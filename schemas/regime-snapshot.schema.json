@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/KDTikkly/Cytisus-Trading/schemas/regime-snapshot.schema.json",
+  "title": "Cytisus Regime Snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "as_of",
+    "probabilities",
+    "uncertainty",
+    "risk_multiplier",
+    "explanation"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "as_of": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "probabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "Trend",
+        "Range",
+        "HighVolatility",
+        "Crisis"
+      ],
+      "properties": {
+        "Trend": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "Range": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "HighVolatility": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "Crisis": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "uncertainty": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "risk_multiplier": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "explanation": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
+    }
+  }
+}

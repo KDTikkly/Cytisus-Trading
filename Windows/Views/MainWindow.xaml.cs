@@ -28,6 +28,11 @@ public partial class MainWindow : Window
         _model.RunReview();
     }
 
+    private void RunFactorSearch_Click(object sender, RoutedEventArgs e)
+    {
+        _model.RunTinyFactorSearch();
+    }
+
     private void Reset_Click(object sender, RoutedEventArgs e)
     {
         _model.ResetDemo();

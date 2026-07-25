@@ -46,6 +46,11 @@ public sealed class StudioViewModel : ObservableObject
         LiveToPaperTransition.StopOpeningRisk;
     private readonly Dictionary<string, ExternalStrategyRuntime>
         _externalRuntimes = new(StringComparer.Ordinal);
+    private NormalizedResearchDataset? _researchDataset;
+    private RegimeSnapshot? _regimeSnapshot;
+    private CapitalAllocationResult? _capitalAllocation;
+    private string _candidateSearchStatus =
+        "Tiny deterministic search has not run.";
 
     public StudioViewModel()
         : this(AppServices.CreateOfflineFixture())
@@ -84,6 +89,7 @@ public sealed class StudioViewModel : ObservableObject
             ApplicationLogs.Add(entry);
         }
         InitializeStrategies();
+        InitializeResearch();
 
         AppendLog(
             ApplicationLogLevel.Info,
@@ -106,8 +112,40 @@ public sealed class StudioViewModel : ObservableObject
     public ObservableCollection<UniverseEntry> UniverseEntries { get; } = new();
     public ObservableCollection<ApplicationLogEntry> ApplicationLogs { get; } = new();
     public ObservableCollection<StrategyItemViewModel> Strategies { get; } = new();
+    public ObservableCollection<FactorResearchSummary> ResearchFactors { get; } =
+        new();
+    public ObservableCollection<FactorTrial> RecentFactorTrials { get; } =
+        new();
     public ObservableCollection<string> LogSeverityOptions { get; } =
         new(new[] { "All", "Debug", "Info", "Warning", "Error", "Critical" });
+
+    public string CandidateSearchStatus
+    {
+        get => _candidateSearchStatus;
+        private set => Set(ref _candidateSearchStatus, value);
+    }
+
+    public string TrendProbability =>
+        (_regimeSnapshot?.Trend ?? 0).ToString("P1", EnglishCulture);
+    public string RangeProbability =>
+        (_regimeSnapshot?.Range ?? 0).ToString("P1", EnglishCulture);
+    public string HighVolatilityProbability =>
+        (_regimeSnapshot?.HighVolatility ?? 0)
+        .ToString("P1", EnglishCulture);
+    public string CrisisProbability =>
+        (_regimeSnapshot?.Crisis ?? 0).ToString("P1", EnglishCulture);
+    public string RegimeUncertainty =>
+        (_regimeSnapshot?.Uncertainty ?? 0)
+        .ToString("P1", EnglishCulture);
+    public string PortfolioRiskDisplay =>
+        (_regimeSnapshot?.RiskMultiplier ?? 0)
+        .ToString("P0", EnglishCulture);
+    public string CapitalUsageDisplay =>
+        (_capitalAllocation?.TotalRiskBudget ?? 0)
+        .ToString("C0", EnglishCulture);
+    public string AllocatorSummary => _capitalAllocation is null
+        ? "Allocator has not run."
+        : $"Risk budget {CapitalUsageDisplay} | Regime multiplier {PortfolioRiskDisplay} | Alpha tilt capped at {DynamicCapitalAllocator.MaximumAlphaTilt:P0}.";
 
     public StrategyMode CurrentStrategyMode =>
         SelectedStrategy?.Mode ?? StrategyMode.PaperOnly;
@@ -990,6 +1028,59 @@ public sealed class StudioViewModel : ObservableObject
         }
     }
 
+    public void RunTinyFactorSearch()
+    {
+        if (_researchDataset is null)
+        {
+            CandidateSearchStatus =
+                "Research data is unavailable; no candidate was evaluated.";
+            return;
+        }
+        try
+        {
+            var definitions = _services.FactorResearchStore
+                .LoadFactorDefinitions();
+            var result = _services.FactorSearch.RunTinySearch(
+                _researchDataset,
+                definitions,
+                FactorSearchConfiguration.Tiny);
+            ReplaceResearchFactors(result.Summaries);
+            RecentFactorTrials.Clear();
+            foreach (var trial in result.Trials
+                         .OrderByDescending(item => item.CreatedAt)
+                         .Take(50))
+            {
+                RecentFactorTrials.Add(trial);
+            }
+            CandidateSearchStatus = result.Status;
+            AppendAudit(
+                "TinyFactorBeamSearchCompleted",
+                new Dictionary<string, string>
+                {
+                    ["dataset_version"] =
+                        _researchDataset.DatasetVersion,
+                    ["universe_version"] =
+                        _researchDataset.UniverseVersion,
+                    ["evaluated_count"] =
+                        result.EvaluatedCount.ToString(EnglishCulture),
+                    ["candidate_count"] =
+                        result.CandidateCount.ToString(EnglishCulture),
+                    ["rejected_count"] =
+                        result.RejectedCount.ToString(EnglishCulture),
+                    ["quarantined_count"] =
+                        result.QuarantinedCount.ToString(EnglishCulture),
+                    ["search_algorithm"] =
+                        "deterministic-constrained-beam-v1"
+                },
+                AuditEventCategory.FactorLifecycle);
+        }
+        catch (Exception exception)
+        {
+            CandidateSearchStatus =
+                $"Tiny search failed closed: {SensitiveDataRedactor.Redact(exception.Message)}";
+        }
+    }
+
     public void RunReview()
     {
         _reviewCount += 1;
@@ -1414,6 +1505,102 @@ public sealed class StudioViewModel : ObservableObject
         }
         SelectedStrategy = Strategies.FirstOrDefault();
         RaiseDashboard();
+    }
+
+    private void InitializeResearch()
+    {
+        try
+        {
+            var source = _services.FixtureDataService
+                .LoadFixtureSnapshot();
+            _researchDataset = _services.ResearchFixtures
+                .BuildDataset(source);
+            var definitions = _services.FactorResearchStore
+                .LoadFactorDefinitions();
+            if (definitions.Count == 0)
+            {
+                definitions = _services.ResearchFixtures
+                    .LoadFactorDefinitions();
+                _services.FactorResearchStore
+                    .SaveFactorDefinitions(definitions);
+            }
+            var trials = _services.FactorResearchStore
+                .LoadFactorTrials(200);
+            ReplaceResearchFactors(
+                FactorSearchService.InitialSummaries(
+                    definitions,
+                    trials));
+            RecentFactorTrials.Clear();
+            foreach (var trial in trials
+                         .OrderByDescending(item => item.CreatedAt)
+                         .Take(50))
+            {
+                RecentFactorTrials.Add(trial);
+            }
+
+            var fixture = _services.ResearchFixtures
+                .LoadRegimeAllocationFixture();
+            _regimeSnapshot = _services.RegimeEngine.Evaluate(
+                fixture.RegimeInput,
+                _researchDataset.CreatedAt);
+            _capitalAllocation = _services.CapitalAllocator.Allocate(
+                fixture.TotalCapital,
+                fixture.BaseRiskFraction,
+                _regimeSnapshot,
+                fixture.Strategies);
+            ApplyCapitalAllocations(_capitalAllocation);
+            CandidateSearchStatus = trials.Count == 0
+                ? "Ready for a tiny deterministic beam search."
+                : $"Loaded {trials.Count} retained factor trials.";
+            RaiseResearchSummary();
+        }
+        catch (Exception exception)
+        {
+            CandidateSearchStatus =
+                $"Research foundation is degraded: {SensitiveDataRedactor.Redact(exception.Message)}";
+        }
+    }
+
+    private void ApplyCapitalAllocations(
+        CapitalAllocationResult result)
+    {
+        foreach (var allocation in result.Allocations)
+        {
+            var strategy = Strategies.FirstOrDefault(item =>
+                string.Equals(
+                    item.StrategyId,
+                    allocation.StrategyId,
+                    StringComparison.Ordinal));
+            if (strategy is null)
+            {
+                continue;
+            }
+            strategy.CapitalBudget = allocation.CapitalBudget;
+            strategy.AllocationExplanation =
+                allocation.ExplanationText;
+        }
+    }
+
+    private void ReplaceResearchFactors(
+        IEnumerable<FactorResearchSummary> summaries)
+    {
+        ResearchFactors.Clear();
+        foreach (var summary in summaries)
+        {
+            ResearchFactors.Add(summary);
+        }
+    }
+
+    private void RaiseResearchSummary()
+    {
+        Raise(nameof(TrendProbability));
+        Raise(nameof(RangeProbability));
+        Raise(nameof(HighVolatilityProbability));
+        Raise(nameof(CrisisProbability));
+        Raise(nameof(RegimeUncertainty));
+        Raise(nameof(PortfolioRiskDisplay));
+        Raise(nameof(CapitalUsageDisplay));
+        Raise(nameof(AllocatorSummary));
     }
 
     private void LoadParameterHistory(StrategyItemViewModel strategy)

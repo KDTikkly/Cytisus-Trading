@@ -50,6 +50,9 @@ final class StrategyItemModel: ObservableObject, Identifiable {
     @Published var targets: [StrategyTarget] = []
     @Published var intents: [StrategyIntentRecord] = []
     @Published var cycles: [StrategyCycleSummary] = []
+    @Published var capitalBudget = 0.0
+    @Published var capitalAllocationExplanation =
+        "Dynamic allocation evidence is not available."
 
     init(
         manifest: StrategyManifest,
@@ -81,6 +84,11 @@ final class StrategyItemModel: ObservableObject, Identifiable {
     var lastHeartbeatDisplay: String {
         lastHeartbeat?.formatted(date: .abbreviated, time: .shortened)
             ?? "No heartbeat"
+    }
+    var capitalBudgetDisplay: String {
+        capitalBudget.formatted(
+            .currency(code: "USD").precision(.fractionLength(0))
+        )
     }
 
     func persistentState() -> StrategyPersistentState {

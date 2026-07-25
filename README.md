@@ -8,7 +8,7 @@ Cytisus-Trading is a local desktop front end for automated quantitative operatio
 
 ## v1.1 implementation status
 
-Version 1.1.0 is in progress. Prompt 3 adds the governed local strategy runtime and deterministic Paper operation while keeping Live broker submission unavailable.
+Version 1.1.0 is in progress. Prompt 4 adds deterministic factor research, lifecycle controls, regime probabilities, and dynamic strategy capital budgets while keeping Live broker submission unavailable.
 
 Currently available:
 
@@ -33,13 +33,20 @@ Currently available:
 - A Global Live Lock that is OFF by default and bounded Live-authorization validation.
 - A rejecting Live adapter that prevents broker submission during this implementation pass.
 - Native Dashboard and Strategies screens with health, cycle, signal, target, intent, and runtime state.
+- Typed deterministic Factor DSL implementations on both native platforms.
+- Multi-task Alpha, Risk, Regime, Liquidity, and Execution factor contracts.
+- A bounded deterministic beam search with nine economic seed families and neighboring-horizon validation.
+- An append-only local Trial Registry that retains rejected candidates.
+- Global quarantine, strategy-specific lifecycle state, risk contraction, retirement, and recovery guards.
+- Deterministic Trend, Range, High Volatility, and Crisis probabilities with uncertainty.
+- Dynamic strategy capital budgets with capped alpha tilt, correlation, drawdown, capacity, liquidity, and turnover controls.
+- Native factor research, regime, and allocator explanations.
 - English-only ASCII repository validation.
 
 Not yet available:
 
-- Factor DSL execution or factor search.
-- Portfolio allocation.
-- Real Paper or Live broker execution.
+- Final portfolio construction, internal netting, and partial-fill allocation.
+- Real broker execution.
 - Broker order submission.
 - Manual order entry.
 
@@ -157,9 +164,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_ascii.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_json.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_prompt2.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_prompt3.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_prompt4.ps1
 ```
 
-The Windows application supports `--foundation-smoke`, `--prompt2-smoke`, and `--prompt3-smoke`. The Prompt 3 smoke covers manifest rejection, NDJSON round trips, heartbeat timeout, malformed output, all parameter risk tiers, Live Lock and authorization rules, Paper isolation, and the official deterministic Paper cycle.
+The Windows application also supports `--prompt4-smoke`. The Prompt 4 smoke covers DSL temporal safety and reproducibility, bounded beam search, failed-trial retention, lifecycle guards, normalized regime probabilities, uncertainty-driven risk contraction, capped alpha tilt, and deterministic allocation.
 
 ## Privacy and security
 
@@ -168,7 +176,7 @@ The Windows application supports `--foundation-smoke`, `--prompt2-smoke`, and `-
 - Optional broker-position snapshots are used only for Reduce Only universe behavior and are not cached.
 - No tokens, credentials, certificates, or authorization output.
 - No Live broker submission.
-- Registered strategy manifests and state, parameter history, bounded Live authorizations, non-sensitive settings, market cache records, universe snapshots, operational logs, and audit events are stored locally.
+- Registered strategy manifests and state, parameter history, bounded Live authorizations, factor definitions and trials, non-sensitive settings, market cache records, universe snapshots, operational logs, and audit events are stored locally.
 - Factor demo state resets deterministically from repository fixtures.
 
 See [PRIVACY.md](PRIVACY.md) and [SANITIZATION.json](SANITIZATION.json).

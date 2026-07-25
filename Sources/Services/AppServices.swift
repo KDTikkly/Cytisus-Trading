@@ -20,6 +20,13 @@ struct AppServices {
     let liveBrokerAdapter: LiveBrokerAdapting
     let strategyIntentRouter: StrategyIntentRouter
     let officialStrategyRuntime: OfficialStrategyRuntimeServicing
+    let factorResearchStore: FactorResearchStore
+    let researchFixtures: ResearchFixtureService
+    let factorDSL: FactorDSLService
+    let factorSearch: FactorSearchService
+    let factorLifecycle: FactorLifecycleService
+    let regimeEngine: RegimeEngine
+    let capitalAllocator: DynamicCapitalAllocator
 
     static func offlineFixture() -> AppServices {
         let store = JSONFilePersistentStore(rootURL: JSONFilePersistentStore.defaultRootURL())
@@ -34,6 +41,8 @@ struct AppServices {
         let strategyCodec = StrategyMessageCodec()
         let liveAdapter = RejectingLiveBrokerAdapter()
         let router = StrategyIntentRouter()
+        let researchFixtures = ResearchFixtureService()
+        let factorDSL = FactorDSLService()
 
         return AppServices(
             factorRepository: FixtureFactorRepository(),
@@ -61,7 +70,17 @@ struct AppServices {
                 codec: strategyCodec,
                 router: router,
                 liveAdapter: liveAdapter
-            )
+            ),
+            factorResearchStore: store,
+            researchFixtures: researchFixtures,
+            factorDSL: factorDSL,
+            factorSearch: FactorSearchService(
+                dsl: factorDSL,
+                store: store
+            ),
+            factorLifecycle: FactorLifecycleService(),
+            regimeEngine: RegimeEngine(),
+            capitalAllocator: DynamicCapitalAllocator()
         )
     }
 }

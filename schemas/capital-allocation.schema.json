@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/KDTikkly/Cytisus-Trading/schemas/capital-allocation.schema.json",
+  "title": "Cytisus Strategy Capital Allocation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "strategy_id",
+    "final_weight",
+    "capital_budget",
+    "explanation"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "strategy_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "final_weight": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "capital_budget": {
+      "type": "number",
+      "minimum": 0
+    },
+    "explanation": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
+    }
+  }
+}

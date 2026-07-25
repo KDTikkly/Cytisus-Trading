@@ -1,7 +1,7 @@
 {
   "artifact": "Cytisus-Trading",
   "version": "1.1.0",
-  "implementation_stage": "Prompt 3 strategy runtime and parameter governance",
+  "implementation_stage": "Prompt 4 factor research, regime, and dynamic allocation",
   "implementation_in_progress": true,
   "language": "en",
   "platforms": [
@@ -18,8 +18,10 @@
   "strategy_direct_cli_access": false,
   "global_live_lock_default": false,
   "live_adapter": "rejecting stub",
-  "factor_search": false,
-  "portfolio_allocation": false,
+  "factor_search": true,
+  "factor_search_scope": "bounded deterministic local fixture research",
+  "portfolio_allocation": true,
+  "portfolio_allocation_scope": "local strategy capital budgets without orders or netting",
   "broker_integrations": [
     "Longbridge CLI read-only data adapter"
   ],
@@ -39,6 +41,7 @@
     "strategy manifests and state",
     "parameter change history",
     "bounded Live authorizations without credentials",
+    "factor definitions and append-only trial records",
     "application logs",
     "audit events"
   ]
