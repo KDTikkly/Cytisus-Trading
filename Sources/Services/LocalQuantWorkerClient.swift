@@ -84,7 +84,14 @@ final class ProcessLocalQuantWorkerClient: LocalQuantWorkerClient {
         guard data.count <= maximumResponseBytes else {
             throw LocalQuantWorkerError.responseTooLarge
         }
-        let firstLine = data.split(separator: 0x0a).first.map(Data.init) ?? data
+        let firstLine: Data
+        if let newlineIndex = data.firstIndex(where: { (byte: UInt8) in
+            byte == 0x0a
+        }) {
+            firstLine = Data(data[..<newlineIndex])
+        } else {
+            firstLine = data
+        }
         return try JSONSerialization.jsonObject(
             with: firstLine
         ) as? [String: Any] ?? [:]

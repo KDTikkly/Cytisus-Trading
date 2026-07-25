@@ -20,12 +20,14 @@ try {
         $ExecutablePath = Join-Path $repoRoot (
             "Windows\bin\Release\net8.0-windows\CytisusTrading.exe")
     }
-    if (-not [System.IO.Path]::IsPathRooted($ExecutablePath) -or
-        -not (Test-Path -LiteralPath $ExecutablePath -PathType Leaf)) {
-        throw "ExecutablePath must be an existing absolute file path."
+    if (-not [System.IO.Path]::IsPathRooted($ExecutablePath)) {
+        $ExecutablePath = Join-Path $repoRoot $ExecutablePath
     }
     $resolvedExecutable = [System.IO.Path]::GetFullPath(
         [string]$ExecutablePath)
+    if (-not (Test-Path -LiteralPath $resolvedExecutable -PathType Leaf)) {
+        throw "ExecutablePath must resolve to an existing file."
+    }
     $process = Start-Process `
         -FilePath $resolvedExecutable `
         -ArgumentList @("--v113-smoke", $smokeRoot) `
