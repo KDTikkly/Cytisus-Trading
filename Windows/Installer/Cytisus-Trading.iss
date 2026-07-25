@@ -7,13 +7,13 @@
 #endif
 
 #ifndef ArtifactBaseName
-  #define ArtifactBaseName "Cytisus-Trading-1.1.3-win11-x64"
+  #define ArtifactBaseName "Cytisus-Trading-1.1.4-win11-x64"
 #endif
 
 [Setup]
 AppId={{A69B1E9B-BD48-4E79-830B-12B60EB45104}
 AppName=Cytisus-Trading
-AppVersion=1.1.3
+AppVersion=1.1.4
 AppPublisher=Cytisus-Trading contributors
 AppPublisherURL=https://github.com/KDTikkly/Cytisus-Trading
 DefaultDirName={autopf}\Cytisus-Trading
@@ -29,7 +29,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=admin
 UninstallDisplayIcon={app}\CytisusTrading.exe
 SetupIconFile=..\..\Resources\ProductIcon.ico
-VersionInfoVersion=1.1.3.0
+VersionInfoVersion=1.1.4.0
 VersionInfoProductName=Cytisus-Trading
 VersionInfoDescription=Cytisus-Trading Windows 11 installer
 VersionInfoCompany=Cytisus-Trading contributors

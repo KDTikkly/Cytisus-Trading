@@ -88,7 +88,7 @@
                             <TextBlock Text="Cytisus-Trading"
                                        FontWeight="SemiBold"
                                        FontSize="15" />
-                            <TextBlock Text="v1.1.3 Automated Operations"
+                            <TextBlock Text="v1.1.4 Automated Operations"
                                        Foreground="{StaticResource SecondaryTextBrush}"
                                        FontSize="11"
                                        Margin="0,3,0,0" />
@@ -1871,9 +1871,9 @@
                                                            FontSize="10"
                                                            Foreground="{StaticResource SecondaryTextBrush}" />
                                                 <TextBlock>
-                                                    <Run Text="{Binding SelectedProviderModelCount}" />
+                                                    <Run Text="{Binding SelectedProviderModelCount, Mode=OneWay}" />
                                                     <Run Text=" / " />
-                                                    <Run Text="{Binding SelectedProviderRoleBadge}" />
+                                                    <Run Text="{Binding SelectedProviderRoleBadge, Mode=OneWay}" />
                                                 </TextBlock>
                                             </StackPanel>
                                         </Grid>
@@ -2119,7 +2119,7 @@
                                            Style="{StaticResource BodySecondary}"
                                            TextWrapping="Wrap"
                                            Margin="0,6,0,0" />
-                                <TextBlock Text="Live broker submission remains intentionally rejecting until v1.1.3 command verification."
+                                <TextBlock Text="Live broker submission remains intentionally rejecting until a later verified Live release."
                                            Foreground="#FFF7B955"
                                            FontSize="11"
                                            Margin="0,5,0,0" />

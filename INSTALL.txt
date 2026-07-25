@@ -1,8 +1,9 @@
-Cytisus-Trading 1.1.3
+Cytisus-Trading 1.1.4
 
 IMPLEMENTATION STATUS
 
-v1.1 Local Paper implementation is complete. Version 1.1.3 repairs Longbridge
+v1.1 Local Paper implementation is complete. Version 1.1.4 fixes Windows
+front-end startup and retains the v1.1.3 Longbridge
 Terminal discovery, login, command mapping, and Paper-account classification.
 The app starts in offline fixture mode.
 Read-only Longbridge CLI discovery, market fixtures, local caching, and daily
@@ -14,13 +15,13 @@ not available.
 
 MACOS
 
-1. Download and open "Cytisus-Trading-1.1.3-universal.dmg".
+1. Download and open "Cytisus-Trading-1.1.4-universal.dmg".
 2. Drag "Cytisus-Trading.app" into Applications.
 3. Open Cytisus-Trading from Applications.
 
 WINDOWS 11
 
-Download "Cytisus-Trading-1.1.3-win11-x64.exe", run the English installation
+Download "Cytisus-Trading-1.1.4-win11-x64.exe", run the English installation
 wizard, choose the destination, and launch Cytisus-Trading from the Start menu.
 
 NOTES

@@ -70,7 +70,7 @@ struct SidebarView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Cytisus-Trading")
                         .font(.headline.weight(.semibold))
-                    Text("v1.1.3 Automated Operations")
+                    Text("v1.1.4 Automated Operations")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -1002,7 +1002,7 @@ struct SettingsView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Text(
-                            "Live broker submission remains intentionally rejecting until v1.1.3 command verification."
+                            "Live broker submission remains intentionally rejecting until a later verified Live release."
                         )
                         .font(.caption)
                         .foregroundStyle(.orange)
