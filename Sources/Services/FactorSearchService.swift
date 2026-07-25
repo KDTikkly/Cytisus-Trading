@@ -33,14 +33,29 @@ final class FactorSearchService {
         if configuration.maximumGenerations > 1 {
             for generation in 1..<configuration.maximumGenerations
                 where evaluated.count < configuration.maximumCandidates {
-                let beam = evaluated.sorted {
+                let sortedEvaluated: [CandidateEvaluation] =
+                    evaluated.sorted {
                     $0.rawScore == $1.rawScore
                         ? $0.draft.expression < $1.draft.expression
                         : $0.rawScore > $1.rawScore
-                }.prefix(min(configuration.beamWidth, configuration.topK))
-                let expansions = beam.flatMap {
-                    expand($0.draft, generation: generation)
-                }.sorted {
+                }
+                let beamLimit = min(
+                    configuration.beamWidth,
+                    configuration.topK
+                )
+                let beam: [CandidateEvaluation] = Array(
+                    sortedEvaluated.prefix(beamLimit)
+                )
+                var expansions: [CandidateDraft] = []
+                for candidate in beam {
+                    expansions.append(
+                        contentsOf: expand(
+                            candidate.draft,
+                            generation: generation
+                        )
+                    )
+                }
+                expansions.sort {
                     $0.family == $1.family
                         ? $0.expression < $1.expression
                         : $0.family < $1.family

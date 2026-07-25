@@ -2,6 +2,16 @@ name: Build desktop releases
 
 on:
   workflow_dispatch:
+    inputs:
+      target:
+        description: Build target
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - macos
+          - windows
   push:
     tags:
       - "v*"
@@ -27,6 +37,7 @@ jobs:
 
   macos:
     name: Build macOS DMG
+    if: github.event_name != 'workflow_dispatch' || inputs.target == 'all' || inputs.target == 'macos'
     needs: text-check
     runs-on: macos-14
     steps:
@@ -50,6 +61,7 @@ jobs:
 
   windows:
     name: Build Windows 11 executable
+    if: github.event_name != 'workflow_dispatch' || inputs.target == 'all' || inputs.target == 'windows'
     needs: text-check
     runs-on: windows-2022
     steps:
