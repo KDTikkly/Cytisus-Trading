@@ -46,6 +46,7 @@ struct RootView: View {
                     case .portfolio: PortfolioView()
                     case .execution: ExecutionView()
                     case .algorithmStudio: AlgorithmStudioView()
+                    case .compute: ComputeView()
                     case .data: DataUniverseView()
                     case .settings: SettingsView()
                     case .logs: LogsView()
@@ -70,7 +71,7 @@ struct SidebarView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Cytisus-Trading")
                         .font(.headline.weight(.semibold))
-                    Text("v1.1.7 Automated Operations")
+                    Text("v1.1.8 Automated Operations")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -919,6 +920,59 @@ struct SettingsView: View {
                     subtitle: "Configure local data and user-supplied model APIs. Longbridge OAuth and model-provider authorization remain separate."
                 )
 
+                GlassCard {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Local Runtime").font(.headline)
+                        TextField(
+                            "Approved Python executable path",
+                            text: $model.pythonExecutablePath
+                        )
+                        .textFieldStyle(.roundedBorder)
+                        TextField(
+                            "Worker root directory",
+                            text: $model.quantWorkerRootDirectory
+                        )
+                        .textFieldStyle(.roundedBorder)
+                        Text(model.quantWorkerStatus)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                HStack(alignment: .top, spacing: 18) {
+                    GlassCard {
+                        VStack(alignment: .leading, spacing: 9) {
+                            Text("Longbridge Accounts").font(.headline)
+                            Text(
+                                "\(model.localStudioState.accounts.count) configured channel"
+                            )
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(.cyan)
+                            Text(model.longbridgeAccountStatus)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    GlassCard {
+                        VStack(alignment: .leading, spacing: 9) {
+                            Text("Agent / Risk Settings").font(.headline)
+                            Text(
+                                "SuggestOnly / ConfirmEveryOrder / BoundedAutonomy"
+                            )
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.cyan)
+                            Text(model.agentCostLimitStatus)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(
+                                "Order permissions remain explicit, limited, expiring, revocable, and gateway controlled."
+                            )
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+
                 ModelProvidersSettingsView(
                     viewModel: model.modelProviders
                 )
@@ -1308,6 +1362,19 @@ struct ExecutionView: View {
                     title: "Execution",
                     subtitle: model.executionSafetyStatus
                 )
+
+                GlassCard {
+                    VStack(alignment: .leading, spacing: 9) {
+                        Text("Execution Algorithms and Infrastructure")
+                            .font(.headline)
+                        Text("Gateway-governed execution modules")
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(.cyan)
+                        Text(model.executionModuleStatus)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
 
                 HStack(spacing: 14) {
                     ExecutionCountCard(

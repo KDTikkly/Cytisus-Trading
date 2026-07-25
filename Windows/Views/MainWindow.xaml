@@ -88,7 +88,7 @@
                             <TextBlock Text="Cytisus-Trading"
                                        FontWeight="SemiBold"
                                        FontSize="15" />
-                            <TextBlock Text="v1.1.7 Automated Operations"
+                            <TextBlock Text="v1.1.8 Automated Operations"
                                        Foreground="{StaticResource SecondaryTextBrush}"
                                        FontSize="11"
                                        Margin="0,3,0,0" />
@@ -288,6 +288,34 @@
                                 </Border>
                                 <TextBlock Grid.Column="1"
                                            Text="Algorithm Studio"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+
+                        <Button x:Name="ComputeNav"
+                                Tag="Compute"
+                                Style="{StaticResource NavButton}"
+                                Click="NavButton_Click"
+                                Margin="0,0,0,5">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="34" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="24"
+                                        Height="24"
+                                        CornerRadius="7"
+                                        Background="#18A68BFA"
+                                        HorizontalAlignment="Left">
+                                    <TextBlock Text="CP"
+                                               Foreground="{StaticResource PurpleBrush}"
+                                               FontSize="9"
+                                               FontWeight="Bold"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Grid.Column="1"
+                                           Text="Compute"
                                            VerticalAlignment="Center" />
                             </Grid>
                         </Button>
@@ -991,14 +1019,42 @@
                                                Margin="0,0,0,12" />
                                     <StackPanel Orientation="Horizontal">
                                         <Button Content="Use Local Paper"
-                                                Style="{StaticResource PrimaryButton}"
                                                 Click="UsePaper_Click"
-                                                Margin="0,0,8,0" />
+                                                Margin="0,0,8,0">
+                                            <Button.Style>
+                                                <Style TargetType="Button"
+                                                       BasedOn="{StaticResource SecondaryButton}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsLocalPaperSelected}"
+                                                                     Value="True">
+                                                            <Setter Property="Background"
+                                                                    Value="{StaticResource AccentBrush}" />
+                                                            <Setter Property="Foreground"
+                                                                    Value="#FF06121E" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
                                         <Button Content="Use Longbridge Paper"
-                                                Style="{StaticResource SecondaryButton}"
                                                 IsEnabled="{Binding LongbridgePaperAvailable}"
                                                 Click="UseLongbridgePaper_Click"
-                                                Margin="0,0,8,0" />
+                                                Margin="0,0,8,0">
+                                            <Button.Style>
+                                                <Style TargetType="Button"
+                                                       BasedOn="{StaticResource SecondaryButton}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsLongbridgePaperSelected}"
+                                                                     Value="True">
+                                                            <Setter Property="Background"
+                                                                    Value="{StaticResource AccentBrush}" />
+                                                            <Setter Property="Foreground"
+                                                                    Value="#FF06121E" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
                                         <Button Content="Request Live"
                                                 Style="{StaticResource SecondaryButton}"
                                                 Click="RequestLive_Click" />
@@ -1375,6 +1431,23 @@
                         <TextBlock Text="{Binding ExecutionSafetyStatus}"
                                    Style="{StaticResource BodySecondary}"
                                    Margin="0,0,0,22" />
+
+                        <Border Style="{StaticResource CardBorder}"
+                                Margin="0,0,0,18">
+                            <StackPanel>
+                                <TextBlock Text="Execution Algorithms and Infrastructure"
+                                           FontSize="15"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="Gateway-governed execution modules"
+                                           Foreground="{StaticResource AccentBrush}"
+                                           FontSize="17"
+                                           FontWeight="SemiBold"
+                                           Margin="0,9,0,6" />
+                                <TextBlock Text="{Binding ExecutionModuleStatus}"
+                                           Style="{StaticResource BodySecondary}"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
 
                         <UniformGrid Columns="4" Margin="0,0,0,18">
                             <Border Style="{StaticResource CardBorder}" Margin="0,0,10,0">
@@ -1813,6 +1886,67 @@
                                    Margin="0,0,0,22" />
 
                         <Border Style="{StaticResource CardBorder}"
+                                Margin="0,0,0,18">
+                            <StackPanel>
+                                <TextBlock Text="Local Runtime"
+                                           FontSize="15"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="Python executable"
+                                           Style="{StaticResource BodySecondary}"
+                                           Margin="0,12,0,5" />
+                                <TextBox Text="{Binding PythonExecutablePath, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Enter an approved absolute interpreter path."
+                                         Margin="0,0,0,10" />
+                                <TextBlock Text="Worker root directory"
+                                           Style="{StaticResource BodySecondary}"
+                                           Margin="0,0,0,5" />
+                                <TextBox Text="{Binding QuantWorkerRootDirectory, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Only project jobs, checkpoints, and artifacts are stored here." />
+                                <TextBlock Text="{Binding QuantWorkerStatus}"
+                                           Style="{StaticResource BodySecondary}"
+                                           Margin="0,10,0,0"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+
+                        <UniformGrid Columns="2" Margin="0,0,0,18">
+                            <Border Style="{StaticResource CardBorder}" Margin="0,0,8,0">
+                                <StackPanel>
+                                    <TextBlock Text="Longbridge Accounts"
+                                               FontSize="15"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding LocalStudio.Accounts.Count, StringFormat={}{0} configured channel}"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontSize="17"
+                                               FontWeight="SemiBold"
+                                               Margin="0,9,0,6" />
+                                    <TextBlock Text="{Binding LongbridgeAccountStatus}"
+                                               Style="{StaticResource BodySecondary}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource CardBorder}" Margin="8,0,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Agent / Risk Settings"
+                                               FontSize="15"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="SuggestOnly / ConfirmEveryOrder / BoundedAutonomy"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Margin="0,9,0,6" />
+                                    <TextBlock Text="{Binding AgentCostLimitStatus}"
+                                               Style="{StaticResource BodySecondary}"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock Text="Order permissions are explicit, limited, expiring, revocable, and always pass through risk and execution gateways."
+                                               Style="{StaticResource BodySecondary}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,6,0,0" />
+                                </StackPanel>
+                            </Border>
+                        </UniformGrid>
+
+                        <Border Style="{StaticResource CardBorder}"
                                 DataContext="{Binding ModelProviders}"
                                 Margin="0,0,0,18">
                             <StackPanel>
@@ -2243,83 +2377,401 @@
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="34,30,34,38">
-                        <TextBlock Text="LOCAL QUANT RUNTIME"
+                        <TextBlock Text="QUANTITATIVE STRATEGY DEVELOPMENT"
                                    Style="{StaticResource EyebrowText}" />
                         <TextBlock Text="Algorithm Studio"
                                    Style="{StaticResource PageTitle}" />
-                        <TextBlock Text="Versioned projects, truthful compute discovery, deterministic research jobs, and gated Agent proposals."
+                        <TextBlock Text="Build, validate, compare, and govern quantitative strategy projects."
                                    Style="{StaticResource BodySecondary}"
-                                   Margin="0,0,0,22" />
+                                   Margin="0,0,0,16" />
 
-                        <UniformGrid Columns="2" Margin="0,0,0,16">
-                            <Border Style="{StaticResource CardBorder}" Margin="0,0,8,0">
-                                <StackPanel>
-                                    <TextBlock Text="Projects and Agent"
-                                               FontSize="15"
-                                               FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding LocalStudio.Projects.Count, StringFormat={}{0} project}"
-                                               Foreground="{StaticResource AccentBrush}"
-                                               FontSize="19"
-                                               FontWeight="SemiBold"
-                                               Margin="0,9,0,7" />
-                                <TextBlock Text="{Binding AgentSafetyStatus}"
-                                           Style="{StaticResource BodySecondary}"
-                                           TextWrapping="Wrap" />
-                                <TextBlock Text="{Binding AgentCostLimitStatus}"
-                                           Style="{StaticResource BodySecondary}"
-                                           TextWrapping="Wrap"
-                                           Margin="0,7,0,0" />
-                                </StackPanel>
-                            </Border>
-                            <Border Style="{StaticResource CardBorder}" Margin="8,0,0,0">
-                                <StackPanel>
-                                    <TextBlock Text="Quant Worker"
-                                               FontSize="15"
-                                               FontWeight="SemiBold" />
-                                    <TextBlock Text="Local process"
-                                               Foreground="{StaticResource AccentBrush}"
-                                               FontSize="19"
-                                               FontWeight="SemiBold"
-                                               Margin="0,9,0,7" />
-                                    <TextBlock Text="{Binding QuantWorkerStatus}"
-                                               Style="{StaticResource BodySecondary}"
-                                               TextWrapping="Wrap" />
-                                </StackPanel>
-                            </Border>
-                        </UniformGrid>
+                        <WrapPanel Margin="0,0,0,14">
+                            <Button Content="New Strategy"
+                                    Style="{StaticResource PrimaryButton}"
+                                    Click="NewAlgorithmProject_Click"
+                                    Margin="0,0,8,8" />
+                            <Button Content="Open Project"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Click="OpenAlgorithmProject_Click"
+                                    Margin="0,0,8,8" />
+                            <Button Content="Compare Versions"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Click="CompareAlgorithmVersions_Click"
+                                    Margin="0,0,8,8" />
+                        </WrapPanel>
+
+                        <Border Style="{StaticResource CardBorder}"
+                                Padding="16"
+                                Margin="0,0,0,16">
+                            <TextBlock Text="Project  >  Universe  >  Factors  >  Signals  >  Portfolio and Risk  >  Execution Logic  >  Backtest  >  Walk-forward Validation  >  Optimization or Training  >  Candidate  >  Paper  >  Shadow  >  Live Eligibility"
+                                       Foreground="{StaticResource AccentBrush}"
+                                       FontSize="11"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap" />
+                        </Border>
 
                         <Border Style="{StaticResource CardBorder}"
                                 Margin="0,0,0,16">
                             <StackPanel>
-                                <TextBlock Text="Controlled Runtime"
+                                <TextBlock Text="Strategy Projects"
                                            FontSize="15"
-                                           FontWeight="SemiBold" />
-                                <TextBlock Text="Python executable"
-                                           Style="{StaticResource BodySecondary}"
-                                           Margin="0,12,0,5" />
-                                <TextBox Text="{Binding PythonExecutablePath, UpdateSourceTrigger=PropertyChanged}"
-                                         ToolTip="Enter an approved absolute interpreter path."
-                                         Margin="0,0,0,10" />
-                                <TextBlock Text="Worker root directory"
-                                           Style="{StaticResource BodySecondary}"
-                                           Margin="0,0,0,5" />
-                                <TextBox Text="{Binding QuantWorkerRootDirectory, UpdateSourceTrigger=PropertyChanged}"
-                                         ToolTip="Only project jobs, checkpoints, and artifacts are stored here."
-                                         Margin="0,0,0,10" />
-                                <TextBlock Text="Scheduling policy"
-                                           Style="{StaticResource BodySecondary}"
-                                           Margin="0,0,0,5" />
-                                <ComboBox ItemsSource="{Binding ComputeSchedulingModes}"
-                                          SelectedItem="{Binding ComputeSchedulingMode}" />
-                                <TextBlock Text="{Binding QuantWorkerStatus}"
-                                           Style="{StaticResource BodySecondary}"
-                                           Margin="0,10,0,0"
-                                           TextWrapping="Wrap" />
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,10" />
+                                <ListBox ItemsSource="{Binding AlgorithmProjects}"
+                                         SelectedItem="{Binding SelectedAlgorithmProject, Mode=TwoWay}"
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         Foreground="{StaticResource PrimaryTextBrush}">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Background" Value="Transparent" />
+                                            <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}" />
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                            <Setter Property="Padding" Value="0" />
+                                            <Setter Property="Margin" Value="0,0,0,5" />
+                                            <Style.Triggers>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter Property="Background" Value="{StaticResource ActiveNavBrush}" />
+                                                    <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}" />
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="10,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="2*" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Name}"
+                                                               Foreground="{StaticResource PrimaryTextBrush}"
+                                                               FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding StrategyType}"
+                                                               Foreground="{StaticResource SecondaryTextBrush}"
+                                                               FontSize="10" />
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding VersionDisplay}"
+                                                           Foreground="{StaticResource AccentBrush}"
+                                                           VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="2"
+                                                           Text="{Binding LifecycleState}"
+                                                           Foreground="#FFF7B955"
+                                                           VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="3"
+                                                           Text="{Binding LastModifiedDisplay}"
+                                                           Foreground="{StaticResource SecondaryTextBrush}"
+                                                           HorizontalAlignment="Right"
+                                                           VerticalAlignment="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
                             </StackPanel>
                         </Border>
 
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*" />
+                                <ColumnDefinition Width="14" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" Style="{StaticResource CardBorder}">
+                                <StackPanel>
+                                    <TextBlock Text="Current Strategy"
+                                               FontSize="15"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding AlgorithmStudioStatus}"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontSize="13"
+                                               Margin="0,5,0,12" />
+                                    <TabControl Background="Transparent"
+                                                BorderThickness="0"
+                                                Foreground="{StaticResource PrimaryTextBrush}">
+                                        <TabControl.Resources>
+                                            <Style TargetType="TabItem">
+                                                <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}" />
+                                                <Setter Property="Background" Value="#1FFFFFFF" />
+                                                <Setter Property="Padding" Value="9,6" />
+                                                <Setter Property="Margin" Value="0,0,4,4" />
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="TabItem">
+                                                            <Border x:Name="TabBorder"
+                                                                    Background="{TemplateBinding Background}"
+                                                                    CornerRadius="7"
+                                                                    Padding="{TemplateBinding Padding}">
+                                                                <ContentPresenter ContentSource="Header"
+                                                                                  HorizontalAlignment="Center" />
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsSelected" Value="True">
+                                                                    <Setter TargetName="TabBorder"
+                                                                            Property="Background"
+                                                                            Value="{StaticResource AccentBrush}" />
+                                                                    <Setter Property="Foreground" Value="#FF06121E" />
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </TabControl.Resources>
+                                        <TabItem Header="Overview">
+                                            <Grid Margin="0,14,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="Project"
+                                                               Foreground="{StaticResource SecondaryTextBrush}" />
+                                                    <TextBlock Text="{Binding SelectedAlgorithmProject.Name}"
+                                                               Foreground="{StaticResource PrimaryTextBrush}"
+                                                               FontWeight="SemiBold"
+                                                               Margin="0,3,0,10" />
+                                                    <TextBlock Text="Universe / Timeframe"
+                                                               Foreground="{StaticResource SecondaryTextBrush}" />
+                                                    <TextBlock Text="{Binding SelectedAlgorithmProject.Universe}"
+                                                               Foreground="{StaticResource PrimaryTextBrush}"
+                                                               Margin="0,3,0,3" />
+                                                    <TextBlock Text="{Binding SelectedAlgorithmProject.Timeframe}"
+                                                               Foreground="{StaticResource PrimaryTextBrush}" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="Lifecycle / Validation"
+                                                               Foreground="{StaticResource SecondaryTextBrush}" />
+                                                    <TextBlock Text="{Binding SelectedAlgorithmProject.LifecycleState}"
+                                                               Foreground="#FFF7B955"
+                                                               FontWeight="SemiBold"
+                                                               Margin="0,3,0,10" />
+                                                    <TextBlock Text="{Binding SelectedAlgorithmProject.ValidationStatus}"
+                                                               Foreground="{StaticResource PrimaryTextBrush}"
+                                                               TextWrapping="Wrap" />
+                                                    <TextBlock Text="{Binding SelectedAlgorithmProject.RebalanceFrequency}"
+                                                               Foreground="{StaticResource AccentBrush}"
+                                                               Margin="0,10,0,0" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </TabItem>
+                                        <TabItem Header="Factors">
+                                            <TextBlock Text="{Binding SelectedAlgorithmProject.Factors}"
+                                                       Foreground="{StaticResource PrimaryTextBrush}"
+                                                       TextWrapping="Wrap"
+                                                       Margin="0,14,0,0" />
+                                        </TabItem>
+                                        <TabItem Header="Signals">
+                                            <StackPanel Margin="0,14,0,0">
+                                                <TextBlock Text="{Binding SelectedAlgorithmProject.Signals}"
+                                                           Foreground="{StaticResource PrimaryTextBrush}"
+                                                           TextWrapping="Wrap" />
+                                                <TextBlock Text="{Binding SelectedAlgorithmProject.SignalCombination}"
+                                                           Foreground="{StaticResource AccentBrush}"
+                                                           TextWrapping="Wrap"
+                                                           Margin="0,10,0,0" />
+                                            </StackPanel>
+                                        </TabItem>
+                                        <TabItem Header="Portfolio">
+                                            <TextBlock Text="{Binding SelectedAlgorithmProject.PortfolioConstruction}"
+                                                       Foreground="{StaticResource PrimaryTextBrush}"
+                                                       TextWrapping="Wrap"
+                                                       Margin="0,14,0,0" />
+                                        </TabItem>
+                                        <TabItem Header="Risk">
+                                            <TextBlock Text="{Binding SelectedAlgorithmProject.RiskLogic}"
+                                                       Foreground="{StaticResource PrimaryTextBrush}"
+                                                       TextWrapping="Wrap"
+                                                       Margin="0,14,0,0" />
+                                        </TabItem>
+                                        <TabItem Header="Execution">
+                                            <TextBlock Text="{Binding SelectedAlgorithmProject.ExecutionLogic}"
+                                                       Foreground="{StaticResource PrimaryTextBrush}"
+                                                       TextWrapping="Wrap"
+                                                       Margin="0,14,0,0" />
+                                        </TabItem>
+                                        <TabItem Header="Code">
+                                            <TextBox Text="{Binding SelectedAlgorithmProject.CodeSummary}"
+                                                     IsReadOnly="True"
+                                                     AcceptsReturn="True"
+                                                     TextWrapping="Wrap"
+                                                     MinHeight="150"
+                                                     Margin="0,14,0,0" />
+                                        </TabItem>
+                                        <TabItem Header="Parameters">
+                                            <TextBlock Text="{Binding SelectedAlgorithmProject.ParameterSummary}"
+                                                       Foreground="{StaticResource PrimaryTextBrush}"
+                                                       TextWrapping="Wrap"
+                                                       Margin="0,14,0,0" />
+                                        </TabItem>
+                                        <TabItem Header="Backtests">
+                                            <TextBlock Text="{Binding SelectedAlgorithmProject.BacktestSummary}"
+                                                       Foreground="{StaticResource PrimaryTextBrush}"
+                                                       TextWrapping="Wrap"
+                                                       Margin="0,14,0,0" />
+                                        </TabItem>
+                                        <TabItem Header="Versions">
+                                            <StackPanel Margin="0,14,0,0">
+                                                <TextBlock Text="{Binding SelectedAlgorithmProject.VersionSummary}"
+                                                           Foreground="{StaticResource PrimaryTextBrush}"
+                                                           TextWrapping="Wrap" />
+                                                <TextBlock Text="{Binding AlgorithmComparison}"
+                                                           Foreground="{StaticResource AccentBrush}"
+                                                           TextWrapping="Wrap"
+                                                           Margin="0,10,0,0" />
+                                            </StackPanel>
+                                        </TabItem>
+                                    </TabControl>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="2" Style="{StaticResource CardBorder}">
+                                <StackPanel>
+                                    <TextBlock Text="Agent Assistant"
+                                               FontSize="15"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="Operates only on the selected quantitative project."
+                                               Style="{StaticResource BodySecondary}"
+                                               Margin="0,4,0,10" />
+                                    <TextBox Text="{Binding AlgorithmAgentRequest, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             AcceptsReturn="True"
+                                             TextWrapping="Wrap"
+                                             MinHeight="72"
+                                             ToolTip="Describe a review-only quantitative strategy change." />
+                                    <Button Content="Propose ProjectPatch"
+                                            Style="{StaticResource PrimaryButton}"
+                                            IsEnabled="{Binding AlgorithmAgentCanPropose}"
+                                            Click="ProposeAlgorithmPatch_Click"
+                                            Margin="0,10,0,10" />
+                                    <TextBlock Text="Proposed Patch"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding AlgorithmProposedPatch}"
+                                               Style="{StaticResource BodySecondary}"
+                                               Margin="0,4,0,10" />
+                                    <TextBlock Text="Validation Plan"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding AlgorithmValidationPlan}"
+                                               Style="{StaticResource BodySecondary}"
+                                               Margin="0,4,0,10" />
+                                    <TextBlock Text="Cost Estimate"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding AlgorithmCostEstimate}"
+                                               Style="{StaticResource BodySecondary}"
+                                               Margin="0,4,0,10" />
+                                    <TextBlock Text="Active and Live versions cannot be modified directly."
+                                               Foreground="#FFF7B955"
+                                               FontSize="11"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
                         <UniformGrid Columns="2" Margin="0,0,0,16">
                             <Border Style="{StaticResource CardBorder}" Margin="0,0,8,0">
+                                <StackPanel>
+                                    <TextBlock Text="Latest Backtest"
+                                               FontSize="15"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding SelectedAlgorithmProject.LastBacktest}"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontSize="17"
+                                               Margin="0,9,0,6" />
+                                    <TextBlock Text="{Binding SelectedAlgorithmProject.BacktestSummary}"
+                                               Style="{StaticResource BodySecondary}" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource CardBorder}" Margin="8,0,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Walk-forward Validation"
+                                               FontSize="15"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding SelectedAlgorithmProject.ValidationStatus}"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontSize="17"
+                                               Margin="0,9,0,6" />
+                                    <TextBlock Text="{Binding SelectedAlgorithmProject.Eligibility}"
+                                               Style="{StaticResource BodySecondary}" />
+                                </StackPanel>
+                            </Border>
+                        </UniformGrid>
+
+                        <Border Style="{StaticResource CardBorder}">
+                            <StackPanel>
+                                <TextBlock Text="Jobs: Backtest / Optimization / Training"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,8" />
+                                <ItemsControl ItemsSource="{Binding QuantWorkspaceJobs}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="2*" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="120" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding JobType}"
+                                                               Foreground="{StaticResource PrimaryTextBrush}"
+                                                               FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding StrategyName}"
+                                                               Foreground="{StaticResource SecondaryTextBrush}"
+                                                               FontSize="10" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="{Binding Backend, StringFormat=Backend: {0}}"
+                                                               Foreground="{StaticResource SecondaryTextBrush}"
+                                                               FontSize="10" />
+                                                    <TextBlock Text="{Binding Detail}"
+                                                               Foreground="{StaticResource SecondaryTextBrush}"
+                                                               FontSize="10" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2">
+                                                    <TextBlock Text="{Binding Status}"
+                                                               Foreground="{StaticResource AccentBrush}"
+                                                               HorizontalAlignment="Right" />
+                                                    <ProgressBar Minimum="0"
+                                                                 Maximum="100"
+                                                                 Value="{Binding Progress}"
+                                                                 Height="7"
+                                                                 Margin="0,5,0,0" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <ScrollViewer x:Name="ComputePanel"
+                              Visibility="Collapsed"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="34,30,34,38">
+                        <TextBlock Text="LOCAL QUANTITATIVE COMPUTE"
+                                   Style="{StaticResource EyebrowText}" />
+                        <TextBlock Text="Compute"
+                                   Style="{StaticResource PageTitle}" />
+                        <TextBlock Text="Manage local CPU, GPU, and NPU scheduling. Hardware appears in Algorithm Studio only as job metadata."
+                                   Style="{StaticResource BodySecondary}"
+                                   Margin="0,0,0,22" />
+
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="14" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource CardBorder}">
                                 <StackPanel>
                                     <TextBlock Text="Compute Backends"
                                                FontSize="15"
@@ -2328,17 +2780,19 @@
                                     <ItemsControl ItemsSource="{Binding ComputeDevices}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Grid Margin="0,4">
+                                                <Grid Margin="0,5">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="*" />
                                                         <ColumnDefinition Width="Auto" />
                                                     </Grid.ColumnDefinitions>
                                                     <StackPanel>
                                                         <TextBlock Text="{Binding Name}"
+                                                                   Foreground="{StaticResource PrimaryTextBrush}"
                                                                    FontWeight="SemiBold" />
                                                         <TextBlock Text="{Binding Reason}"
-                                                                   Style="{StaticResource BodySecondary}"
-                                                                   FontSize="10" />
+                                                                   Foreground="{StaticResource SecondaryTextBrush}"
+                                                                   FontSize="10"
+                                                                   TextWrapping="Wrap" />
                                                     </StackPanel>
                                                     <TextBlock Grid.Column="1"
                                                                Text="{Binding Health}"
@@ -2349,69 +2803,54 @@
                                     </ItemsControl>
                                 </StackPanel>
                             </Border>
-                            <Border Style="{StaticResource CardBorder}" Margin="8,0,0,0">
+                            <Border Grid.Column="2" Style="{StaticResource CardBorder}">
                                 <StackPanel>
-                                    <TextBlock Text="Backtests, Training, and ONNX"
+                                    <TextBlock Text="Scheduling"
                                                FontSize="15"
                                                FontWeight="SemiBold" />
-                                    <TextBlock Text="Bounded compute jobs"
-                                               Foreground="{StaticResource AccentBrush}"
-                                               FontSize="19"
-                                               FontWeight="SemiBold"
-                                               Margin="0,9,0,7" />
-                                    <TextBlock Text="Jobs are cancellable, checkpoint-aware, deterministic in fixture mode, and use CPU fallback when no accelerator is validated."
+                                    <TextBlock Text="Scheduling policy"
                                                Style="{StaticResource BodySecondary}"
-                                               TextWrapping="Wrap" />
+                                               Margin="0,12,0,5" />
+                                    <ComboBox ItemsSource="{Binding ComputeSchedulingModes}"
+                                              SelectedItem="{Binding ComputeSchedulingMode}" />
+                                    <TextBlock Text="Backtests, optimization, and training use a validated local backend with CPU fallback."
+                                               Style="{StaticResource BodySecondary}"
+                                               Margin="0,12,0,0" />
                                 </StackPanel>
                             </Border>
-                        </UniformGrid>
-
-                        <UniformGrid Columns="2" Margin="0,0,0,16">
-                            <Border Style="{StaticResource CardBorder}" Margin="0,0,8,0">
-                                <StackPanel>
-                                    <TextBlock Text="Execution Lab"
-                                               FontSize="15"
-                                               FontWeight="SemiBold" />
-                                    <TextBlock Text="Proposal only"
-                                               Foreground="{StaticResource AccentBrush}"
-                                               FontSize="19"
-                                               FontWeight="SemiBold"
-                                               Margin="0,9,0,7" />
-                                    <TextBlock Text="{Binding ExecutionModuleStatus}"
-                                               Style="{StaticResource BodySecondary}"
-                                               TextWrapping="Wrap" />
-                                </StackPanel>
-                            </Border>
-                            <Border Style="{StaticResource CardBorder}" Margin="8,0,0,0">
-                                <StackPanel>
-                                    <TextBlock Text="Longbridge Accounts"
-                                               FontSize="15"
-                                               FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding LocalStudio.Accounts.Count, StringFormat={}{0} fixture}"
-                                               Foreground="{StaticResource AccentBrush}"
-                                               FontSize="19"
-                                               FontWeight="SemiBold"
-                                               Margin="0,9,0,7" />
-                                    <TextBlock Text="{Binding LongbridgeAccountStatus}"
-                                               Style="{StaticResource BodySecondary}"
-                                               TextWrapping="Wrap" />
-                                </StackPanel>
-                            </Border>
-                        </UniformGrid>
+                        </Grid>
 
                         <Border Style="{StaticResource CardBorder}">
                             <StackPanel>
-                                <TextBlock Text="Agent Order Authorization"
+                                <TextBlock Text="Active Compute Jobs"
                                            FontSize="15"
-                                           FontWeight="SemiBold" />
-                                <TextBlock Text="SuggestOnly / ConfirmEveryOrder / BoundedAutonomy"
-                                           Foreground="{StaticResource AccentBrush}"
-                                           FontSize="16"
                                            FontWeight="SemiBold"
-                                           Margin="0,9,0,7" />
-                                <TextBlock Text="Authorizations are explicit, limited, expiring, revocable, and still subject to the existing risk and execution gateways. There is no manual order ticket."
-                                           Style="{StaticResource BodySecondary}"
-                                           TextWrapping="Wrap" />
+                                           Margin="0,0,0,8" />
+                                <ItemsControl ItemsSource="{Binding QuantWorkspaceJobs}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="2*" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="140" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding JobType}"
+                                                           Foreground="{StaticResource PrimaryTextBrush}"
+                                                           FontWeight="SemiBold" />
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding Backend, StringFormat=Backend: {0}}"
+                                                           Foreground="{StaticResource SecondaryTextBrush}" />
+                                                <ProgressBar Grid.Column="2"
+                                                             Minimum="0"
+                                                             Maximum="100"
+                                                             Value="{Binding Progress}"
+                                                             Height="8"
+                                                             VerticalAlignment="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </StackPanel>
                         </Border>
                     </StackPanel>

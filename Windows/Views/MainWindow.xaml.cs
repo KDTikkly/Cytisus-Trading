@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Diagnostics;
+using Microsoft.Win32;
 
 namespace CytisusTrading.Windows;
 
@@ -187,6 +188,40 @@ public partial class MainWindow : Window
         _model.RequestLongbridgePaperMode();
     }
 
+    private void NewAlgorithmProject_Click(object sender, RoutedEventArgs e)
+    {
+        _model.CreateAlgorithmProject();
+    }
+
+    private void OpenAlgorithmProject_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "Open Quantitative Strategy Project",
+            Filter = "Strategy projects (*.json;*.yaml;*.yml)|*.json;*.yaml;*.yml|All files (*.*)|*.*",
+            CheckFileExists = true,
+            Multiselect = false
+        };
+        if (dialog.ShowDialog(this) == true)
+        {
+            _model.OpenAlgorithmProjectReference(dialog.FileName);
+        }
+    }
+
+    private void CompareAlgorithmVersions_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        _model.CompareAlgorithmVersions();
+    }
+
+    private async void ProposeAlgorithmPatch_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        await _model.ProposeAlgorithmPatchAsync();
+    }
+
     private void RunReconciliationDiagnostic_Click(
         object sender,
         RoutedEventArgs e)
@@ -367,6 +402,7 @@ public partial class MainWindow : Window
         PortfolioPanel.Visibility = section == "Portfolio" ? Visibility.Visible : Visibility.Collapsed;
         ExecutionPanel.Visibility = section == "Execution" ? Visibility.Visible : Visibility.Collapsed;
         AlgorithmStudioPanel.Visibility = section == "AlgorithmStudio" ? Visibility.Visible : Visibility.Collapsed;
+        ComputePanel.Visibility = section == "Compute" ? Visibility.Visible : Visibility.Collapsed;
         DataPanel.Visibility = section == "Data" ? Visibility.Visible : Visibility.Collapsed;
         SettingsPanel.Visibility = section == "Settings" ? Visibility.Visible : Visibility.Collapsed;
         LogsPanel.Visibility = section == "Logs" ? Visibility.Visible : Visibility.Collapsed;
@@ -380,6 +416,7 @@ public partial class MainWindow : Window
                      PortfolioNav,
                      ExecutionNav,
                      AlgorithmStudioNav,
+                     ComputeNav,
                      DataNav,
                      SettingsNav,
                      LogsNav,

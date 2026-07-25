@@ -241,6 +241,19 @@ final class ModelProvidersViewModel: ObservableObject {
         isBusy = false
     }
 
+    func proposeProjectPatch(
+        projectName: String,
+        request: String
+    ) async throws -> String {
+        let outcome = try await manager.generateTextWithFallback(
+            systemInstruction:
+                "Propose a review-only quantitative strategy ProjectPatch. Do not place orders, change credentials, or apply changes.",
+            userText:
+                "Project: \(projectName)\nRequested adjustment: \(request)\nReturn a concise patch proposal and validation plan."
+        )
+        return outcome.text
+    }
+
     func addManualModel() {
         guard let provider = selectedProvider else {
             statusMessage = "Select a provider."

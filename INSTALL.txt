@@ -1,10 +1,10 @@
-Cytisus-Trading 1.1.7
+Cytisus-Trading 1.1.8
 
 IMPLEMENTATION STATUS
 
-v1.1 Local Paper implementation is complete. Version 1.1.7 clarifies network
-boundaries while retaining NVIDIA and Longbridge Paper support, Windows repairs,
-Longbridge Terminal discovery, login, command mapping, and account classification.
+v1.1 Local Paper implementation is complete. Version 1.1.8 corrects Algorithm
+Studio around quantitative strategy development, separates runtime and compute
+settings, and repairs Windows table contrast and selected-mode highlighting.
 The app starts with deterministic market-data fixtures enabled.
 Read-only Longbridge CLI discovery, market fixtures, local caching, and daily
 universe snapshots are available. Deterministic Local Paper strategy cycles, factor
@@ -15,13 +15,13 @@ not available.
 
 MACOS
 
-1. Download and open "Cytisus-Trading-1.1.7-universal.dmg".
+1. Download and open "Cytisus-Trading-1.1.8-universal.dmg".
 2. Drag "Cytisus-Trading.app" into Applications.
 3. Open Cytisus-Trading from Applications.
 
 WINDOWS 11
 
-Download "Cytisus-Trading-1.1.7-win11-x64.exe", run the English installation
+Download "Cytisus-Trading-1.1.8-win11-x64.exe", run the English installation
 wizard, choose the destination, and launch Cytisus-Trading from the Start menu.
 
 NOTES

@@ -1,7 +1,7 @@
 import Foundation
 
 enum ProductVersion {
-    static let current = "1.1.7"
+    static let current = "1.1.8"
 }
 
 enum StrategyMode: String, Codable, CaseIterable {

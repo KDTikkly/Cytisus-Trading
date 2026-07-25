@@ -214,3 +214,42 @@ public sealed class StrategyItemViewModel : ObservableObject
             LiveToPaperTransition);
     }
 }
+
+public sealed record AlgorithmProjectWorkspaceItem(
+    string ProjectId,
+    string Name,
+    string StrategyType,
+    int Version,
+    string LifecycleState,
+    string Universe,
+    string Timeframe,
+    string RebalanceFrequency,
+    string LastBacktest,
+    string ValidationStatus,
+    DateTimeOffset LastModified,
+    string Factors,
+    string Signals,
+    string SignalCombination,
+    string PortfolioConstruction,
+    string RiskLogic,
+    string ExecutionLogic,
+    string CodeSummary,
+    string ParameterSummary,
+    string BacktestSummary,
+    string VersionSummary,
+    string Eligibility)
+{
+    public string VersionDisplay => $"v{Version}";
+    public string LastModifiedDisplay => LastModified.ToLocalTime().ToString("g");
+    public bool AgentPatchAllowed =>
+        LifecycleState is not ("Active" or "Live");
+}
+
+public sealed record QuantWorkspaceJob(
+    string JobId,
+    string JobType,
+    string StrategyName,
+    string Backend,
+    int Progress,
+    string Status,
+    string Detail);

@@ -71,6 +71,18 @@ public sealed class StudioViewModel : ObservableObject
     private int _agentOutputTokenLimit = 4000;
     private decimal _agentDailySpendingLimit = 5m;
     private decimal _agentMonthlySpendingLimit = 50m;
+    private AlgorithmProjectWorkspaceItem? _selectedAlgorithmProject;
+    private string _algorithmAgentRequest = string.Empty;
+    private string _algorithmProposedPatch =
+        "No ProjectPatch has been proposed.";
+    private string _algorithmValidationPlan =
+        "Backtest, walk-forward, regime, turnover, cost, and risk checks are required.";
+    private string _algorithmCostEstimate =
+        "No model request has been made.";
+    private string _algorithmComparison =
+        "Select a project and compare its candidate with the baseline.";
+    private string _algorithmStudioStatus =
+        "Select a quantitative strategy project.";
 
     public StudioViewModel()
         : this(AppServices.CreateOfflineFixture())
@@ -98,6 +110,7 @@ public sealed class StudioViewModel : ObservableObject
             services.ModelProviderManager);
         LocalStudio = services.LocalStudioService.LoadOrCreateFixtureState();
         ComputeDevices = LocalStudioService.DiscoverDevices();
+        InitializeAlgorithmWorkspace();
         var settings = services.SettingsStore.LoadSettings();
         _riskBudget = settings.RiskBudget;
         _coverageGate = settings.CoverageGate;
@@ -163,6 +176,10 @@ public sealed class StudioViewModel : ObservableObject
         new();
     public ObservableCollection<FactorTrial> RecentFactorTrials { get; } =
         new();
+    public ObservableCollection<AlgorithmProjectWorkspaceItem>
+        AlgorithmProjects { get; } = new();
+    public ObservableCollection<QuantWorkspaceJob> QuantWorkspaceJobs { get; } =
+        new();
     public ObservableCollection<string> LogSeverityOptions { get; } =
         new(new[] { "All", "Debug", "Info", "Warning", "Error", "Critical" });
     public ModelProvidersViewModel ModelProviders { get; }
@@ -182,6 +199,60 @@ public sealed class StudioViewModel : ObservableObject
         CliStatusState == LongbridgeStatusState.ReadyPaper
             ? "Longbridge Paper is ready through the Execution Gateway."
             : "Local Paper is ready. Longbridge Paper requires a verified Paper channel.";
+
+    public AlgorithmProjectWorkspaceItem? SelectedAlgorithmProject
+    {
+        get => _selectedAlgorithmProject;
+        set
+        {
+            if (Set(ref _selectedAlgorithmProject, value))
+            {
+                Raise(nameof(AlgorithmAgentCanPropose));
+                AlgorithmStudioStatus = value is null
+                    ? "Select a quantitative strategy project."
+                    : $"{value.Name} {value.VersionDisplay} {value.LifecycleState}";
+            }
+        }
+    }
+
+    public string AlgorithmAgentRequest
+    {
+        get => _algorithmAgentRequest;
+        set => Set(ref _algorithmAgentRequest, value);
+    }
+
+    public string AlgorithmProposedPatch
+    {
+        get => _algorithmProposedPatch;
+        private set => Set(ref _algorithmProposedPatch, value);
+    }
+
+    public string AlgorithmValidationPlan
+    {
+        get => _algorithmValidationPlan;
+        private set => Set(ref _algorithmValidationPlan, value);
+    }
+
+    public string AlgorithmCostEstimate
+    {
+        get => _algorithmCostEstimate;
+        private set => Set(ref _algorithmCostEstimate, value);
+    }
+
+    public string AlgorithmComparison
+    {
+        get => _algorithmComparison;
+        private set => Set(ref _algorithmComparison, value);
+    }
+
+    public string AlgorithmStudioStatus
+    {
+        get => _algorithmStudioStatus;
+        private set => Set(ref _algorithmStudioStatus, value);
+    }
+
+    public bool AlgorithmAgentCanPropose =>
+        SelectedAlgorithmProject?.AgentPatchAllowed == true;
 
     public string PythonExecutablePath
     {
@@ -304,8 +375,20 @@ public sealed class StudioViewModel : ObservableObject
     public LongbridgePaperMode SelectedPaperMode
     {
         get => _selectedPaperMode;
-        private set => Set(ref _selectedPaperMode, value);
+        private set
+        {
+            if (!Set(ref _selectedPaperMode, value))
+            {
+                return;
+            }
+            Raise(nameof(IsLocalPaperSelected));
+            Raise(nameof(IsLongbridgePaperSelected));
+        }
     }
+    public bool IsLocalPaperSelected =>
+        SelectedPaperMode == LongbridgePaperMode.LocalPaper;
+    public bool IsLongbridgePaperSelected =>
+        SelectedPaperMode == LongbridgePaperMode.LongbridgePaper;
     public bool LiveExecutionAvailable => false;
 
     public bool GlobalLiveLock
@@ -1430,6 +1513,206 @@ public sealed class StudioViewModel : ObservableObject
                 ["changed_factor_ids"] = string.Join(",", result.ChangedFactorIds),
                 ["review_count"] = _reviewCount.ToString(EnglishCulture)
             });
+    }
+
+    public void CreateAlgorithmProject()
+    {
+        var project = new AlgorithmProjectWorkspaceItem(
+            $"strategy-{Guid.NewGuid():N}",
+            "Untitled Quantitative Strategy",
+            "Research",
+            1,
+            "Draft",
+            "US liquid equities",
+            "Daily",
+            "Weekly",
+            "Not run",
+            "Pending",
+            DateTimeOffset.UtcNow,
+            "No factors selected.",
+            "No signals defined.",
+            "No combination logic defined.",
+            "Equal-weight placeholder.",
+            "Default exposure and loss limits.",
+            "TWAP placeholder; execution remains gateway-controlled.",
+            "strategy.py draft",
+            "No structured parameters.",
+            "No backtest result.",
+            "v1 draft; no baseline comparison.",
+            "Not eligible until backtest and walk-forward validation pass.");
+        AlgorithmProjects.Add(project);
+        SelectedAlgorithmProject = project;
+        AlgorithmStudioStatus =
+            "Draft project created. Define universe, factors, and validation.";
+    }
+
+    public void OpenAlgorithmProjectReference(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+        var name = Path.GetFileNameWithoutExtension(path);
+        var project = new AlgorithmProjectWorkspaceItem(
+            $"opened-{Guid.NewGuid():N}",
+            string.IsNullOrWhiteSpace(name) ? "Opened Strategy" : name,
+            "Imported",
+            1,
+            "Draft",
+            "Pending manifest validation",
+            "Pending",
+            "Pending",
+            "Not run",
+            "Manifest review required",
+            File.GetLastWriteTimeUtc(path),
+            "Load from the reviewed project manifest.",
+            "Load from the reviewed project manifest.",
+            "Pending review.",
+            "Pending review.",
+            "Pending review.",
+            "Pending review.",
+            Path.GetFileName(path),
+            "Pending schema validation.",
+            "No local validation has run.",
+            "Imported draft; no baseline comparison.",
+            "Not eligible until the imported project is validated.");
+        AlgorithmProjects.Add(project);
+        SelectedAlgorithmProject = project;
+        AlgorithmStudioStatus =
+            "Project reference opened as Draft. No code was executed.";
+    }
+
+    public void CompareAlgorithmVersions()
+    {
+        var project = SelectedAlgorithmProject;
+        AlgorithmComparison = project is null
+            ? "Select a project before comparing versions."
+            : $"{project.Name}: {project.VersionSummary} Baseline versus candidate review includes performance, drawdown, turnover, cost, and regime stability.";
+    }
+
+    public async Task ProposeAlgorithmPatchAsync()
+    {
+        var project = SelectedAlgorithmProject;
+        if (project is null)
+        {
+            AlgorithmProposedPatch = "Select a project.";
+            return;
+        }
+        if (!project.AgentPatchAllowed)
+        {
+            AlgorithmProposedPatch =
+                "Agent patches are blocked for Active and Live strategy versions.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(AlgorithmAgentRequest))
+        {
+            AlgorithmProposedPatch =
+                "Enter a quantitative strategy change request.";
+            return;
+        }
+
+        try
+        {
+            var prompt =
+                $"Project: {project.Name}\n" +
+                $"Type: {project.StrategyType}\n" +
+                $"Version: {project.VersionDisplay} {project.LifecycleState}\n" +
+                $"Universe: {project.Universe}\n" +
+                $"Timeframe: {project.Timeframe}\n" +
+                $"Factors: {project.Factors}\n" +
+                $"Risk: {project.RiskLogic}\n" +
+                $"Execution: {project.ExecutionLogic}\n" +
+                $"Request: {AlgorithmAgentRequest.Trim()}";
+            var outcome =
+                await _services.ModelProviderManager.GenerateTextWithFallbackAsync(
+                    "You are the Cytisus quantitative strategy patch reviewer. Propose a review-only ProjectPatch for the selected project. Include affected strategy area, structured parameter or code change, rationale, risks, and a validation plan. Do not apply changes, execute code, change Active or Live versions, or submit orders.",
+                    prompt,
+                    CancellationToken.None);
+            AlgorithmProposedPatch = outcome.Text;
+            AlgorithmValidationPlan =
+                "Required: deterministic backtest, walk-forward OOS, regime slices, turnover and cost stress, risk-limit checks, then baseline comparison.";
+            AlgorithmCostEstimate =
+                $"Model: {outcome.Selection.Provider.DisplayName}/{outcome.Selection.Model.DisplayName}; output capped at 384 tokens; validation jobs not started.";
+            AlgorithmStudioStatus =
+                "ProjectPatch proposed for review. No project state was modified.";
+        }
+        catch (Exception exception)
+        {
+            AlgorithmProposedPatch =
+                SensitiveDataRedactor.Redact(exception.Message);
+        }
+    }
+
+    private void InitializeAlgorithmWorkspace()
+    {
+        var now = DateTimeOffset.UtcNow;
+        AlgorithmProjects.Add(new AlgorithmProjectWorkspaceItem(
+            "project-cross-sectional-multifactor",
+            "Cross-Sectional Multi-Factor",
+            "Equity Multi-Factor",
+            18,
+            "Candidate",
+            "US liquid large and mid-cap equities",
+            "Daily bars, 5-year research window",
+            "Weekly",
+            now.AddDays(-1).ToLocalTime().ToString("g"),
+            "OOS passed; regime stress passed",
+            now.AddHours(-6),
+            "Value, momentum, quality, low volatility",
+            "Cross-sectional z-scores with coverage gates",
+            "Winsorized weighted ensemble with correlation penalty",
+            "Risk-budgeted long-only allocation with sector caps",
+            "Volatility target, drawdown brake, liquidity and exposure limits",
+            "Adaptive TWAP with participation cap through the Execution Gateway",
+            "strategy.py plus factor-definition and parameter schemas",
+            "Signal threshold, rebalance interval, gross exposure, turnover cap",
+            "Sharpe 1.42 | Max drawdown 9.8% | Cost 21 bps | Turnover 34%",
+            "v18 candidate versus v17 baseline: higher OOS Sharpe, lower drawdown, similar cost.",
+            "Candidate; eligible for Paper after approval, then Shadow. Live remains ineligible."));
+        AlgorithmProjects.Add(new AlgorithmProjectWorkspaceItem(
+            "project-momentum-regime",
+            "Momentum Regime Strategy",
+            "Regime-Aware Momentum",
+            7,
+            "Shadow",
+            "US index and liquid sector ETFs",
+            "Daily bars, 10-year research window",
+            "Daily",
+            now.AddDays(-3).ToLocalTime().ToString("g"),
+            "Walk-forward passed; Shadow monitoring",
+            now.AddDays(-2),
+            "Medium-term momentum and volatility regime",
+            "Trend strength with crisis probability filter",
+            "Regime-gated momentum score",
+            "Volatility-scaled allocation with cash reserve",
+            "Crisis de-risking, stop-opening-risk, maximum drawdown",
+            "POV execution with spread and liquidity guard",
+            "regime_strategy.py and ONNX regime classifier metadata",
+            "Lookback, volatility target, crisis threshold, participation cap",
+            "Sharpe 1.18 | Max drawdown 11.4% | Cost 17 bps | Turnover 27%",
+            "v7 Shadow versus v6 baseline: improved crisis containment.",
+            "Shadow; Live eligibility blocked until monitoring and authorization complete."));
+        SelectedAlgorithmProject = AlgorithmProjects[0];
+
+        var accelerated = ComputeDevices.FirstOrDefault(device =>
+            device.Type == ComputeDeviceType.NvidiaCuda &&
+            device.Health == ComputeHealth.Ready);
+        QuantWorkspaceJobs.Add(new QuantWorkspaceJob(
+            "job-backtest-v18",
+            "Walk-forward Backtest",
+            "Cross-Sectional Multi-Factor",
+            accelerated?.Name ?? "Generic CPU",
+            62,
+            "Running",
+            "Fold 8 of 12 | deterministic cost model"));
+        QuantWorkspaceJobs.Add(new QuantWorkspaceJob(
+            "job-optimization-v18",
+            "Parameter Optimization",
+            "Cross-Sectional Multi-Factor",
+            "Generic CPU",
+            100,
+            "Completed",
+            "36 bounded trials | candidate v18"));
     }
 
     public void ResetDemo()

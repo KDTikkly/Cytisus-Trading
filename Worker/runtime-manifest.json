@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "worker_version": "1.1.7",
+  "worker_version": "1.1.8",
   "python": {
     "minimum": "3.11",
     "maximum_exclusive": "3.14",
