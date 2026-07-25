@@ -1018,8 +1018,8 @@ struct PortfolioView: View {
                         Text(model.persistentExecutionAlert)
                             .font(.caption)
                             .foregroundStyle(
-                                model.executionState.riskEvents.isEmpty
-                                    ? .secondary : .red
+                                model.executionState.blockedSymbols.isEmpty
+                                    ? Color.secondary : Color.red
                             )
                         Divider().overlay(.white.opacity(0.08))
                         ForEach(model.brokerNetPositions) { position in
