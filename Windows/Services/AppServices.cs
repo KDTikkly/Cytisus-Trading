@@ -40,7 +40,10 @@ public sealed record AppServices(
     IModelSecretStore ModelSecretStore,
     IModelProviderClient ModelProviderClient,
     ModelProviderManager ModelProviderManager,
-    ModelLongbridgeCoordinator ModelLongbridgeCoordinator)
+    ModelLongbridgeCoordinator ModelLongbridgeCoordinator,
+    ILocalStudioStore LocalStudioStore,
+    LocalStudioService LocalStudioService,
+    ILocalQuantWorkerClient QuantWorkerClient)
 {
     public static AppServices CreateOfflineFixture()
     {
@@ -76,6 +79,7 @@ public sealed record AppServices(
         var modelLongbridgeCoordinator = new ModelLongbridgeCoordinator(
             new FixtureReadOnlyLongbridgeToolGateway(
                 new FixtureLongbridgeDataService(cache, universeService)));
+        var localStudioService = new LocalStudioService(store, store);
         var executionGateway = new ExecutionGateway(
             store,
             store,
@@ -128,6 +132,9 @@ public sealed record AppServices(
             modelSecretStore,
             modelProviderClient,
             modelProviderManager,
-            modelLongbridgeCoordinator);
+            modelLongbridgeCoordinator,
+            store,
+            localStudioService,
+            new LocalQuantWorkerClient());
     }
 }

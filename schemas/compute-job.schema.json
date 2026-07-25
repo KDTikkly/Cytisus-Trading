@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cytisus.local/schemas/compute-job.schema.json",
+  "title": "Compute Job",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "job_id",
+    "job_type",
+    "project_id",
+    "device_id",
+    "seed",
+    "resource_limits",
+    "payload"
+  ],
+  "properties": {
+    "job_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "job_type": {
+      "enum": [
+        "FactorCalculation",
+        "Backtest",
+        "WalkForwardBacktest",
+        "ParameterSearch",
+        "PortfolioOptimization",
+        "MonteCarlo",
+        "TrainModel",
+        "ExportONNX",
+        "TestONNX",
+        "BenchmarkInference",
+        "ValidateProject",
+        "SimulateExecutionAlgorithm"
+      ]
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "device_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "resource_limits": {
+      "type": "object",
+      "required": [
+        "timeout_seconds",
+        "max_threads",
+        "max_memory_bytes",
+        "max_gpu_memory_bytes",
+        "max_epochs",
+        "max_trials",
+        "max_output_bytes"
+      ],
+      "properties": {
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        },
+        "max_threads": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256
+        },
+        "max_memory_bytes": {
+          "type": "integer",
+          "minimum": 1048576
+        },
+        "max_gpu_memory_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_epochs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_trials": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_output_bytes": {
+          "type": "integer",
+          "minimum": 1024
+        }
+      }
+    },
+    "payload": {
+      "type": "object"
+    }
+  }
+}

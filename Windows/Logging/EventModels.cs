@@ -37,7 +37,12 @@ public enum AuditEventCategory
     BrokerFill,
     VirtualAllocation,
     AllocationShortfall,
-    Reconciliation
+    Reconciliation,
+    AlgorithmProject,
+    ComputeJob,
+    ModelLifecycle,
+    AccountMapping,
+    AgentAuthorization
 }
 
 public enum AuditResult

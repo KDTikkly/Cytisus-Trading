@@ -1,9 +1,10 @@
-Cytisus-Trading 1.1.1
+Cytisus-Trading 1.1.2
 
 IMPLEMENTATION STATUS
 
-v1.1 Local Paper implementation is complete. Version 1.1.1 adds secure
-user-supplied model-provider configuration. The app starts in offline fixture mode.
+v1.1 Local Paper implementation is complete. Version 1.1.2 adds a local
+Algorithm Studio, isolated Quant Worker, compute discovery, versioned projects,
+ONNX metadata, and bounded Agent proposals. The app starts in offline fixture mode.
 Read-only Longbridge CLI discovery, market fixtures, local caching, and daily
 universe snapshots are available. Deterministic Local Paper strategy cycles, factor
 research, regime probabilities, and governed strategy capital budgets are
@@ -18,8 +19,8 @@ MACOS
 
 WINDOWS 11
 
-New packaging is deferred until v1.1.3. No v1.1.1 Windows installer is published.
-The prepared future artifact name is "Cytisus-Trading-1.1.1-win11-x64.exe".
+New packaging is deferred until v1.1.3. No v1.1.2 Windows installer is published.
+The prepared future artifact name is "Cytisus-Trading-1.1.2-win11-x64.exe".
 
 NOTES
 
@@ -36,5 +37,8 @@ NOTES
 - Users supply their own model API and may incur provider charges.
 - macOS keys use Keychain Services. Windows keys use CurrentUser DPAPI.
 - Model-provider authorization is separate from Longbridge OAuth.
+- The Quant Worker requires a user-selected Python interpreter and cannot send orders.
+- CPU is the safe fallback; optional accelerators are Ready only after runtime checks.
+- Longbridge account fixtures are synthetic. Authentication work remains v1.1.3.
 - Never include API keys in issues, logs, screenshots, or bug reports.
-- No v1.1.1 DMG, Windows installer, tag, or GitHub Release is produced.
+- No v1.1.2 DMG, Windows installer, tag, or GitHub Release is produced.

@@ -1,0 +1,28 @@
+{
+  "source": "SyntheticFixture",
+  "authentication_required": false,
+  "accounts": [
+    {
+      "account_id": "fixture-local-paper",
+      "display_name": "Local Paper",
+      "channel": "LocalPaper",
+      "market": "US",
+      "is_synthetic": true
+    },
+    {
+      "account_id": "fixture-longbridge-live",
+      "display_name": "Longbridge Live Fixture",
+      "channel": "LongbridgeLive",
+      "market": "US",
+      "is_synthetic": true
+    }
+  ],
+  "strategy_mappings": [
+    {
+      "strategy_id": "official-fixture-strategy",
+      "account_id": "fixture-local-paper",
+      "market": "US",
+      "source": "SyntheticFixture"
+    }
+  ]
+}

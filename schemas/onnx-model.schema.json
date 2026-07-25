@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cytisus.local/schemas/onnx-model.schema.json",
+  "title": "ONNX Model Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "model_id",
+    "name",
+    "version",
+    "status",
+    "artifact_path",
+    "sha256",
+    "input_names",
+    "output_names",
+    "compatible_providers",
+    "imported_at",
+    "dataset_version",
+    "feature_metadata",
+    "normalization_metadata",
+    "preferred_provider",
+    "fallback_providers",
+    "actual_provider_used",
+    "strategy_bindings",
+    "dependency_ids"
+  ],
+  "properties": {
+    "model_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "Draft",
+        "Imported",
+        "Validated",
+        "Backtested",
+        "Shadow",
+        "Active",
+        "Incompatible",
+        "Retired"
+      ]
+    },
+    "artifact_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "input_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "output_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "compatible_providers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "imported_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "dataset_version": {
+      "type": "string"
+    },
+    "feature_metadata": {
+      "type": "object"
+    },
+    "normalization_metadata": {
+      "type": "object"
+    },
+    "preferred_provider": {
+      "type": "string"
+    },
+    "fallback_providers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "actual_provider_used": {
+      "type": "string"
+    },
+    "strategy_bindings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dependency_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

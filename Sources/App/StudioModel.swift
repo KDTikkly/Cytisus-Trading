@@ -7,6 +7,7 @@ enum StudioSection: String, CaseIterable, Identifiable {
     case lab = "Strategies"
     case portfolio = "Portfolio"
     case execution = "Execution"
+    case algorithmStudio = "Algorithm Studio"
     case data = "Data and Universe"
     case settings = "Settings"
     case logs = "Logs"
@@ -21,6 +22,7 @@ enum StudioSection: String, CaseIterable, Identifiable {
         case .lab: return "slider.horizontal.3"
         case .portfolio: return "chart.pie"
         case .execution: return "arrow.left.arrow.right.square"
+        case .algorithmStudio: return "cpu"
         case .data: return "externaldrive.connected.to.line.below"
         case .settings: return "gearshape"
         case .logs: return "list.bullet.rectangle"
@@ -123,9 +125,35 @@ final class StudioModel: ObservableObject {
     @Published private(set) var regimeSnapshot: RegimeSnapshot?
     @Published private(set) var capitalAllocation: CapitalAllocationResult?
     @Published private(set) var executionState = ExecutionStateSnapshot.empty
+    @Published private(set) var localStudioState = LocalStudioState.empty
+    @Published var pythonExecutablePath: String {
+        didSet { persistSettings() }
+    }
+    @Published var quantWorkerRootDirectory: String {
+        didSet { persistSettings() }
+    }
+    @Published var computeSchedulingMode: ComputeSchedulingMode {
+        didSet { persistSettings() }
+    }
+    @Published var agentCallLimit: Int {
+        didSet { persistSettings() }
+    }
+    @Published var agentInputTokenLimit: Int {
+        didSet { persistSettings() }
+    }
+    @Published var agentOutputTokenLimit: Int {
+        didSet { persistSettings() }
+    }
+    @Published var agentDailySpendingLimit: Double {
+        didSet { persistSettings() }
+    }
+    @Published var agentMonthlySpendingLimit: Double {
+        didSet { persistSettings() }
+    }
 
     let liveExecutionAvailable = false
     let modelProviders: ModelProvidersViewModel
+    let computeDevices = LocalStudioService.fixtureDevices()
 
     private let services: AppServices
     private var externalRuntimes: [String: ExternalStrategyRuntime] = [:]
@@ -151,11 +179,22 @@ final class StudioModel: ObservableObject {
         dataRetentionDays = Double(max(7, settings.dataRetentionDays))
         logRetentionDays = Double(max(7, settings.logRetentionDays))
         globalLiveLock = settings.globalLiveLock
+        pythonExecutablePath = settings.pythonExecutablePath
+        quantWorkerRootDirectory = settings.quantWorkerRootDirectory
+        computeSchedulingMode = settings.computeSchedulingMode
+        agentCallLimit = settings.agentCallLimit
+        agentInputTokenLimit = settings.agentInputTokenLimit
+        agentOutputTokenLimit = settings.agentOutputTokenLimit
+        agentDailySpendingLimit = settings.agentDailySpendingLimit
+        agentMonthlySpendingLimit = settings.agentMonthlySpendingLimit
         factors = (try? services.factorRepository.loadFactors()) ?? []
         applicationLogs = (try? services.logStore.loadLogs(limit: 50)) ?? []
         initializeStrategies()
         initializeResearch()
         initializeExecution()
+        localStudioState =
+            (try? services.localStudioService.loadOrCreateFixtureState()) ??
+            .empty
 
         appendLog(
             level: .info,
@@ -172,6 +211,26 @@ final class StudioModel: ObservableObject {
 
     var activeFactors: Int {
         factors.filter { $0.state == .active }.count
+    }
+
+    var quantWorkerStatus: String {
+        "Stopped until an approved Python interpreter is selected."
+    }
+
+    var agentSafetyStatus: String {
+        "Project-only patches, bounded cost, no shell, no secrets, and no arbitrary files."
+    }
+
+    var executionModuleStatus: String {
+        "Synthetic child proposals only; every proposal must enter the Execution Gateway."
+    }
+
+    var longbridgeAccountStatus: String {
+        "Synthetic account fixtures only. v1.1.3 will verify authentication and account mapping."
+    }
+
+    var agentCostLimitStatus: String {
+        "\(agentCallLimit) calls | \(agentInputTokenLimit) input tokens | \(agentOutputTokenLimit) output tokens | \(agentDailySpendingLimit.formatted(.currency(code: "USD"))) daily | \(agentMonthlySpendingLimit.formatted(.currency(code: "USD"))) monthly"
     }
 
     var shadowFactors: Int {
@@ -1646,7 +1705,15 @@ final class StudioModel: ObservableObject {
             processTimeoutSeconds: Int(processTimeoutSeconds.rounded()),
             dataRetentionDays: Int(dataRetentionDays.rounded()),
             logRetentionDays: Int(logRetentionDays.rounded()),
-            globalLiveLock: globalLiveLock
+            globalLiveLock: globalLiveLock,
+            pythonExecutablePath: pythonExecutablePath,
+            quantWorkerRootDirectory: quantWorkerRootDirectory,
+            computeSchedulingMode: computeSchedulingMode,
+            agentCallLimit: agentCallLimit,
+            agentInputTokenLimit: agentInputTokenLimit,
+            agentOutputTokenLimit: agentOutputTokenLimit,
+            agentDailySpendingLimit: agentDailySpendingLimit,
+            agentMonthlySpendingLimit: agentMonthlySpendingLimit
         )
 
         do {

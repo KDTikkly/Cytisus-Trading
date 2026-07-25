@@ -41,6 +41,9 @@ struct AppServices {
     let modelProviderClient: ModelProviderClient
     let modelProviderManager: ModelProviderManager
     let modelLongbridgeCoordinator: ModelLongbridgeCoordinator
+    let localStudioStore: LocalStudioStore
+    let localStudioService: LocalStudioService
+    let quantWorkerClient: LocalQuantWorkerClient
 
     static func offlineFixture() -> AppServices {
         let store = JSONFilePersistentStore(rootURL: JSONFilePersistentStore.defaultRootURL())
@@ -81,6 +84,10 @@ struct AppServices {
                     universeService: universeService
                 )
             )
+        )
+        let localStudioService = LocalStudioService(
+            store: store,
+            auditStore: store
         )
         let executionGateway = ExecutionGateway(
             store: store,
@@ -143,7 +150,10 @@ struct AppServices {
             modelSecretStore: modelSecretStore,
             modelProviderClient: modelProviderClient,
             modelProviderManager: modelProviderManager,
-            modelLongbridgeCoordinator: modelLongbridgeCoordinator
+            modelLongbridgeCoordinator: modelLongbridgeCoordinator,
+            localStudioStore: store,
+            localStudioService: localStudioService,
+            quantWorkerClient: ProcessLocalQuantWorkerClient()
         )
     }
 }

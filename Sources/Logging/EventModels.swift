@@ -69,6 +69,11 @@ enum AuditEventCategory: String, Codable {
     case virtualAllocation = "VirtualAllocation"
     case allocationShortfall = "AllocationShortfall"
     case reconciliation = "Reconciliation"
+    case algorithmProject = "AlgorithmProject"
+    case computeJob = "ComputeJob"
+    case modelLifecycle = "ModelLifecycle"
+    case accountMapping = "AccountMapping"
+    case agentAuthorization = "AgentAuthorization"
 }
 
 enum AuditResult: String, Codable {

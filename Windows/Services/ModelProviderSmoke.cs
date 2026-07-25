@@ -25,10 +25,10 @@ public static class ModelProviderSmoke
             var store = new JsonFilePersistentStore(rootDirectory);
             store.InitializeSchema();
             Require(
-                store.GetSchemaVersion().Version == 6 &&
+                store.GetSchemaVersion().Version == 7 &&
                 store.GetMigrationRecords().Any(item =>
-                    item.FromVersion == 5 && item.ToVersion == 6),
-                "The v1.1.0 to v1.1.1 migration did not run.");
+                    item.FromVersion == 5 && item.ToVersion == 7),
+                "The cumulative v1.1.0 to v1.1.2 migration did not run.");
 
             var secrets = new InMemoryModelSecretStore();
             secrets.Save("first", "secret:test");

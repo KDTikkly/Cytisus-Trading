@@ -53,6 +53,15 @@ public sealed class StudioViewModel : ObservableObject
         ExecutionStateSnapshot.Empty;
     private string _candidateSearchStatus =
         "Tiny deterministic search has not run.";
+    private string _pythonExecutablePath = string.Empty;
+    private string _quantWorkerRootDirectory = string.Empty;
+    private ComputeSchedulingMode _computeSchedulingMode =
+        ComputeSchedulingMode.Auto;
+    private int _agentCallLimit = 3;
+    private int _agentInputTokenLimit = 12000;
+    private int _agentOutputTokenLimit = 4000;
+    private decimal _agentDailySpendingLimit = 5m;
+    private decimal _agentMonthlySpendingLimit = 50m;
 
     public StudioViewModel()
         : this(AppServices.CreateOfflineFixture())
@@ -64,6 +73,8 @@ public sealed class StudioViewModel : ObservableObject
         _services = services;
         ModelProviders = new ModelProvidersViewModel(
             services.ModelProviderManager);
+        LocalStudio = services.LocalStudioService.LoadOrCreateFixtureState();
+        ComputeDevices = LocalStudioService.DiscoverFixtureDevices();
         var settings = services.SettingsStore.LoadSettings();
         _riskBudget = settings.RiskBudget;
         _coverageGate = settings.CoverageGate;
@@ -86,6 +97,14 @@ public sealed class StudioViewModel : ObservableObject
             ? settings.LogRetentionDays
             : 30;
         _globalLiveLock = settings.GlobalLiveLock;
+        _pythonExecutablePath = settings.PythonExecutablePath;
+        _quantWorkerRootDirectory = settings.QuantWorkerRootDirectory;
+        _computeSchedulingMode = settings.ComputeSchedulingMode;
+        _agentCallLimit = settings.AgentCallLimit;
+        _agentInputTokenLimit = settings.AgentInputTokenLimit;
+        _agentOutputTokenLimit = settings.AgentOutputTokenLimit;
+        _agentDailySpendingLimit = settings.AgentDailySpendingLimit;
+        _agentMonthlySpendingLimit = settings.AgentMonthlySpendingLimit;
 
         ReplaceFactors(services.FactorRepository.LoadFactors());
         foreach (var entry in services.LogStore.LoadLogs(50))
@@ -124,6 +143,60 @@ public sealed class StudioViewModel : ObservableObject
     public ObservableCollection<string> LogSeverityOptions { get; } =
         new(new[] { "All", "Debug", "Info", "Warning", "Error", "Critical" });
     public ModelProvidersViewModel ModelProviders { get; }
+    public LocalStudioState LocalStudio { get; }
+    public IReadOnlyList<ComputeDevice> ComputeDevices { get; }
+    public IReadOnlyList<ComputeSchedulingMode> ComputeSchedulingModes { get; } =
+        Enum.GetValues<ComputeSchedulingMode>();
+    public string QuantWorkerStatus =>
+        string.IsNullOrWhiteSpace(PythonExecutablePath)
+            ? "Stopped until an approved Python interpreter is selected."
+            : "Stopped. The selected interpreter will be validated before a Worker starts.";
+    public string AgentSafetyStatus =>
+        "Project-only patches, bounded cost, no shell, no secrets, and no arbitrary files.";
+    public string ExecutionModuleStatus =>
+        "Synthetic child proposals only; every proposal must enter the Execution Gateway.";
+    public string LongbridgeAccountStatus =>
+        "Synthetic account fixtures only. v1.1.3 will verify authentication and account mapping.";
+
+    public string PythonExecutablePath
+    {
+        get => _pythonExecutablePath;
+        set
+        {
+            if (Set(ref _pythonExecutablePath, value))
+            {
+                PersistSettings();
+                Raise(nameof(QuantWorkerStatus));
+            }
+        }
+    }
+
+    public string QuantWorkerRootDirectory
+    {
+        get => _quantWorkerRootDirectory;
+        set
+        {
+            if (Set(ref _quantWorkerRootDirectory, value))
+            {
+                PersistSettings();
+            }
+        }
+    }
+
+    public ComputeSchedulingMode ComputeSchedulingMode
+    {
+        get => _computeSchedulingMode;
+        set
+        {
+            if (Set(ref _computeSchedulingMode, value))
+            {
+                PersistSettings();
+            }
+        }
+    }
+
+    public string AgentCostLimitStatus =>
+        $"{_agentCallLimit} calls | {_agentInputTokenLimit} input tokens | {_agentOutputTokenLimit} output tokens | {_agentDailySpendingLimit:C} daily | {_agentMonthlySpendingLimit:C} monthly";
 
     public IReadOnlyList<TradeIntent> ExecutionIntents =>
         _executionState.Intents;
@@ -1393,7 +1466,15 @@ public sealed class StudioViewModel : ObservableObject
                 ProcessTimeoutSeconds = (int)ProcessTimeoutSeconds,
                 DataRetentionDays = (int)DataRetentionDays,
                 LogRetentionDays = (int)LogRetentionDays,
-                GlobalLiveLock = GlobalLiveLock
+                GlobalLiveLock = GlobalLiveLock,
+                PythonExecutablePath = PythonExecutablePath,
+                QuantWorkerRootDirectory = QuantWorkerRootDirectory,
+                ComputeSchedulingMode = ComputeSchedulingMode,
+                AgentCallLimit = _agentCallLimit,
+                AgentInputTokenLimit = _agentInputTokenLimit,
+                AgentOutputTokenLimit = _agentOutputTokenLimit,
+                AgentDailySpendingLimit = _agentDailySpendingLimit,
+                AgentMonthlySpendingLimit = _agentMonthlySpendingLimit
             });
         }
         catch

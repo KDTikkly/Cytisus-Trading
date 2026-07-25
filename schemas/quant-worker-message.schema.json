@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cytisus.local/schemas/quant-worker-message.schema.json",
+  "title": "Quant Worker Message",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["request_id", "correlation_id", "message_type"],
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "message_type": {
+      "enum": [
+        "Version",
+        "Health",
+        "DiscoverDevices",
+        "SubmitJob",
+        "ReadProgress",
+        "ReadResult",
+        "CancelJob",
+        "StructuredLogs",
+        "Stop"
+      ]
+    },
+    "job_id": {
+      "type": ["string", "null"]
+    },
+    "project_id": {
+      "type": ["string", "null"]
+    },
+    "payload": {
+      "type": "object"
+    }
+  }
+}

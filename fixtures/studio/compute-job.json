@@ -1,0 +1,23 @@
+{
+  "job_id": "job-backtest-fixture",
+  "job_type": "Backtest",
+  "project_id": "project-ma-demo",
+  "device_id": "cpu",
+  "seed": 7,
+  "resource_limits": {
+    "timeout_seconds": 30,
+    "max_threads": 2,
+    "max_memory_bytes": 268435456,
+    "max_gpu_memory_bytes": 0,
+    "max_epochs": 0,
+    "max_trials": 20,
+    "max_output_bytes": 1048576
+  },
+  "payload": {
+    "prices": [100, 101, 102, 101, 103, 105, 104, 106],
+    "short_window": 2,
+    "long_window": 4,
+    "cost_bps": 2,
+    "slippage_bps": 1
+  }
+}

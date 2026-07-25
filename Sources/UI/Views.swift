@@ -45,6 +45,7 @@ struct RootView: View {
                     case .lab: LabView()
                     case .portfolio: PortfolioView()
                     case .execution: ExecutionView()
+                    case .algorithmStudio: AlgorithmStudioView()
                     case .data: DataUniverseView()
                     case .settings: SettingsView()
                     case .logs: LogsView()
@@ -69,7 +70,7 @@ struct SidebarView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Cytisus-Trading")
                         .font(.headline.weight(.semibold))
-                    Text("v1.1 Automated Operations")
+                    Text("v1.1.2 Automated Operations")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

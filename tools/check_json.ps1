@@ -14,6 +14,8 @@ foreach ($directory in @("schemas", "fixtures")) {
 }
 
 $jsonFiles.Add((Get-Item -LiteralPath (Join-Path $projectRoot "SANITIZATION.json")))
+$jsonFiles.Add((Get-Item -LiteralPath (
+    Join-Path $projectRoot "Worker\runtime-manifest.json")))
 
 foreach ($file in $jsonFiles) {
     try {

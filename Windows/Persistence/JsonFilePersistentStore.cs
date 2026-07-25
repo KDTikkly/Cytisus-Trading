@@ -13,7 +13,8 @@ public sealed class JsonFilePersistentStore :
     IStrategyStateStore,
     IFactorResearchStore,
     IExecutionStore,
-    IModelProviderStore
+    IModelProviderStore,
+    ILocalStudioStore
 {
     private readonly string _rootDirectory;
     private readonly object _gate = new();
@@ -47,6 +48,8 @@ public sealed class JsonFilePersistentStore :
         Path.Combine(_rootDirectory, "model-role-assignments.json");
     private string ProviderTestEventsPath =>
         Path.Combine(_rootDirectory, "provider-test-events.ndjson");
+    private string LocalStudioStatePath =>
+        Path.Combine(_rootDirectory, "local-studio-state.json");
 
     public JsonFilePersistentStore(string rootDirectory)
     {
@@ -468,6 +471,24 @@ public sealed class JsonFilePersistentStore :
     public void AppendProviderTestEvent(ProviderTestEvent testEvent)
     {
         AppendLine(ProviderTestEventsPath, testEvent);
+    }
+
+    public LocalStudioState LoadLocalStudioState()
+    {
+        lock (_gate)
+        {
+            return File.Exists(LocalStudioStatePath)
+                ? ReadDocument<LocalStudioState>(LocalStudioStatePath)
+                : LocalStudioState.Empty;
+        }
+    }
+
+    public void SaveLocalStudioState(LocalStudioState state)
+    {
+        lock (_gate)
+        {
+            WriteDocument(LocalStudioStatePath, state);
+        }
     }
 
     private static JsonSerializerOptions CreateOptions(bool writeIndented)

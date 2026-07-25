@@ -1,0 +1,20 @@
+{
+  "authorization_id": "auth-fixture",
+  "mode": "BoundedAutonomy",
+  "allowed_accounts": ["fixture-local-paper"],
+  "allowed_markets": ["US"],
+  "allowed_strategies": ["official-fixture-strategy"],
+  "allowed_symbols_or_universe": ["AAPL.US"],
+  "maximum_order_value": 2000,
+  "maximum_daily_value": 5000,
+  "maximum_position": 10000,
+  "maximum_daily_loss": 500,
+  "max_orders_per_day": 3,
+  "allowed_order_types": ["Market", "Limit"],
+  "allowed_trading_hours": ["Regular"],
+  "outside_regular_hours_permission": false,
+  "minimum_confidence": 0.8,
+  "valid_from": "2026-01-01T00:00:00Z",
+  "expires_at": "2099-01-01T00:00:00Z",
+  "revoked": false
+}

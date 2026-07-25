@@ -427,7 +427,7 @@ public sealed class LongbridgeCliAdapter : ILongbridgeCliAdapter
             1,
             false,
             version,
-            $"{version}|cytisus-adapter-1.1.1",
+            $"{version}|cytisus-adapter-1.1.2",
             LongbridgeStatusState.Degraded,
             HasJsonOutput(rootHelp.StandardOutput),
             templates,

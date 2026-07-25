@@ -1,7 +1,7 @@
 import Foundation
 
 struct StoreSchemaVersion: Codable, Equatable {
-    static let current = StoreSchemaVersion(version: 6)
+    static let current = StoreSchemaVersion(version: 7)
 
     let version: Int
 }
@@ -103,4 +103,9 @@ protocol ModelSecretStore {
     func replace(secret: String, reference: String) throws
     func retrieve(reference: String) throws -> String
     func delete(reference: String) throws
+}
+
+protocol LocalStudioStore {
+    func loadLocalStudioState() throws -> LocalStudioState
+    func saveLocalStudioState(_ state: LocalStudioState) throws
 }

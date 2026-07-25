@@ -354,7 +354,7 @@ final class LongbridgeCLIAdapter: LongbridgeCLIAdapting {
                 schemaVersion: 1,
                 fixtureMode: false,
                 cliVersion: version,
-                sourceVersion: "\(version)|cytisus-adapter-1.1.1",
+                sourceVersion: "\(version)|cytisus-adapter-1.1.2",
                 statusState: .degraded,
                 supportsJSON: !jsonArguments(helpResult.standardOutput).isEmpty,
                 commands: templates,

@@ -8,9 +8,9 @@
     <AssemblyName>CytisusTrading</AssemblyName>
     <RootNamespace>CytisusTrading.Windows</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>1.1.1</Version>
-    <AssemblyVersion>1.1.1.0</AssemblyVersion>
-    <FileVersion>1.1.1.0</FileVersion>
+    <Version>1.1.2</Version>
+    <AssemblyVersion>1.1.2.0</AssemblyVersion>
+    <FileVersion>1.1.2.0</FileVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <NeutralLanguage>en-US</NeutralLanguage>
     <Product>Cytisus-Trading</Product>
@@ -42,6 +42,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="..\fixtures\model-providers\*.json">
       <Link>fixtures\model-providers\%(Filename)%(Extension)</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\fixtures\studio\*.json">
+      <Link>fixtures\studio\%(Filename)%(Extension)</Link>
     </EmbeddedResource>
   </ItemGroup>
 </Project>

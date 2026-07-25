@@ -2,7 +2,7 @@ namespace CytisusTrading.Windows;
 
 public sealed record StoreSchemaVersion(int Version)
 {
-    public static StoreSchemaVersion Current { get; } = new(6);
+    public static StoreSchemaVersion Current { get; } = new(7);
 }
 
 public sealed record MigrationRecord(
@@ -103,4 +103,10 @@ public interface IModelSecretStore
     void Replace(string secret, string reference);
     string Retrieve(string reference);
     void Delete(string reference);
+}
+
+public interface ILocalStudioStore
+{
+    LocalStudioState LoadLocalStudioState();
+    void SaveLocalStudioState(LocalStudioState state);
 }

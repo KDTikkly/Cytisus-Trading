@@ -7,7 +7,7 @@ namespace CytisusTrading.Windows;
 
 public static class ProductVersion
 {
-    public const string Current = "1.1.1";
+    public const string Current = "1.1.2";
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -210,6 +210,15 @@ public sealed record AppSettings(
     public int DataRetentionDays { get; init; } = 90;
     public int LogRetentionDays { get; init; } = 30;
     public bool GlobalLiveLock { get; init; }
+    public string PythonExecutablePath { get; init; } = string.Empty;
+    public string QuantWorkerRootDirectory { get; init; } = string.Empty;
+    public ComputeSchedulingMode ComputeSchedulingMode { get; init; } =
+        ComputeSchedulingMode.Auto;
+    public int AgentCallLimit { get; init; } = 3;
+    public int AgentInputTokenLimit { get; init; } = 12000;
+    public int AgentOutputTokenLimit { get; init; } = 4000;
+    public decimal AgentDailySpendingLimit { get; init; } = 5m;
+    public decimal AgentMonthlySpendingLimit { get; init; } = 50m;
 
     public static AppSettings Default { get; } = new(
         true,

@@ -3,6 +3,14 @@
 Version: 1.1
 Status: Read-only data foundation retained; Prompt 5 Live execution remains rejecting
 
+## v1.1.2 account-fixture boundary
+
+The Algorithm Studio uses only synthetic account and strategy-mapping fixtures in v1.1.2. They prepare native Longbridge Accounts UI and persistence contracts without requiring CLI installation, authentication, connectivity, or a real account.
+
+The local Quant Worker, ONNX models, execution modules, and Agents have no direct Longbridge CLI access. Execution modules produce child proposals only and every proposal must enter the existing Execution Gateway. Local Paper remains fully independent.
+
+Longbridge login, logout, device authorization, authorization-code login, Paper-account-channel setup, real account discovery, and verified Terminal command mapping remain v1.1.3 work. Real Live submission is still a safe rejecting implementation.
+
 ## Security boundary
 
 Longbridge CLI is installed and authorized separately by the user. Cytisus does not bundle it, download it, inspect its token directory, request a token, store OAuth material, or expose CLI arguments to a strategy.

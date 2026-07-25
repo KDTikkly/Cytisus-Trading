@@ -88,7 +88,7 @@
                             <TextBlock Text="Cytisus-Trading"
                                        FontWeight="SemiBold"
                                        FontSize="15" />
-                            <TextBlock Text="v1.1 Automated Operations"
+                            <TextBlock Text="v1.1.2 Automated Operations"
                                        Foreground="{StaticResource SecondaryTextBrush}"
                                        FontSize="11"
                                        Margin="0,3,0,0" />
@@ -260,6 +260,34 @@
                                 </Border>
                                 <TextBlock Grid.Column="1"
                                            Text="Data and Universe"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+
+                        <Button x:Name="AlgorithmStudioNav"
+                                Tag="AlgorithmStudio"
+                                Style="{StaticResource NavButton}"
+                                Click="NavButton_Click"
+                                Margin="0,0,0,5">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="34" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="24"
+                                        Height="24"
+                                        CornerRadius="7"
+                                        Background="#1855D7F1"
+                                        HorizontalAlignment="Left">
+                                    <TextBlock Text="AS"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontSize="9"
+                                               FontWeight="Bold"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Grid.Column="1"
+                                           Text="Algorithm Studio"
                                            VerticalAlignment="Center" />
                             </Grid>
                         </Button>
@@ -2075,6 +2103,185 @@
                                     </GridView>
                                 </ListView.View>
                             </ListView>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <ScrollViewer x:Name="AlgorithmStudioPanel"
+                              Visibility="Collapsed"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="34,30,34,38">
+                        <TextBlock Text="LOCAL QUANT RUNTIME"
+                                   Style="{StaticResource EyebrowText}" />
+                        <TextBlock Text="Algorithm Studio"
+                                   Style="{StaticResource PageTitle}" />
+                        <TextBlock Text="Versioned projects, truthful compute discovery, deterministic research jobs, and gated Agent proposals."
+                                   Style="{StaticResource BodySecondary}"
+                                   Margin="0,0,0,22" />
+
+                        <UniformGrid Columns="2" Margin="0,0,0,16">
+                            <Border Style="{StaticResource CardBorder}" Margin="0,0,8,0">
+                                <StackPanel>
+                                    <TextBlock Text="Projects and Agent"
+                                               FontSize="15"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding LocalStudio.Projects.Count, StringFormat={}{0} project}"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontSize="19"
+                                               FontWeight="SemiBold"
+                                               Margin="0,9,0,7" />
+                                <TextBlock Text="{Binding AgentSafetyStatus}"
+                                           Style="{StaticResource BodySecondary}"
+                                           TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding AgentCostLimitStatus}"
+                                           Style="{StaticResource BodySecondary}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,7,0,0" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource CardBorder}" Margin="8,0,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Quant Worker"
+                                               FontSize="15"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="Local process"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontSize="19"
+                                               FontWeight="SemiBold"
+                                               Margin="0,9,0,7" />
+                                    <TextBlock Text="{Binding QuantWorkerStatus}"
+                                               Style="{StaticResource BodySecondary}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                        </UniformGrid>
+
+                        <Border Style="{StaticResource CardBorder}"
+                                Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Controlled Runtime"
+                                           FontSize="15"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="Python executable"
+                                           Style="{StaticResource BodySecondary}"
+                                           Margin="0,12,0,5" />
+                                <TextBox Text="{Binding PythonExecutablePath, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Enter an approved absolute interpreter path."
+                                         Margin="0,0,0,10" />
+                                <TextBlock Text="Worker root directory"
+                                           Style="{StaticResource BodySecondary}"
+                                           Margin="0,0,0,5" />
+                                <TextBox Text="{Binding QuantWorkerRootDirectory, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Only project jobs, checkpoints, and artifacts are stored here."
+                                         Margin="0,0,0,10" />
+                                <TextBlock Text="Scheduling policy"
+                                           Style="{StaticResource BodySecondary}"
+                                           Margin="0,0,0,5" />
+                                <ComboBox ItemsSource="{Binding ComputeSchedulingModes}"
+                                          SelectedItem="{Binding ComputeSchedulingMode}" />
+                                <TextBlock Text="{Binding QuantWorkerStatus}"
+                                           Style="{StaticResource BodySecondary}"
+                                           Margin="0,10,0,0"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+
+                        <UniformGrid Columns="2" Margin="0,0,0,16">
+                            <Border Style="{StaticResource CardBorder}" Margin="0,0,8,0">
+                                <StackPanel>
+                                    <TextBlock Text="Compute Backends"
+                                               FontSize="15"
+                                               FontWeight="SemiBold"
+                                               Margin="0,0,0,10" />
+                                    <ItemsControl ItemsSource="{Binding ComputeDevices}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,4">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Name}"
+                                                                   FontWeight="SemiBold" />
+                                                        <TextBlock Text="{Binding Reason}"
+                                                                   Style="{StaticResource BodySecondary}"
+                                                                   FontSize="10" />
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding Health}"
+                                                               Foreground="{StaticResource AccentBrush}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource CardBorder}" Margin="8,0,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Backtests, Training, and ONNX"
+                                               FontSize="15"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="Bounded compute jobs"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontSize="19"
+                                               FontWeight="SemiBold"
+                                               Margin="0,9,0,7" />
+                                    <TextBlock Text="Jobs are cancellable, checkpoint-aware, deterministic in fixture mode, and use CPU fallback when no accelerator is validated."
+                                               Style="{StaticResource BodySecondary}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                        </UniformGrid>
+
+                        <UniformGrid Columns="2" Margin="0,0,0,16">
+                            <Border Style="{StaticResource CardBorder}" Margin="0,0,8,0">
+                                <StackPanel>
+                                    <TextBlock Text="Execution Lab"
+                                               FontSize="15"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="Proposal only"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontSize="19"
+                                               FontWeight="SemiBold"
+                                               Margin="0,9,0,7" />
+                                    <TextBlock Text="{Binding ExecutionModuleStatus}"
+                                               Style="{StaticResource BodySecondary}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource CardBorder}" Margin="8,0,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Longbridge Accounts"
+                                               FontSize="15"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding LocalStudio.Accounts.Count, StringFormat={}{0} fixture}"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontSize="19"
+                                               FontWeight="SemiBold"
+                                               Margin="0,9,0,7" />
+                                    <TextBlock Text="{Binding LongbridgeAccountStatus}"
+                                               Style="{StaticResource BodySecondary}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                        </UniformGrid>
+
+                        <Border Style="{StaticResource CardBorder}">
+                            <StackPanel>
+                                <TextBlock Text="Agent Order Authorization"
+                                           FontSize="15"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="SuggestOnly / ConfirmEveryOrder / BoundedAutonomy"
+                                           Foreground="{StaticResource AccentBrush}"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Margin="0,9,0,7" />
+                                <TextBlock Text="Authorizations are explicit, limited, expiring, revocable, and still subject to the existing risk and execution gateways. There is no manual order ticket."
+                                           Style="{StaticResource BodySecondary}"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
                         </Border>
                     </StackPanel>
                 </ScrollViewer>

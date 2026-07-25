@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cytisus.local/schemas/compute-device.schema.json",
+  "title": "Compute Device",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "device_id",
+    "device_type",
+    "vendor",
+    "model",
+    "driver_or_runtime_version",
+    "dedicated_or_unified_memory",
+    "supported_precisions",
+    "supported_backends",
+    "training_supported",
+    "inference_supported",
+    "health",
+    "failure_reason"
+  ],
+  "properties": {
+    "device_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "device_type": {
+      "enum": ["CPU", "GPU", "NPU"]
+    },
+    "vendor": {
+      "type": "string"
+    },
+    "model": {
+      "type": "string"
+    },
+    "driver_or_runtime_version": {
+      "type": "string"
+    },
+    "dedicated_or_unified_memory": {
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
+    "supported_precisions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "supported_backends": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "training_supported": {
+      "type": "boolean"
+    },
+    "inference_supported": {
+      "type": "boolean"
+    },
+    "health": {
+      "enum": ["Ready", "Unavailable", "Degraded", "Unhealthy", "Quarantined"]
+    },
+    "failure_reason": {
+      "type": "string"
+    }
+  }
+}

@@ -5,7 +5,7 @@ enum PersistentStoreError: Error {
     case invalidJSONLine
 }
 
-final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEventStore, MigrationStore, StrategyStateStore, FactorResearchStore, ExecutionStore, ModelProviderStore {
+final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEventStore, MigrationStore, StrategyStateStore, FactorResearchStore, ExecutionStore, ModelProviderStore, LocalStudioStore {
     private let rootURL: URL
     private let fileManager: FileManager
     private let encoder: JSONEncoder
@@ -41,6 +41,9 @@ final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEv
     }
     private var providerTestEventsURL: URL {
         rootURL.appendingPathComponent("provider-test-events.ndjson")
+    }
+    private var localStudioStateURL: URL {
+        rootURL.appendingPathComponent("local-studio-state.json")
     }
 
     init(rootURL: URL, fileManager: FileManager = .default) {
@@ -326,6 +329,17 @@ final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEv
 
     func appendProviderTestEvent(_ event: ProviderTestEvent) throws {
         try appendLine(event, to: providerTestEventsURL)
+    }
+
+    func loadLocalStudioState() throws -> LocalStudioState {
+        guard fileManager.fileExists(atPath: localStudioStateURL.path) else {
+            return .empty
+        }
+        return try read(LocalStudioState.self, from: localStudioStateURL)
+    }
+
+    func saveLocalStudioState(_ state: LocalStudioState) throws {
+        try write(state, to: localStudioStateURL)
     }
 
     private func read<T: Decodable>(_ type: T.Type, from url: URL) throws -> T {

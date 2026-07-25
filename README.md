@@ -6,9 +6,9 @@
 
 Cytisus-Trading is a local desktop front end for automated quantitative operations. It is not a manual trading terminal.
 
-## v1.1.1 implementation status
+## v1.1.2 implementation status
 
-Version 1.1.1 adds secure user-supplied model-provider configuration on top of the completed v1.1.0 Local Paper execution path. Live broker submission remains intentionally unavailable until v1.1.3 verifies Longbridge Terminal authentication and command mapping.
+Version 1.1.2 adds a local Algorithm Studio, isolated Quant Worker, truthful compute-provider discovery, deterministic research jobs, versioned projects, ONNX metadata, and bounded Agent proposals on top of the completed v1.1.0 Local Paper and v1.1.1 model-provider foundations. Live broker submission remains intentionally unavailable until v1.1.3 verifies Longbridge Terminal authentication and command mapping.
 
 Currently available:
 
@@ -54,6 +54,15 @@ Currently available:
 - Provider discovery where supported, manual model entry, user-triggered connectivity tests, and sanitized result categories.
 - One Ready primary model and ordered Ready fallback models with disabled-provider skipping.
 - A fixture-only read-only Quote, MarketStatus, and SymbolLookup model-tool boundary that rejects trading tools.
+- A separate local Quant Worker with typed JSON messages, job lifecycle, cancellation, logs, artifacts, checkpoints, and crash isolation.
+- An explicitly selected Python-interpreter boundary; Cytisus never silently chooses or installs a Python runtime.
+- Truthful CPU, Metal, CUDA, ROCm, OpenVINO, and NPU discovery with deterministic CPU fallback.
+- A narrow C++ CPU core with a stable C ABI for common quantitative primitives.
+- Versioned algorithm projects and allowlisted, cost-bounded Agent patch proposals.
+- Deterministic backtest, walk-forward, parameter-search, training, checkpoint, ONNX, and execution-simulation job contracts.
+- Synthetic Longbridge account and mapping fixtures for v1.1.3 UI and contract preparation.
+- SuggestOnly, ConfirmEveryOrder, and BoundedAutonomy Agent-order authorization contracts.
+- A native Algorithm Studio surface on macOS and Windows.
 - English-only ASCII repository validation.
 
 Not yet available:
@@ -64,12 +73,15 @@ Not yet available:
 - Manual order entry.
 - Chat, assistants, knowledge bases, prompt libraries, and model benchmarking.
 - Provider import, export, billing, key rotation, or automatic cost routing.
+- Real Longbridge account discovery or authentication flows.
+- Verified optional accelerator execution in environments where its runtime provider is not installed.
+- A general-purpose code editor, shell, arbitrary filesystem Agent access, or autonomous broker access.
 
 `Live` can be selected only when the Global Live Lock and a bounded authorization both pass validation. The Live Longbridge adapter still rejects every submission without starting a process, and no UI path can create a manual order. Local Paper does not require Longbridge CLI, authentication, connectivity, or an account.
 
 ## Native desktop editions and packaging
 
-The source version is 1.1.1. The repository owner has deferred new desktop packaging until v1.1.3, so no v1.1.1 DMG, Windows installer, tag, or GitHub Release is published. The latest existing v1.1.0 packages remain:
+The source version is 1.1.2. The repository owner has deferred new desktop packaging until v1.1.3, so no v1.1.2 DMG, Windows installer, tag, or GitHub Release is published. The latest existing v1.1.0 packages remain:
 
 - macOS 14 or later: SwiftUI Universal 2 app distributed as `Cytisus-Trading-1.1.0-universal.dmg`.
 - Windows 11 x64: self-contained WPF app distributed as `Cytisus-Trading-1.1.0-win11-x64.exe`.
@@ -121,6 +133,14 @@ The platforms do not share a compiled runtime. They share schema definitions, fi
 - [v1.1.1 PDM](docs/PDM-v1.1.1.md)
 - [v1.1.1 implementation prompt](docs/CODEX-v1.1.1-PROMPT.md)
 - [Model-provider configuration and security](docs/MODEL-PROVIDERS.md)
+- [v1.1.2 PDM](docs/PDM-v1.1.2.md)
+- [v1.1.2 implementation prompt](docs/CODEX-v1.1.2-PROMPT.md)
+- [Local Quant Runtime](docs/LOCAL-QUANT-RUNTIME.md)
+- [Compute backends](docs/COMPUTE-BACKENDS.md)
+- [Algorithm projects](docs/ALGORITHM-PROJECTS.md)
+- [ONNX models](docs/ONNX-MODELS.md)
+- [Agent development](docs/AGENT-DEVELOPMENT.md)
+- [Agent order authorization](docs/AGENT-ORDER-AUTHORIZATION.md)
 
 ## Install on macOS
 
@@ -151,7 +171,7 @@ tools/build_dmg.sh
 The script is prepared for this source version, but it is not run or published before v1.1.3 under the current packaging plan. Its prepared output name is:
 
 ```text
-dist/Cytisus-Trading-1.1.1-universal.dmg
+dist/Cytisus-Trading-1.1.2-universal.dmg
 ```
 
 For Developer ID signing and Apple notarization:
@@ -173,7 +193,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/build_win11.ps1
 The script is prepared for this source version, but it is not run or published before v1.1.3 under the current packaging plan. Its prepared output name is:
 
 ```text
-dist/Cytisus-Trading-1.1.1-win11-x64.exe
+dist/Cytisus-Trading-1.1.2-win11-x64.exe
 ```
 
 With Inno Setup present, this artifact is a standard English install wizard containing the self-contained single-file application. Without Inno Setup, the local script emits a development single-file fallback. Release CI installs Inno Setup and always builds the wizard.
@@ -192,6 +212,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_prompt3.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_prompt4.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_prompt5.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_model_providers.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_v112.ps1 -PythonExecutablePath C:\Path\To\Approved\python.exe
 ```
 
 The Prompt 5 smoke is deliberately small: one complete strategy-intent-to-Local-Paper-fill cycle, one internal-netting case, one partial-fill allocation case, one reconciliation case, one assertion that unavailable Longbridge CLI does not block Local Paper, and one assertion that the Live adapter remains rejecting.
@@ -208,5 +229,7 @@ The Prompt 5 smoke is deliberately small: one complete strategy-intent-to-Local-
 - Factor demo state resets deterministically from repository fixtures.
 - Model API keys remain in operating-system secure storage and never enter the application database, logs, Longbridge CLI arguments, or Longbridge environment.
 - Model-provider authorization is separate from Longbridge OAuth. Users supply and pay their selected provider directly.
+- The Quant Worker receives project jobs and artifacts only. It receives no broker secret or account-token path and cannot submit orders.
+- Synthetic account fixtures and Agent authorizations contain no real account identifier or credential.
 
 See [PRIVACY.md](PRIVACY.md) and [SANITIZATION.json](SANITIZATION.json).

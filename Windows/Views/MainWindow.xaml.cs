@@ -259,6 +259,7 @@ public partial class MainWindow : Window
         LabPanel.Visibility = section == "Lab" ? Visibility.Visible : Visibility.Collapsed;
         PortfolioPanel.Visibility = section == "Portfolio" ? Visibility.Visible : Visibility.Collapsed;
         ExecutionPanel.Visibility = section == "Execution" ? Visibility.Visible : Visibility.Collapsed;
+        AlgorithmStudioPanel.Visibility = section == "AlgorithmStudio" ? Visibility.Visible : Visibility.Collapsed;
         DataPanel.Visibility = section == "Data" ? Visibility.Visible : Visibility.Collapsed;
         SettingsPanel.Visibility = section == "Settings" ? Visibility.Visible : Visibility.Collapsed;
         LogsPanel.Visibility = section == "Logs" ? Visibility.Visible : Visibility.Collapsed;
@@ -271,6 +272,7 @@ public partial class MainWindow : Window
                      LabNav,
                      PortfolioNav,
                      ExecutionNav,
+                     AlgorithmStudioNav,
                      DataNav,
                      SettingsNav,
                      LogsNav,
