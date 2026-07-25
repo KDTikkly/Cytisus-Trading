@@ -1,6 +1,6 @@
 # Cytisus-Trading Privacy Statement
 
-Cytisus-Trading 1.1.0 is under active implementation. Prompt 2 adds optional read-only market-data access through a separately installed Longbridge CLI. Fixture mode remains the default.
+Cytisus-Trading 1.1.0 is under active implementation. Prompt 3 adds local governed strategy processes and deterministic Paper operation. Fixture mode remains the default, and Live broker submission remains unavailable.
 
 ## Current behavior
 
@@ -10,8 +10,12 @@ Cytisus-Trading 1.1.0 is under active implementation. Prompt 2 adds optional rea
 - A read-only broker-position snapshot may be held in memory to mark excluded holdings Reduce Only. It is not cached.
 - The app contains no tokens, API keys, certificates, authorization codes, or account bindings.
 - Repository fixtures contain only fictional market, factor, and position data.
+- Official and registered third-party strategies run as explicit local processes without a shell. They do not receive credentials or direct CLI access.
+- Strategy messages are size-bounded, typed, and checked for prohibited sensitive payload keys before they are logged or accepted.
+- Paper strategy intents remain local records and cannot reach the Live adapter.
+- The Global Live Lock is off by default. A bounded local authorization record is required for Live selection, but the Live adapter still rejects submission.
 - The app has no order, cancellation, fund-management, or account-configuration capability.
-- Live execution is unavailable.
+- Live broker submission is unavailable.
 
 ## Local persistence
 
@@ -21,10 +25,13 @@ The v1.1 foundation stores only:
 - Schema and migration version information.
 - Operational application logs.
 - Audit events for local fixture actions.
+- Strategy manifests and runtime state.
+- Parameter-change history and rollback version references.
+- Bounded Live-authorization records that contain limits but no broker credential.
 - Historical market bars and current snapshots.
 - Daily universe snapshots.
 
-These files remain on the local device. They must not contain credentials, full account identifiers, raw authentication output, broker-position snapshots, or real orders.
+These files remain on the local device. They must not contain credentials, full account identifiers, raw authentication output, broker-position snapshots, or real broker instructions.
 
 Future prompts will update this statement only when their behavior is implemented. The completed v1.1 PDM is a product plan and does not describe current functionality by itself.
 

@@ -32,5 +32,14 @@
     <EmbeddedResource Include="..\fixtures\longbridge\*.json">
       <Link>fixtures\longbridge\%(Filename)%(Extension)</Link>
     </EmbeddedResource>
+    <EmbeddedResource Include="..\fixtures\strategies\*.json">
+      <Link>fixtures\strategies\%(Filename)%(Extension)</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\fixtures\strategies\*.ndjson">
+      <Link>fixtures\strategies\%(Filename)%(Extension)</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\fixtures\execution\*.json">
+      <Link>fixtures\execution\%(Filename)%(Extension)</Link>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

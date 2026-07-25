@@ -13,6 +13,7 @@ $textExtensions = @(
     ".gitignore",
     ".json",
     ".md",
+    ".ndjson",
     ".plist",
     ".ps1",
     ".sh",

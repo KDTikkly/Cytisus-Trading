@@ -1,15 +1,24 @@
 {
   "schema_version": 1,
-  "strategy_id": "fixture-multifactor",
-  "name": "Fixture Multi-Factor",
+  "protocol_version": 1,
+  "strategy_id": "cross-sectional-multifactor",
+  "name": "Cross-Sectional Multi-Factor",
   "version": "1.1.0",
-  "entrypoint": "./fixture-strategy",
+  "source": "Official",
+  "entrypoint": "fixture://cross-sectional-multifactor",
   "supported_modes": [
-    "PaperOnly"
+    "PaperOnly",
+    "Live"
   ],
   "required_data": [
     "daily_bars",
     "market_status"
   ],
-  "parameter_schema_version": 1
+  "parameter_schema_version": 1,
+  "parameter_schema": "official-parameter-schema.json",
+  "requested_capabilities": [
+    "market_data",
+    "strategy_events",
+    "structured_logs"
+  ]
 }

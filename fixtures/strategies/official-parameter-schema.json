@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "strategy_id": "cross-sectional-multifactor",
+  "parameters": [
+    {
+      "key": "signal_threshold",
+      "label": "Signal Threshold",
+      "description": "Minimum deterministic composite score required to create an automated target.",
+      "type": "Number",
+      "default_value": "0.15",
+      "recommended_min": "0.05",
+      "recommended_max": "0.30",
+      "recommended_activation_mode": "Immediate",
+      "safety_override": {
+        "hard_min": "0.05",
+        "hard_max": "0.25",
+        "risk_tier": "Low",
+        "live_mutable": true,
+        "requires_preview": false,
+        "requires_pause": false,
+        "requires_confirmation": false,
+        "activation_mode": "Immediate",
+        "rollback_required": true
+      }
+    },
+    {
+      "key": "rebalance_interval_days",
+      "label": "Rebalance Interval",
+      "description": "Number of daily boundaries between automated strategy cycles.",
+      "type": "Integer",
+      "default_value": "5",
+      "recommended_min": "1",
+      "recommended_max": "20",
+      "recommended_activation_mode": "NextCycle",
+      "safety_override": {
+        "hard_min": "1",
+        "hard_max": "20",
+        "risk_tier": "Medium",
+        "live_mutable": true,
+        "requires_preview": false,
+        "requires_pause": false,
+        "requires_confirmation": false,
+        "activation_mode": "NextCycle",
+        "rollback_required": true
+      }
+    },
+    {
+      "key": "gross_exposure_limit",
+      "label": "Gross Exposure Limit",
+      "description": "Maximum gross strategy exposure before later portfolio-allocation controls.",
+      "type": "Number",
+      "default_value": "0.60",
+      "recommended_min": "0.20",
+      "recommended_max": "0.80",
+      "recommended_activation_mode": "SafeBoundary",
+      "safety_override": {
+        "hard_min": "0.10",
+        "hard_max": "0.80",
+        "risk_tier": "High",
+        "live_mutable": false,
+        "requires_preview": true,
+        "requires_pause": true,
+        "requires_confirmation": true,
+        "activation_mode": "SafeBoundary",
+        "rollback_required": true
+      }
+    }
+  ]
+}

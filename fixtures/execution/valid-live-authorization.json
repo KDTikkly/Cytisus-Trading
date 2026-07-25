@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "authorization_id": "auth-fixture-disabled",
+  "authorization_id": "auth-fixture-valid",
   "strategy_id": "cross-sectional-multifactor",
   "allowed_markets": [
     "US"
@@ -13,10 +13,10 @@
   "maximum_single_position_exposure": 0.02,
   "maximum_daily_loss": 100.0,
   "maximum_drawdown": 0.05,
-  "maximum_order_frequency": 0,
+  "maximum_order_frequency": 4,
   "outside_regular_hours_permission": false,
   "parameter_version": 1,
   "valid_from": "2026-01-01T00:00:00Z",
-  "expires_at": "2026-01-01T00:00:01Z",
-  "enabled": false
+  "expires_at": "2099-01-01T00:00:00Z",
+  "enabled": true
 }

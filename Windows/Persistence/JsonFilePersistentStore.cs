@@ -9,7 +9,8 @@ public sealed class JsonFilePersistentStore :
     ISettingsStore,
     IApplicationLogStore,
     IAuditEventStore,
-    IMigrationStore
+    IMigrationStore,
+    IStrategyStateStore
 {
     private readonly string _rootDirectory;
     private readonly object _gate = new();
@@ -21,6 +22,14 @@ public sealed class JsonFilePersistentStore :
     private string MigrationsPath => Path.Combine(_rootDirectory, "migrations.json");
     private string LogsPath => Path.Combine(_rootDirectory, "application-logs.ndjson");
     private string AuditPath => Path.Combine(_rootDirectory, "audit-events.ndjson");
+    private string StrategyManifestsPath =>
+        Path.Combine(_rootDirectory, "strategy-manifests.json");
+    private string StrategyStatesPath =>
+        Path.Combine(_rootDirectory, "strategy-states.json");
+    private string ParameterChangesPath =>
+        Path.Combine(_rootDirectory, "parameter-changes.ndjson");
+    private string LiveAuthorizationsPath =>
+        Path.Combine(_rootDirectory, "live-authorizations.json");
 
     public JsonFilePersistentStore(string rootDirectory)
     {
@@ -152,6 +161,139 @@ public sealed class JsonFilePersistentStore :
                 .Select(line => JsonSerializer.Deserialize<AuditEvent>(line, _lineOptions)
                     ?? throw new InvalidDataException("Invalid audit-event JSON line."))
                 .ToArray();
+        }
+    }
+
+    public IReadOnlyList<StrategyManifest> LoadStrategyManifests()
+    {
+        lock (_gate)
+        {
+            return File.Exists(StrategyManifestsPath)
+                ? ReadDocument<List<StrategyManifest>>(StrategyManifestsPath)
+                : Array.Empty<StrategyManifest>();
+        }
+    }
+
+    public void SaveStrategyManifest(StrategyManifest manifest)
+    {
+        lock (_gate)
+        {
+            var manifests = File.Exists(StrategyManifestsPath)
+                ? ReadDocument<List<StrategyManifest>>(StrategyManifestsPath)
+                : new List<StrategyManifest>();
+            var existingIndex = manifests.FindIndex(item =>
+                string.Equals(
+                    item.StrategyId,
+                    manifest.StrategyId,
+                    StringComparison.Ordinal));
+            if (existingIndex >= 0)
+            {
+                manifests[existingIndex] = manifest;
+            }
+            else
+            {
+                manifests.Add(manifest);
+            }
+            WriteDocument(StrategyManifestsPath, manifests);
+        }
+    }
+
+    public IReadOnlyList<StrategyPersistentState> LoadStrategyStates()
+    {
+        lock (_gate)
+        {
+            return File.Exists(StrategyStatesPath)
+                ? ReadDocument<List<StrategyPersistentState>>(StrategyStatesPath)
+                : Array.Empty<StrategyPersistentState>();
+        }
+    }
+
+    public void SaveStrategyState(StrategyPersistentState state)
+    {
+        lock (_gate)
+        {
+            var states = File.Exists(StrategyStatesPath)
+                ? ReadDocument<List<StrategyPersistentState>>(StrategyStatesPath)
+                : new List<StrategyPersistentState>();
+            var existingIndex = states.FindIndex(item =>
+                string.Equals(
+                    item.StrategyId,
+                    state.StrategyId,
+                    StringComparison.Ordinal));
+            if (existingIndex >= 0)
+            {
+                states[existingIndex] = state;
+            }
+            else
+            {
+                states.Add(state);
+            }
+            WriteDocument(StrategyStatesPath, states);
+        }
+    }
+
+    public IReadOnlyList<StrategyParameterChange> LoadParameterChanges(
+        string strategyId,
+        int limit)
+    {
+        lock (_gate)
+        {
+            if (!File.Exists(ParameterChangesPath))
+            {
+                return Array.Empty<StrategyParameterChange>();
+            }
+
+            return File.ReadLines(ParameterChangesPath, Encoding.UTF8)
+                .Where(line => !string.IsNullOrWhiteSpace(line))
+                .Select(line => JsonSerializer.Deserialize<StrategyParameterChange>(
+                    line,
+                    _lineOptions) ?? throw new InvalidDataException(
+                    "Invalid parameter-change JSON line."))
+                .Where(change => string.Equals(
+                    change.StrategyId,
+                    strategyId,
+                    StringComparison.Ordinal))
+                .TakeLast(Math.Max(0, limit))
+                .ToArray();
+        }
+    }
+
+    public void AppendParameterChange(StrategyParameterChange change)
+    {
+        AppendLine(ParameterChangesPath, change);
+    }
+
+    public IReadOnlyList<LiveAuthorization> LoadLiveAuthorizations()
+    {
+        lock (_gate)
+        {
+            return File.Exists(LiveAuthorizationsPath)
+                ? ReadDocument<List<LiveAuthorization>>(LiveAuthorizationsPath)
+                : Array.Empty<LiveAuthorization>();
+        }
+    }
+
+    public void SaveLiveAuthorization(LiveAuthorization authorization)
+    {
+        lock (_gate)
+        {
+            var authorizations = File.Exists(LiveAuthorizationsPath)
+                ? ReadDocument<List<LiveAuthorization>>(LiveAuthorizationsPath)
+                : new List<LiveAuthorization>();
+            var existingIndex = authorizations.FindIndex(item =>
+                string.Equals(
+                    item.AuthorizationId,
+                    authorization.AuthorizationId,
+                    StringComparison.Ordinal));
+            if (existingIndex >= 0)
+            {
+                authorizations[existingIndex] = authorization;
+            }
+            else
+            {
+                authorizations.Add(authorization);
+            }
+            WriteDocument(LiveAuthorizationsPath, authorizations);
         }
     }
 

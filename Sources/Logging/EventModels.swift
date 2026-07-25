@@ -15,6 +15,8 @@ struct ApplicationLogEntry: Codable, Identifiable {
     let module: String
     let message: String
     let correlationID: String?
+    let strategyID: String?
+    let cycleID: String?
     let context: [String: String]
 
     enum CodingKeys: String, CodingKey {
@@ -24,7 +26,31 @@ struct ApplicationLogEntry: Codable, Identifiable {
         case module
         case message
         case correlationID = "correlation_id"
+        case strategyID = "strategy_id"
+        case cycleID = "cycle_id"
         case context
+    }
+
+    init(
+        id: String,
+        timestamp: Date,
+        severity: ApplicationLogLevel,
+        module: String,
+        message: String,
+        correlationID: String?,
+        strategyID: String? = nil,
+        cycleID: String? = nil,
+        context: [String: String]
+    ) {
+        self.id = id
+        self.timestamp = timestamp
+        self.severity = severity
+        self.module = module
+        self.message = message
+        self.correlationID = correlationID
+        self.strategyID = strategyID
+        self.cycleID = cycleID
+        self.context = context
     }
 }
 

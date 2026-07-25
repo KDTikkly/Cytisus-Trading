@@ -1,7 +1,7 @@
 import Foundation
 
 struct StoreSchemaVersion: Codable, Equatable {
-    static let current = StoreSchemaVersion(version: 2)
+    static let current = StoreSchemaVersion(version: 3)
 
     let version: Int
 }
@@ -59,4 +59,18 @@ protocol MarketDataCache {
     ) throws -> HistoricalBarSeries?
     func loadUniverseSnapshot(date: String) throws -> UniverseSnapshot?
     func cacheSizeBytes() throws -> Int64
+}
+
+protocol StrategyStateStore {
+    func loadStrategyManifests() throws -> [StrategyManifest]
+    func saveStrategyManifest(_ manifest: StrategyManifest) throws
+    func loadStrategyStates() throws -> [StrategyPersistentState]
+    func saveStrategyState(_ state: StrategyPersistentState) throws
+    func loadParameterChanges(
+        strategyId: String,
+        limit: Int
+    ) throws -> [StrategyParameterChange]
+    func appendParameterChange(_ change: StrategyParameterChange) throws
+    func loadLiveAuthorizations() throws -> [LiveAuthorization]
+    func saveLiveAuthorization(_ authorization: LiveAuthorization) throws
 }

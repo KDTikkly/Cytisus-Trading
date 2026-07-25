@@ -8,7 +8,7 @@ Cytisus-Trading is a local desktop front end for automated quantitative operatio
 
 ## v1.1 implementation status
 
-Version 1.1.0 is in progress. Prompt 2 adds the read-only Longbridge data and daily universe foundation while keeping Live execution unavailable.
+Version 1.1.0 is in progress. Prompt 3 adds the governed local strategy runtime and deterministic Paper operation while keeping Live broker submission unavailable.
 
 Currently available:
 
@@ -26,18 +26,24 @@ Currently available:
 - Point-in-time market metadata and idempotent local JSON caching.
 - Daily universe inclusion, exclusion, and Reduce Only decisions.
 - Native Data and Universe, Settings, and structured Logs screens.
+- Official and third-party strategy registries with manifest and parameter-schema validation.
+- Bounded no-shell strategy processes with NDJSON messaging, heartbeats, graceful shutdown, and structured observability.
+- The official Cross-Sectional Multi-Factor fixture strategy in Paper Only mode.
+- Schema-generated parameter editing with Low, Medium, and High risk governance, versioning, audit history, and safe-boundary activation.
+- A Global Live Lock that is OFF by default and bounded Live-authorization validation.
+- A rejecting Live adapter that prevents broker submission during this implementation pass.
+- Native Dashboard and Strategies screens with health, cycle, signal, target, intent, and runtime state.
 - English-only ASCII repository validation.
 
 Not yet available:
 
-- Local strategy-process execution.
 - Factor DSL execution or factor search.
 - Portfolio allocation.
-- Paper or Live broker execution.
+- Real Paper or Live broker execution.
 - Broker order submission.
 - Manual order entry.
 
-`Live` is defined as a contract identifier only. Live execution is unavailable and no UI path can submit an order.
+`Live` can be selected only when the Global Live Lock and a bounded authorization both pass validation. The Live broker adapter still rejects every submission, and no UI path can create a manual order.
 
 ## Native desktop editions
 
@@ -150,9 +156,10 @@ Run:
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_ascii.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_json.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_prompt2.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_prompt3.ps1
 ```
 
-The Windows application supports `--foundation-smoke` and a targeted Prompt 2 mode through `--prompt2-smoke`. The Prompt 2 smoke covers argument arrays, timeout and non-zero handling, redaction, market fixture parsing, idempotent cache behavior, and universe decisions.
+The Windows application supports `--foundation-smoke`, `--prompt2-smoke`, and `--prompt3-smoke`. The Prompt 3 smoke covers manifest rejection, NDJSON round trips, heartbeat timeout, malformed output, all parameter risk tiers, Live Lock and authorization rules, Paper isolation, and the official deterministic Paper cycle.
 
 ## Privacy and security
 
@@ -160,8 +167,8 @@ The Windows application supports `--foundation-smoke` and a targeted Prompt 2 mo
 - Local CLI mode never reads or stores Longbridge token files.
 - Optional broker-position snapshots are used only for Reduce Only universe behavior and are not cached.
 - No tokens, credentials, certificates, or authorization output.
-- No Live execution.
-- Non-sensitive settings, market cache records, universe snapshots, operational logs, and audit events are stored locally.
+- No Live broker submission.
+- Registered strategy manifests and state, parameter history, bounded Live authorizations, non-sensitive settings, market cache records, universe snapshots, operational logs, and audit events are stored locally.
 - Factor demo state resets deterministically from repository fixtures.
 
 See [PRIVACY.md](PRIVACY.md) and [SANITIZATION.json](SANITIZATION.json).

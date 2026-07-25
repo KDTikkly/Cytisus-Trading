@@ -67,7 +67,7 @@ struct SidebarView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Cytisus-Trading")
                         .font(.headline.weight(.semibold))
-                    Text("v1.1 Data Foundation")
+                    Text("v1.1 Strategy Runtime")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -152,20 +152,22 @@ struct OverviewView: View {
             VStack(alignment: .leading, spacing: 24) {
                 HStack(alignment: .bottom) {
                     PageHeader(
-                        eyebrow: "Operations Foundation",
-                        title: "Paper-only operations foundation",
-                        subtitle: "v1.1 implementation is in progress. Live execution is unavailable."
+                        eyebrow: "Automated Operations",
+                        title: "Dashboard",
+                        subtitle: "Strategy runtime health, bounded modes, and deterministic Paper activity. Live broker submission is unavailable."
                     )
                     Spacer()
-                    Button("Run Sample Review") { model.runReview() }
+                    Button("Run Paper Cycle") {
+                        model.runSelectedPaperCycle()
+                    }
                         .buttonStyle(PrimaryGlassButton())
                 }
 
                 HStack(spacing: 16) {
-                    MetricCard(title: "Run Mode", value: "Paper Only", detail: "Offline fixtures", symbol: "wifi.slash", tint: .cyan)
-                    MetricCard(title: "Active Factors", value: "\(model.activeFactors)", detail: "Independent risk gates", symbol: "point.3.filled.connected.trianglepath.dotted", tint: .green)
-                    MetricCard(title: "Weighted Coverage", value: model.weightedCoverage.formatted(.percent.precision(.fractionLength(0))), detail: "Minimum gate: 80%", symbol: "chart.dots.scatter", tint: .purple)
-                    MetricCard(title: "Shadow Queue", value: "\(model.shadowFactors)", detail: "Awaiting OOS evidence", symbol: "eye.circle", tint: .orange)
+                    MetricCard(title: "Paper Strategies", value: "\(model.paperStrategyCount)", detail: "Safe default", symbol: "doc.text.magnifyingglass", tint: .cyan)
+                    MetricCard(title: "Live Selected", value: "\(model.liveStrategyCount)", detail: "Submission disabled", symbol: "lock.shield", tint: .orange)
+                    MetricCard(title: "Healthy Runtimes", value: "\(model.healthyStrategyCount)", detail: "Heartbeat observed", symbol: "waveform.path.ecg", tint: .green)
+                    MetricCard(title: "Global Live Lock", value: model.globalLiveLock ? "ON" : "OFF", detail: "OFF by default", symbol: "lock.fill", tint: .purple)
                 }
 
                 HStack(spacing: 16) {
@@ -210,6 +212,21 @@ struct OverviewView: View {
                         }
                     }
                     .frame(width: 330)
+                }
+
+                GlassCard {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("Latest Strategy Cycle").font(.headline)
+                            Text(model.latestCycleDisplay)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Text(model.latestStrategyAlert)
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
                 }
             }
             .padding(34)
@@ -324,69 +341,79 @@ struct LabView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 PageHeader(
-                    eyebrow: "Policy Lab",
-                    title: "Strategy Lab",
-                    subtitle: "Adjust demo thresholds and observe how governance rules constrain factors."
+                    eyebrow: "Local Strategy Runtime",
+                    title: "Strategies",
+                    subtitle: "Register governed strategy processes, edit schema-defined parameters, and inspect Paper outcomes. No manual execution controls are provided."
                 )
 
                 HStack(alignment: .top, spacing: 18) {
                     GlassCard {
-                        VStack(alignment: .leading, spacing: 24) {
-                            Text("Governance Parameters").font(.headline)
-                            ParameterSlider(
-                                title: "Per-Trade Risk Budget",
-                                detail: "Interface demonstration only",
-                                value: $model.riskBudget,
-                                range: 0.25...0.75,
-                                display: { String(format: "%.2f%%", $0) }
+                        VStack(alignment: .leading, spacing: 14) {
+                            Text("Strategy Registry").font(.headline)
+                            Picker(
+                                "Strategy",
+                                selection: $model.selectedStrategyID
+                            ) {
+                                ForEach(model.strategies) { strategy in
+                                    Text(strategy.name)
+                                        .tag(strategy.strategyId)
+                                }
+                            }
+                            .labelsHidden()
+                            TextField(
+                                "Local third-party manifest path",
+                                text: $model.strategyManifestPath
                             )
-                            ParameterSlider(
-                                title: "Minimum Data Coverage",
-                                detail: "No new risk below the gate",
-                                value: $model.coverageGate,
-                                range: 0.70...0.95,
-                                display: { $0.formatted(.percent.precision(.fractionLength(0))) }
-                            )
-                            ParameterSlider(
-                                title: "Single-Factor Weight Cap",
-                                detail: "New factors still start at no more than 5%",
-                                value: $model.maxFactorWeight,
-                                range: 0.10...0.35,
-                                display: { $0.formatted(.percent.precision(.fractionLength(0))) }
-                            )
+                            .textFieldStyle(.roundedBorder)
+                            Button("Validate and Register") {
+                                model.registerThirdPartyStrategy()
+                            }
+                            .buttonStyle(.bordered)
                         }
                     }
-                    .frame(maxWidth: .infinity)
+                    .frame(width: 330)
 
                     GlassCard {
                         VStack(alignment: .leading, spacing: 18) {
-                            Text("Non-Negotiable Boundaries").font(.headline)
-                            BoundaryRow(text: "At least 252 time-series observations")
-                            BoundaryRow(text: "At least 6 frozen OOS windows")
-                            BoundaryRow(text: "OOS degradation must remain controlled")
-                            BoundaryRow(text: "Positive incremental contribution after costs")
-                            BoundaryRow(text: "Missing values cannot be treated as neutral zero")
-                            BoundaryRow(text: "Risk gates remain separate from alpha weights")
+                            Text("Mode Governance").font(.headline)
+                            HStack {
+                                Button("Use Paper Only") {
+                                    model.requestPaperMode()
+                                }
+                                .buttonStyle(PrimaryGlassButton())
+                                Button("Request Live") {
+                                    model.requestLiveMode()
+                                }
+                                .buttonStyle(.bordered)
+                            }
+                            Picker(
+                                "Live-to-Paper transition",
+                                selection: $model.selectedTransition
+                            ) {
+                                ForEach(LiveToPaperTransition.allCases) {
+                                    Text($0.rawValue).tag($0)
+                                }
+                            }
+                            Text(model.globalLiveLockStatus)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(model.liveAuthorizationSummary)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                             Divider().overlay(.white.opacity(0.08))
-                            Label("This app does not execute trades", systemImage: "hand.raised.fill")
+                            Text(model.strategyStatusMessage)
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(.orange)
+                            Text(model.latestStrategyAlert)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                     }
-                    .frame(width: 350)
+                    .frame(maxWidth: .infinity)
                 }
 
-                GlassCard {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text("Current Parameter Proposal").font(.headline)
-                            Text("Coverage >= \(model.coverageGate.formatted(.percent.precision(.fractionLength(0)))) | Weight cap \(model.maxFactorWeight.formatted(.percent.precision(.fractionLength(0)))) | Risk budget \(String(format: "%.2f%%", model.riskBudget))")
-                                .font(.subheadline).foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Image(systemName: "checkmark.seal.fill")
-                            .font(.system(size: 28)).foregroundStyle(.green)
-                    }
+                if let strategy = model.selectedStrategy {
+                    StrategyDetailView(strategy: strategy)
                 }
             }
             .padding(34)
@@ -394,38 +421,144 @@ struct LabView: View {
     }
 }
 
-struct ParameterSlider: View {
-    let title: String
-    let detail: String
-    @Binding var value: Double
-    let range: ClosedRange<Double>
-    let display: (Double) -> String
+struct StrategyDetailView: View {
+    @EnvironmentObject private var model: StudioModel
+    @ObservedObject var strategy: StrategyItemModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(.subheadline.weight(.semibold))
-                    Text(detail).font(.caption).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 18) {
+            GlassCard {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(strategy.name).font(.headline)
+                            Text(
+                                "\(strategy.sourceLabel) | \(strategy.manifest.version) | \(strategy.runtimeState.rawValue) | \(strategy.health.rawValue)"
+                            )
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            Text(strategy.lastHeartbeatDisplay)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        HStack {
+                            Button("Start") { model.startSelectedStrategy() }
+                            Button("Pause") { model.pauseSelectedStrategy() }
+                            Button("Resume") { model.resumeSelectedStrategy() }
+                            Button("Stop") { model.stopSelectedStrategy() }
+                            Button("Run Paper Cycle") {
+                                model.runSelectedPaperCycle()
+                            }
+                            .buttonStyle(PrimaryGlassButton())
+                        }
+                        .buttonStyle(.bordered)
+                    }
                 }
-                Spacer()
-                Text(display(value))
-                    .font(.system(.subheadline, design: .monospaced).weight(.semibold))
-                    .foregroundStyle(.cyan)
             }
-            Slider(value: $value, in: range)
-                .tint(.cyan)
+
+            GlassCard {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Schema-Generated Parameters").font(.headline)
+                    ForEach(strategy.parameters) { parameter in
+                        StrategyParameterEditor(parameter: parameter)
+                        if parameter.id != strategy.parameters.last?.id {
+                            Divider().overlay(.white.opacity(0.06))
+                        }
+                    }
+                }
+            }
+
+            HStack(alignment: .top, spacing: 16) {
+                StrategyObservationCard(
+                    title: "Signals",
+                    values: strategy.signals.map {
+                        "\($0.symbol) | \($0.score.formatted(.number.precision(.fractionLength(3))))"
+                    }
+                )
+                StrategyObservationCard(
+                    title: "Targets",
+                    values: strategy.targets.map {
+                        "\($0.symbol) | \($0.targetWeight.formatted(.percent.precision(.fractionLength(1))))"
+                    }
+                )
+                StrategyObservationCard(
+                    title: "Intent History",
+                    values: strategy.intents.map {
+                        "\($0.symbol) | \($0.reasonCode) | \($0.mode.rawValue)"
+                    }
+                )
+            }
         }
     }
 }
 
-struct BoundaryRow: View {
-    let text: String
+struct StrategyParameterEditor: View {
+    @EnvironmentObject private var model: StudioModel
+    @ObservedObject var parameter: StrategyParameterModel
+
     var body: some View {
-        Label(text, systemImage: "checkmark.circle.fill")
-            .font(.subheadline)
-            .foregroundStyle(.white.opacity(0.88))
-            .symbolRenderingMode(.hierarchical)
+        HStack(alignment: .top, spacing: 16) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(parameter.label).font(.subheadline.weight(.semibold))
+                Text(parameter.description)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text(parameter.rangeLabel)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(width: 260, alignment: .leading)
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Risk: \(parameter.riskTierLabel)")
+                Text("Apply: \(parameter.activationLabel)")
+                Text("Status: \(parameter.status)")
+            }
+            .font(.caption)
+            .frame(width: 150, alignment: .leading)
+            VStack(alignment: .leading, spacing: 7) {
+                TextField("Value", text: $parameter.draftValue)
+                    .textFieldStyle(.roundedBorder)
+                Toggle(
+                    "Confirm high-risk change",
+                    isOn: $parameter.confirmationChecked
+                )
+                .font(.caption)
+                Text(parameter.previewText)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Button("Apply Change") {
+                model.applyParameterChange(parameter)
+            }
+            .buttonStyle(.bordered)
+        }
+    }
+}
+
+struct StrategyObservationCard: View {
+    let title: String
+    let values: [String]
+
+    var body: some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(title).font(.headline)
+                if values.isEmpty {
+                    Text("No observations yet")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(Array(values.prefix(6).enumerated()), id: \.offset) {
+                        Text($0.element)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 }
 
@@ -637,6 +770,24 @@ struct SettingsView: View {
                 }
 
                 GlassCard {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Global Live Lock").font(.headline)
+                        Toggle(
+                            "Enable bounded Live mode selection",
+                            isOn: $model.globalLiveLock
+                        )
+                        Text(model.globalLiveLockStatus)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text(
+                            "Live broker submission remains disabled in this implementation pass."
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                    }
+                }
+
+                GlassCard {
                     Text(model.fixtureModeStatus)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -679,12 +830,43 @@ struct LogsView: View {
                 subtitle: "CLI logs contain bounded outcomes and read-only categories, never raw authentication output."
             )
 
+            HStack {
+                TextField(
+                    "Search message, module, strategy, correlation, or cycle",
+                    text: $model.logSearchText
+                )
+                .textFieldStyle(.roundedBorder)
+                Picker(
+                    "Severity",
+                    selection: $model.selectedLogSeverity
+                ) {
+                    Text("All").tag(nil as ApplicationLogLevel?)
+                    ForEach(
+                        [
+                            ApplicationLogLevel.debug,
+                            .info,
+                            .warning,
+                            .error,
+                            .critical
+                        ],
+                        id: \.rawValue
+                    ) { severity in
+                        Text(severity.rawValue)
+                            .tag(Optional(severity))
+                    }
+                }
+                .frame(width: 180)
+            }
+
             GlassCard(padding: 0) {
                 VStack(spacing: 0) {
                     HStack {
                         Text("Time").frame(width: 150, alignment: .leading)
                         Text("Severity").frame(width: 80, alignment: .leading)
-                        Text("Module").frame(width: 140, alignment: .leading)
+                        Text("Module").frame(width: 110, alignment: .leading)
+                        Text("Strategy").frame(width: 150, alignment: .leading)
+                        Text("Correlation").frame(width: 140, alignment: .leading)
+                        Text("Cycle").frame(width: 120, alignment: .leading)
                         Text("Message").frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .font(.caption.weight(.semibold))
@@ -696,7 +878,7 @@ struct LogsView: View {
 
                     ScrollView {
                         LazyVStack(spacing: 0) {
-                            ForEach(Array(model.applicationLogs.reversed())) { entry in
+                            ForEach(model.filteredApplicationLogs) { entry in
                                 HStack(alignment: .top) {
                                     Text(
                                         entry.timestamp.formatted(
@@ -708,7 +890,13 @@ struct LogsView: View {
                                     Text(entry.severity.rawValue)
                                         .frame(width: 80, alignment: .leading)
                                     Text(entry.module)
+                                        .frame(width: 110, alignment: .leading)
+                                    Text(entry.strategyID ?? "")
+                                        .frame(width: 150, alignment: .leading)
+                                    Text(entry.correlationID ?? "")
                                         .frame(width: 140, alignment: .leading)
+                                    Text(entry.cycleID ?? "")
+                                        .frame(width: 120, alignment: .leading)
                                     Text(entry.message)
                                         .foregroundStyle(.secondary)
                                         .frame(maxWidth: .infinity, alignment: .leading)

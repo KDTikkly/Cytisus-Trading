@@ -16,7 +16,11 @@ public sealed record ApplicationLogEntry(
     string Module,
     string Message,
     string? CorrelationId,
-    IReadOnlyDictionary<string, string> Context);
+    IReadOnlyDictionary<string, string> Context)
+{
+    public string? StrategyId { get; init; }
+    public string? CycleId { get; init; }
+}
 
 public enum AuditEventCategory
 {

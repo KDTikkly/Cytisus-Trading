@@ -1,5 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace CytisusTrading.Windows;
 
@@ -30,6 +33,19 @@ public sealed class StudioViewModel : ObservableObject
     private string _cliStatusMessage =
         "Enable fixture mode or select an installed Longbridge CLI.";
     private string _cliPathDisplay = "Fixture mode (no executable)";
+    private bool _globalLiveLock;
+    private StrategyItemViewModel? _selectedStrategy;
+    private string _strategyManifestPath = string.Empty;
+    private string _strategyStatusMessage =
+        "Official fixture strategy is ready in Paper Only.";
+    private string _latestStrategyAlert =
+        "Live broker submission is disabled until Prompt 5.";
+    private string _logSearchText = string.Empty;
+    private string _selectedLogSeverity = "All";
+    private LiveToPaperTransition _selectedTransition =
+        LiveToPaperTransition.StopOpeningRisk;
+    private readonly Dictionary<string, ExternalStrategyRuntime>
+        _externalRuntimes = new(StringComparer.Ordinal);
 
     public StudioViewModel()
         : this(AppServices.CreateOfflineFixture())
@@ -60,12 +76,14 @@ public sealed class StudioViewModel : ObservableObject
         _logRetentionDays = settings.LogRetentionDays > 0
             ? settings.LogRetentionDays
             : 30;
+        _globalLiveLock = settings.GlobalLiveLock;
 
         ReplaceFactors(services.FactorRepository.LoadFactors());
         foreach (var entry in services.LogStore.LoadLogs(50))
         {
             ApplicationLogs.Add(entry);
         }
+        InitializeStrategies();
 
         AppendLog(
             ApplicationLogLevel.Info,
@@ -87,9 +105,180 @@ public sealed class StudioViewModel : ObservableObject
     public ObservableCollection<FactorItem> Factors { get; } = new();
     public ObservableCollection<UniverseEntry> UniverseEntries { get; } = new();
     public ObservableCollection<ApplicationLogEntry> ApplicationLogs { get; } = new();
+    public ObservableCollection<StrategyItemViewModel> Strategies { get; } = new();
+    public ObservableCollection<string> LogSeverityOptions { get; } =
+        new(new[] { "All", "Debug", "Info", "Warning", "Error", "Critical" });
 
-    public StrategyMode CurrentStrategyMode => StrategyMode.PaperOnly;
+    public StrategyMode CurrentStrategyMode =>
+        SelectedStrategy?.Mode ?? StrategyMode.PaperOnly;
     public bool LiveExecutionAvailable => false;
+
+    public bool GlobalLiveLock
+    {
+        get => _globalLiveLock;
+        set
+        {
+            if (!Set(ref _globalLiveLock, value))
+            {
+                return;
+            }
+            if (!value)
+            {
+                foreach (var strategy in Strategies.Where(item =>
+                             item.Mode == StrategyMode.Live))
+                {
+                    strategy.Mode = StrategyMode.PaperOnly;
+                    strategy.LiveToPaperTransition =
+                        LiveToPaperTransition.StopOpeningRisk;
+                    SaveStrategy(strategy);
+                }
+                LatestStrategyAlert =
+                    "Global Live Lock is OFF. All strategies are Paper Only.";
+            }
+            PersistSettings();
+            Raise(nameof(GlobalLiveLockStatus));
+            Raise(nameof(GlobalLiveLockLabel));
+            RaiseDashboard();
+            AppendAudit(
+                "GlobalLiveLockChanged",
+                new Dictionary<string, string>
+                {
+                    ["enabled"] = value ? "true" : "false"
+                },
+                AuditEventCategory.Settings);
+        }
+    }
+
+    public string GlobalLiveLockStatus => GlobalLiveLock
+        ? "ON: authorized strategies may select Live mode"
+        : "OFF: every strategy remains Paper Only";
+    public string GlobalLiveLockLabel => GlobalLiveLock ? "ON" : "OFF";
+
+    public StrategyItemViewModel? SelectedStrategy
+    {
+        get => _selectedStrategy;
+        set
+        {
+            if (Set(ref _selectedStrategy, value))
+            {
+                Raise(nameof(CurrentStrategyMode));
+                Raise(nameof(LiveAuthorizationSummary));
+            }
+        }
+    }
+
+    public string StrategyManifestPath
+    {
+        get => _strategyManifestPath;
+        set => Set(ref _strategyManifestPath, value);
+    }
+
+    public string StrategyStatusMessage
+    {
+        get => _strategyStatusMessage;
+        private set => Set(ref _strategyStatusMessage, value);
+    }
+
+    public string LatestStrategyAlert
+    {
+        get => _latestStrategyAlert;
+        private set => Set(ref _latestStrategyAlert, value);
+    }
+
+    public LiveToPaperTransition SelectedTransition
+    {
+        get => _selectedTransition;
+        set => Set(ref _selectedTransition, value);
+    }
+
+    public string LogSearchText
+    {
+        get => _logSearchText;
+        set
+        {
+            if (Set(ref _logSearchText, value))
+            {
+                Raise(nameof(FilteredApplicationLogs));
+            }
+        }
+    }
+
+    public string SelectedLogSeverity
+    {
+        get => _selectedLogSeverity;
+        set
+        {
+            if (Set(ref _selectedLogSeverity, value))
+            {
+                Raise(nameof(FilteredApplicationLogs));
+            }
+        }
+    }
+
+    public IEnumerable<ApplicationLogEntry> FilteredApplicationLogs =>
+        ApplicationLogs.Where(entry =>
+            (SelectedLogSeverity == "All" ||
+             string.Equals(
+                 entry.Severity.ToString(),
+                 SelectedLogSeverity,
+                 StringComparison.Ordinal)) &&
+            (string.IsNullOrWhiteSpace(LogSearchText) ||
+             entry.Message.Contains(
+                 LogSearchText,
+                 StringComparison.OrdinalIgnoreCase) ||
+             entry.Module.Contains(
+                 LogSearchText,
+                 StringComparison.OrdinalIgnoreCase) ||
+             (entry.StrategyId?.Contains(
+                 LogSearchText,
+                 StringComparison.OrdinalIgnoreCase) ?? false) ||
+             (entry.CorrelationId?.Contains(
+                 LogSearchText,
+                 StringComparison.OrdinalIgnoreCase) ?? false) ||
+             (entry.CycleId?.Contains(
+                 LogSearchText,
+                 StringComparison.OrdinalIgnoreCase) ?? false)))
+        .Reverse();
+
+    public string PaperStrategyCount => Strategies
+        .Count(strategy => strategy.Mode == StrategyMode.PaperOnly)
+        .ToString(EnglishCulture);
+
+    public string LiveStrategyCount => Strategies
+        .Count(strategy => strategy.Mode == StrategyMode.Live)
+        .ToString(EnglishCulture);
+
+    public string HealthyStrategyCount => Strategies
+        .Count(strategy => strategy.Health == HealthState.Healthy)
+        .ToString(EnglishCulture);
+
+    public string LatestCycleDisplay => Strategies
+        .SelectMany(strategy => strategy.Cycles)
+        .OrderByDescending(cycle => cycle.CompletedAt)
+        .FirstOrDefault() is { } cycle
+        ? $"{cycle.CycleId} | {cycle.IntentCount} intent"
+        : "No completed strategy cycle";
+
+    public string LiveAuthorizationSummary
+    {
+        get
+        {
+            var strategy = SelectedStrategy;
+            if (strategy is null)
+            {
+                return "No strategy selected.";
+            }
+            var authorization = _services.StrategyStore
+                .LoadLiveAuthorizations()
+                .FirstOrDefault(item => string.Equals(
+                    item.StrategyId,
+                    strategy.StrategyId,
+                    StringComparison.Ordinal));
+            return authorization is null
+                ? "No Live authorization is stored."
+                : $"Authorization expires {authorization.ExpiresAt:u} | Capital {authorization.MaximumCapital:0} | Allocation {authorization.MaximumStrategyAllocation:P0} | Orders {authorization.MaximumOrderFrequency}/period";
+        }
+    }
 
     public bool FixtureMode
     {
@@ -344,6 +533,384 @@ public sealed class StudioViewModel : ObservableObject
 
     public string CurrentProposal =>
         $"Coverage at least {CoverageGateDisplay} | Weight cap {MaxFactorWeightDisplay} | Risk budget {RiskBudgetDisplay}";
+
+    public void RegisterThirdPartyStrategy()
+    {
+        try
+        {
+            var registration = _services.StrategyRegistry.LoadThirdParty(
+                StrategyManifestPath,
+                Strategies.Select(strategy => strategy.StrategyId).ToArray());
+            _services.StrategyStore.SaveStrategyManifest(
+                registration.Manifest);
+            var state = DefaultStrategyState(
+                registration.Manifest,
+                registration.Parameters);
+            _services.StrategyStore.SaveStrategyState(state);
+            var item = new StrategyItemViewModel(
+                registration.Manifest,
+                registration.Parameters,
+                state);
+            Strategies.Add(item);
+            SelectedStrategy = item;
+            StrategyStatusMessage =
+                $"Registered third-party strategy {item.Name}.";
+            AppendAudit(
+                "ThirdPartyStrategyRegistered",
+                new Dictionary<string, string>
+                {
+                    ["strategy_id"] = item.StrategyId,
+                    ["source"] = item.SourceLabel
+                },
+                AuditEventCategory.StrategyLifecycle);
+            RaiseDashboard();
+        }
+        catch (Exception exception)
+        {
+            StrategyStatusMessage =
+                $"Strategy registration rejected: {SensitiveDataRedactor.Redact(exception.Message)}";
+        }
+    }
+
+    public async Task StartSelectedStrategyAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var strategy = SelectedStrategy;
+        if (strategy is null)
+        {
+            return;
+        }
+        if (strategy.Manifest.Source == StrategySource.Official)
+        {
+            strategy.RuntimeState = StrategyRuntimeState.Ready;
+            StrategyStatusMessage =
+                "Official strategy is ready. Run a deterministic Paper cycle.";
+            SaveStrategy(strategy);
+            return;
+        }
+        if (_externalRuntimes.ContainsKey(strategy.StrategyId))
+        {
+            StrategyStatusMessage = "The strategy process is already running.";
+            return;
+        }
+
+        var runtime = new ExternalStrategyRuntime(
+            strategy.Manifest,
+            _services.StrategyMessageCodec,
+            TimeSpan.FromSeconds(30),
+            TimeSpan.FromSeconds(5),
+            message => System.Windows.Application.Current.Dispatcher.Invoke(
+                () => HandleExternalStrategyMessage(strategy, message)),
+            entry => System.Windows.Application.Current.Dispatcher.Invoke(
+                () => AppendExistingLog(entry)));
+        _externalRuntimes[strategy.StrategyId] = runtime;
+        var initialize = CreateCoreMessage(
+            strategy,
+            "runtime-start",
+            "initialize",
+            new Dictionary<string, string>
+            {
+                ["mode"] = strategy.Mode.ToString(),
+                ["parameter_version"] =
+                    strategy.ParameterVersion.ToString(EnglishCulture)
+            });
+        try
+        {
+            await runtime.StartAsync(
+                initialize,
+                cancellationToken);
+            strategy.RuntimeState = StrategyRuntimeState.Starting;
+            StrategyStatusMessage =
+                "Third-party strategy process started with NDJSON transport.";
+            SaveStrategy(strategy);
+        }
+        catch (Exception exception)
+        {
+            _externalRuntimes.Remove(strategy.StrategyId);
+            strategy.RuntimeState = StrategyRuntimeState.Rejected;
+            StrategyStatusMessage =
+                $"Strategy process rejected: {SensitiveDataRedactor.Redact(exception.Message)}";
+            SaveStrategy(strategy);
+        }
+    }
+
+    public async Task PauseSelectedStrategyAsync(
+        CancellationToken cancellationToken = default)
+    {
+        await SendRuntimeControlAsync(
+            "pause",
+            StrategyRuntimeState.Paused,
+            cancellationToken);
+    }
+
+    public async Task ResumeSelectedStrategyAsync(
+        CancellationToken cancellationToken = default)
+    {
+        await SendRuntimeControlAsync(
+            "resume",
+            StrategyRuntimeState.Running,
+            cancellationToken);
+    }
+
+    public async Task StopSelectedStrategyAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var strategy = SelectedStrategy;
+        if (strategy is null)
+        {
+            return;
+        }
+        if (_externalRuntimes.Remove(
+                strategy.StrategyId,
+                out var runtime))
+        {
+            var shutdown = CreateCoreMessage(
+                strategy,
+                "runtime-stop",
+                "shutdown",
+                new Dictionary<string, string>
+                {
+                    ["reason"] = "user_requested_strategy_shutdown"
+                });
+            await runtime.ShutdownAsync(
+                shutdown,
+                cancellationToken);
+            await runtime.DisposeAsync();
+        }
+        strategy.RuntimeState = StrategyRuntimeState.Stopped;
+        StrategyStatusMessage = "Strategy runtime stopped gracefully.";
+        SaveStrategy(strategy);
+    }
+
+    public void RunSelectedPaperCycle()
+    {
+        var strategy = SelectedStrategy;
+        if (strategy is null)
+        {
+            return;
+        }
+        if (strategy.Mode != StrategyMode.PaperOnly)
+        {
+            LatestStrategyAlert =
+                "The fixture Paper cycle cannot run while Live mode is selected.";
+            return;
+        }
+        if (strategy.Manifest.Source != StrategySource.Official)
+        {
+            LatestStrategyAlert =
+                "Use Start, Pause, Resume, and Stop for third-party processes.";
+            return;
+        }
+
+        ApplyPendingParameterChanges(strategy);
+        var parameterValues = strategy.Parameters.ToDictionary(
+            parameter => parameter.Key,
+            parameter => parameter.Value,
+            StringComparer.Ordinal);
+        try
+        {
+            var result = _services.OfficialStrategyRuntime.RunPaperCycle(
+                strategy.Manifest,
+                parameterValues);
+            strategy.RuntimeState = StrategyRuntimeState.Running;
+            strategy.Health = result.Health;
+            strategy.LastHeartbeat = result.LastHeartbeat;
+            ReplaceCollection(strategy.Signals, result.Signals);
+            ReplaceCollection(strategy.Targets, result.Targets);
+            ReplaceCollection(strategy.Intents, result.Intents);
+            strategy.Cycles.Insert(0, result.Cycle);
+            while (strategy.Cycles.Count > 20)
+            {
+                strategy.Cycles.RemoveAt(strategy.Cycles.Count - 1);
+            }
+            foreach (var message in result.Messages.Where(message =>
+                         message.MessageType == "log"))
+            {
+                AppendStrategyLog(
+                    ParseLogLevel(message.Payload),
+                    message.Payload.GetValueOrDefault(
+                        "module",
+                        "OfficialStrategy"),
+                    message.Payload.GetValueOrDefault(
+                        "message",
+                        "Strategy log event."),
+                    strategy.StrategyId,
+                    message.CorrelationId,
+                    message.CycleId,
+                    new Dictionary<string, string>
+                    {
+                        ["message_type"] = message.MessageType,
+                        ["mode"] = StrategyMode.PaperOnly.ToString()
+                    });
+            }
+            SaveStrategy(strategy);
+            StrategyStatusMessage =
+                "Deterministic Paper cycle completed through the NDJSON protocol.";
+            LatestStrategyAlert =
+                "Paper intent recorded. No Live adapter was invoked.";
+            AppendAudit(
+                "PaperStrategyCycleCompleted",
+                new Dictionary<string, string>
+                {
+                    ["strategy_id"] = strategy.StrategyId,
+                    ["cycle_id"] = result.Cycle.CycleId,
+                    ["intent_count"] =
+                        result.Intents.Count.ToString(EnglishCulture),
+                    ["live_submission_attempts"] =
+                        _services.LiveBrokerAdapter.SubmissionAttempts
+                            .ToString(EnglishCulture)
+                },
+                AuditEventCategory.StrategyLifecycle);
+            RaiseDashboard();
+        }
+        catch (Exception exception)
+        {
+            strategy.RuntimeState = StrategyRuntimeState.Rejected;
+            strategy.Health = HealthState.Unhealthy;
+            strategy.BlocksNewRisk = true;
+            LatestStrategyAlert =
+                $"Paper cycle rejected: {SensitiveDataRedactor.Redact(exception.Message)}";
+            SaveStrategy(strategy);
+        }
+    }
+
+    public void ApplyParameterChange(StrategyParameterViewModel parameter)
+    {
+        var strategy = SelectedStrategy;
+        if (strategy is null)
+        {
+            return;
+        }
+        var decision = _services.ParameterGovernance.RequestChange(
+            strategy.StrategyId,
+            parameter.Definition,
+            parameter.Value,
+            parameter.DraftValue,
+            strategy.ParameterVersion,
+            "local-user",
+            parameter.ConfirmationChecked,
+            DateTimeOffset.UtcNow);
+        _services.StrategyStore.AppendParameterChange(decision.Change);
+        if (parameter.ConfirmationChecked)
+        {
+            foreach (var pendingPreview in strategy.ParameterChanges
+                         .Where(change =>
+                             change.ParameterKey == parameter.Key &&
+                             change.Result ==
+                                ParameterChangeResult.PendingConfirmation)
+                         .ToArray())
+            {
+                strategy.ParameterChanges.Remove(pendingPreview);
+            }
+        }
+        strategy.ParameterChanges.Insert(0, decision.Change);
+        parameter.PreviewText = decision.ImpactPreview;
+        parameter.Status = decision.Change.Result.ToString();
+        strategy.BlocksNewRisk = decision.BlocksNewRisk;
+        if (decision.Change.Result == ParameterChangeResult.Applied)
+        {
+            parameter.Value = decision.Change.NewValue;
+            strategy.ParameterVersion = decision.Change.ParameterVersion;
+        }
+        else if (decision.Change.Result ==
+                 ParameterChangeResult.PendingSafeBoundary)
+        {
+            strategy.RuntimeState = StrategyRuntimeState.Paused;
+        }
+        parameter.ConfirmationChecked = false;
+        SaveStrategy(strategy);
+        AppendAudit(
+            "StrategyParameterChange",
+            new Dictionary<string, string>
+            {
+                ["change_id"] = decision.Change.ChangeId,
+                ["strategy_id"] = decision.Change.StrategyId,
+                ["parameter_key"] = decision.Change.ParameterKey,
+                ["old_value"] = decision.Change.OldValue,
+                ["new_value"] = decision.Change.NewValue,
+                ["requested_at"] = decision.Change.RequestedAt.ToString("O"),
+                ["effective_at"] =
+                    decision.Change.EffectiveAt?.ToString("O") ?? "",
+                ["requested_by"] = decision.Change.RequestedBy,
+                ["risk_tier"] = decision.Change.RiskTier.ToString(),
+                ["parameter_version"] =
+                    decision.Change.ParameterVersion.ToString(EnglishCulture),
+                ["activation_mode"] =
+                    decision.Change.ActivationMode.ToString(),
+                ["result"] = decision.Change.Result.ToString(),
+                ["rollback_version"] =
+                    decision.Change.RollbackVersion.ToString(EnglishCulture)
+            },
+            AuditEventCategory.Settings);
+    }
+
+    public void RequestLiveMode()
+    {
+        var strategy = SelectedStrategy;
+        if (strategy is null)
+        {
+            return;
+        }
+        var authorization = _services.StrategyStore
+            .LoadLiveAuthorizations()
+            .FirstOrDefault(item => string.Equals(
+                item.StrategyId,
+                strategy.StrategyId,
+                StringComparison.Ordinal));
+        var result = _services.StrategyModeService.SelectMode(
+            StrategyMode.Live,
+            GlobalLiveLock,
+            strategy.Manifest,
+            strategy.ParameterVersion,
+            authorization,
+            DefaultMarket,
+            DateTimeOffset.UtcNow);
+        strategy.Mode = result.Mode;
+        StrategyStatusMessage = result.Message;
+        LatestStrategyAlert = result.Accepted
+            ? "Live selected, but the broker adapter remains a rejecting stub."
+            : result.Message;
+        SaveStrategy(strategy);
+        AppendModeAudit(strategy, result);
+        RaiseDashboard();
+    }
+
+    public void RequestPaperMode()
+    {
+        var strategy = SelectedStrategy;
+        if (strategy is null)
+        {
+            return;
+        }
+        var result = _services.StrategyModeService.SelectMode(
+            StrategyMode.PaperOnly,
+            GlobalLiveLock,
+            strategy.Manifest,
+            strategy.ParameterVersion,
+            null,
+            DefaultMarket,
+            DateTimeOffset.UtcNow);
+        strategy.Mode = StrategyMode.PaperOnly;
+        strategy.LiveToPaperTransition = SelectedTransition;
+        if (SelectedTransition == LiveToPaperTransition.Freeze)
+        {
+            strategy.RuntimeState = StrategyRuntimeState.Paused;
+        }
+        StrategyStatusMessage = result.Message;
+        LatestStrategyAlert = SelectedTransition switch
+        {
+            LiveToPaperTransition.StopOpeningRisk =>
+                "Paper Only: new real risk is blocked; existing-position management state is retained.",
+            LiveToPaperTransition.Freeze =>
+                "Paper Only: strategy is frozen. No orders were generated.",
+            LiveToPaperTransition.ControlledExit =>
+                "Paper Only: controlled automated exit is recorded as intent only; no real order was generated.",
+            _ => result.Message
+        };
+        SaveStrategy(strategy);
+        AppendModeAudit(strategy, result);
+        RaiseDashboard();
+    }
 
     public async Task RefreshLongbridgeAsync(CancellationToken cancellationToken = default)
     {
@@ -641,7 +1208,8 @@ public sealed class StudioViewModel : ObservableObject
                 CacheDirectory = CacheDirectory,
                 ProcessTimeoutSeconds = (int)ProcessTimeoutSeconds,
                 DataRetentionDays = (int)DataRetentionDays,
-                LogRetentionDays = (int)LogRetentionDays
+                LogRetentionDays = (int)LogRetentionDays,
+                GlobalLiveLock = GlobalLiveLock
             });
         }
         catch
@@ -686,6 +1254,51 @@ public sealed class StudioViewModel : ObservableObject
         {
             ApplicationLogs.RemoveAt(0);
         }
+        Raise(nameof(FilteredApplicationLogs));
+    }
+
+    private void AppendStrategyLog(
+        ApplicationLogLevel level,
+        string module,
+        string message,
+        string strategyId,
+        string? correlationId,
+        string? cycleId,
+        IReadOnlyDictionary<string, string> context)
+    {
+        var safeContext = context.ToDictionary(
+            pair => pair.Key,
+            pair => SensitiveDataRedactor.Redact(pair.Value),
+            StringComparer.Ordinal);
+        AppendExistingLog(new ApplicationLogEntry(
+            Guid.NewGuid().ToString("D"),
+            DateTimeOffset.UtcNow,
+            level,
+            module,
+            SensitiveDataRedactor.Redact(message),
+            correlationId,
+            safeContext)
+        {
+            StrategyId = strategyId,
+            CycleId = cycleId
+        });
+    }
+
+    private void AppendExistingLog(ApplicationLogEntry entry)
+    {
+        try
+        {
+            _services.LogStore.AppendLog(entry);
+        }
+        catch
+        {
+        }
+        ApplicationLogs.Add(entry);
+        while (ApplicationLogs.Count > 100)
+        {
+            ApplicationLogs.RemoveAt(0);
+        }
+        Raise(nameof(FilteredApplicationLogs));
     }
 
     private static IReadOnlyDictionary<string, string> SafeCliContext(string state)
@@ -700,12 +1313,13 @@ public sealed class StudioViewModel : ObservableObject
 
     private void AppendAudit(
         string action,
-        IReadOnlyDictionary<string, string> context)
+        IReadOnlyDictionary<string, string> context,
+        AuditEventCategory category = AuditEventCategory.FactorLifecycle)
     {
         _services.AuditStore.AppendAuditEvent(new AuditEvent(
             Guid.NewGuid().ToString("D"),
             DateTimeOffset.UtcNow,
-            AuditEventCategory.FactorLifecycle,
+            category,
             action,
             AuditResult.Completed,
             "local-user",
@@ -718,5 +1332,405 @@ public sealed class StudioViewModel : ObservableObject
         Raise(nameof(ActiveFactorCount));
         Raise(nameof(ShadowQueueCount));
         Raise(nameof(WeightedCoverage));
+    }
+
+    private void InitializeStrategies()
+    {
+        var manifests = _services.StrategyStore.LoadStrategyManifests()
+            .ToDictionary(
+                manifest => manifest.StrategyId,
+                StringComparer.Ordinal);
+        var states = _services.StrategyStore.LoadStrategyStates()
+            .ToDictionary(
+                state => state.StrategyId,
+                StringComparer.Ordinal);
+        var official = _services.StrategyRegistry.LoadOfficial();
+        manifests[official.Manifest.StrategyId] = official.Manifest;
+        if (!states.TryGetValue(
+                official.Manifest.StrategyId,
+                out var officialState))
+        {
+            officialState = DefaultStrategyState(
+                official.Manifest,
+                official.Parameters);
+            _services.StrategyStore.SaveStrategyState(officialState);
+        }
+        _services.StrategyStore.SaveStrategyManifest(official.Manifest);
+        if (_services.StrategyStore.LoadLiveAuthorizations().Count == 0)
+        {
+            _services.StrategyStore.SaveLiveAuthorization(
+                _services.StrategyRegistry.LoadAuthorizationFixture(
+                    "valid-live-authorization.json"));
+        }
+        var officialItem = new StrategyItemViewModel(
+            official.Manifest,
+            official.Parameters,
+            officialState);
+        LoadParameterHistory(officialItem);
+        Strategies.Add(officialItem);
+
+        foreach (var manifest in manifests.Values
+                     .Where(manifest =>
+                         manifest.Source == StrategySource.ThirdParty)
+                     .OrderBy(manifest => manifest.Name, StringComparer.Ordinal))
+        {
+            try
+            {
+                if (!File.Exists(manifest.ParameterSchema))
+                {
+                    continue;
+                }
+                var parameters = JsonSerializer.Deserialize<StrategyParameterSchema>(
+                    File.ReadAllText(manifest.ParameterSchema),
+                    StrategyJsonOptions());
+                if (parameters is null)
+                {
+                    continue;
+                }
+                var validation = _services.StrategyRegistry.Validate(
+                    manifest,
+                    parameters,
+                    Strategies.Select(item => item.StrategyId).ToArray(),
+                    Path.GetDirectoryName(manifest.ParameterSchema));
+                if (!validation.IsValid)
+                {
+                    continue;
+                }
+                var state = states.TryGetValue(
+                    manifest.StrategyId,
+                    out var stored)
+                    ? stored
+                    : DefaultStrategyState(manifest, parameters);
+                var item = new StrategyItemViewModel(
+                    manifest,
+                    parameters,
+                    state);
+                LoadParameterHistory(item);
+                Strategies.Add(item);
+            }
+            catch
+            {
+            }
+        }
+        SelectedStrategy = Strategies.FirstOrDefault();
+        RaiseDashboard();
+    }
+
+    private void LoadParameterHistory(StrategyItemViewModel strategy)
+    {
+        foreach (var change in _services.StrategyStore
+                     .LoadParameterChanges(strategy.StrategyId, 50)
+                     .OrderByDescending(change => change.RequestedAt))
+        {
+            strategy.ParameterChanges.Add(change);
+        }
+    }
+
+    private static StrategyPersistentState DefaultStrategyState(
+        StrategyManifest manifest,
+        StrategyParameterSchema parameters)
+    {
+        return new StrategyPersistentState(
+            manifest.StrategyId,
+            StrategyMode.PaperOnly,
+            StrategyRuntimeState.Stopped,
+            HealthState.Degraded,
+            null,
+            1,
+            parameters.Parameters.ToDictionary(
+                parameter => parameter.Key,
+                parameter => parameter.DefaultValue,
+                StringComparer.Ordinal),
+            false,
+            LiveToPaperTransition.StopOpeningRisk);
+    }
+
+    private void SaveStrategy(StrategyItemViewModel strategy)
+    {
+        _services.StrategyStore.SaveStrategyState(strategy.PersistentState());
+        Raise(nameof(CurrentStrategyMode));
+        Raise(nameof(LiveAuthorizationSummary));
+        RaiseDashboard();
+    }
+
+    private void ApplyPendingParameterChanges(StrategyItemViewModel strategy)
+    {
+        var pending = strategy.ParameterChanges
+            .Where(change => change.Result is
+                ParameterChangeResult.PendingCycle or
+                ParameterChangeResult.PendingSafeBoundary)
+            .OrderBy(change => change.RequestedAt)
+            .ToArray();
+        foreach (var change in pending)
+        {
+            var applied = _services.ParameterGovernance.ApplyBoundary(
+                change,
+                DateTimeOffset.UtcNow);
+            _services.StrategyStore.AppendParameterChange(applied);
+            var parameter = strategy.Parameters.First(item =>
+                string.Equals(
+                    item.Key,
+                    applied.ParameterKey,
+                    StringComparison.Ordinal));
+            parameter.Value = applied.NewValue;
+            parameter.DraftValue = applied.NewValue;
+            parameter.Status = applied.Result.ToString();
+            parameter.PreviewText = "Applied at the next safe cycle boundary.";
+            strategy.ParameterVersion = Math.Max(
+                strategy.ParameterVersion,
+                applied.ParameterVersion);
+            strategy.ParameterChanges.Remove(change);
+            strategy.ParameterChanges.Insert(0, applied);
+        }
+        strategy.BlocksNewRisk = strategy.ParameterChanges.Any(change =>
+            change.RiskTier == RiskTier.High &&
+            change.Result is ParameterChangeResult.PendingConfirmation or
+                ParameterChangeResult.PendingSafeBoundary);
+    }
+
+    private async Task SendRuntimeControlAsync(
+        string messageType,
+        StrategyRuntimeState resultingState,
+        CancellationToken cancellationToken)
+    {
+        var strategy = SelectedStrategy;
+        if (strategy is null ||
+            !_externalRuntimes.TryGetValue(
+                strategy.StrategyId,
+                out var runtime))
+        {
+            StrategyStatusMessage =
+                "No third-party strategy process is running.";
+            return;
+        }
+        var message = CreateCoreMessage(
+            strategy,
+            $"runtime-{messageType}",
+            messageType,
+            new Dictionary<string, string>
+            {
+                ["reason"] = "local_runtime_control"
+            });
+        try
+        {
+            await runtime.SendAsync(message, cancellationToken);
+            strategy.RuntimeState = resultingState;
+            StrategyStatusMessage =
+                $"Strategy runtime received {messageType}.";
+            SaveStrategy(strategy);
+        }
+        catch (Exception exception)
+        {
+            strategy.RuntimeState = StrategyRuntimeState.Rejected;
+            StrategyStatusMessage =
+                $"Runtime control failed: {SensitiveDataRedactor.Redact(exception.Message)}";
+            SaveStrategy(strategy);
+        }
+    }
+
+    private static StrategyMessageEnvelope CreateCoreMessage(
+        StrategyItemViewModel strategy,
+        string cycleId,
+        string messageType,
+        IReadOnlyDictionary<string, string> payload)
+    {
+        return new StrategyMessageEnvelope(
+            1,
+            Guid.NewGuid().ToString("D"),
+            Guid.NewGuid().ToString("D"),
+            strategy.StrategyId,
+            strategy.Version,
+            cycleId,
+            DateTimeOffset.UtcNow,
+            messageType,
+            payload);
+    }
+
+    private void HandleExternalStrategyMessage(
+        StrategyItemViewModel strategy,
+        StrategyMessageEnvelope message)
+    {
+        switch (message.MessageType)
+        {
+            case "ready":
+                strategy.RuntimeState = StrategyRuntimeState.Ready;
+                break;
+            case "heartbeat":
+                strategy.LastHeartbeat = message.Timestamp;
+                strategy.Health = HealthState.Healthy;
+                break;
+            case "health":
+                strategy.Health = Enum.TryParse<HealthState>(
+                    message.Payload.GetValueOrDefault("state"),
+                    true,
+                    out var health)
+                    ? health
+                    : HealthState.Degraded;
+                break;
+            case "log":
+                AppendStrategyLog(
+                    ParseLogLevel(message.Payload),
+                    message.Payload.GetValueOrDefault(
+                        "module",
+                        "ThirdPartyStrategy"),
+                    message.Payload.GetValueOrDefault(
+                        "message",
+                        "Strategy log event."),
+                    strategy.StrategyId,
+                    message.CorrelationId,
+                    message.CycleId,
+                    new Dictionary<string, string>
+                    {
+                        ["message_type"] = message.MessageType
+                    });
+                break;
+            case "signal":
+                if (double.TryParse(
+                        message.Payload.GetValueOrDefault("score"),
+                        NumberStyles.Float,
+                        CultureInfo.InvariantCulture,
+                        out var score))
+                {
+                    strategy.Signals.Insert(0, new StrategySignal(
+                        message.Payload.GetValueOrDefault("symbol") ?? "",
+                        score,
+                        message.Payload.GetValueOrDefault("reason") ?? "",
+                        message.Timestamp));
+                }
+                break;
+            case "target_position":
+                if (double.TryParse(
+                        message.Payload.GetValueOrDefault("target_weight"),
+                        NumberStyles.Float,
+                        CultureInfo.InvariantCulture,
+                        out var weight))
+                {
+                    strategy.Targets.Insert(0, new StrategyTarget(
+                        message.Payload.GetValueOrDefault("symbol") ?? "",
+                        weight,
+                        message.Payload.GetValueOrDefault("reason") ?? "",
+                        message.Timestamp));
+                }
+                break;
+            case "trade_intent":
+                var intent = new StrategyIntentRecord(
+                    message.Payload.GetValueOrDefault(
+                        "intent_id",
+                        message.EventId),
+                    message.Payload.GetValueOrDefault("symbol") ?? "",
+                    double.TryParse(
+                        message.Payload.GetValueOrDefault("target_weight"),
+                        NumberStyles.Float,
+                        CultureInfo.InvariantCulture,
+                        out var targetWeight)
+                        ? targetWeight
+                        : 0,
+                    int.TryParse(
+                        message.Payload.GetValueOrDefault("priority"),
+                        NumberStyles.Integer,
+                        CultureInfo.InvariantCulture,
+                        out var priority)
+                        ? priority
+                        : 0,
+                    bool.TryParse(
+                        message.Payload.GetValueOrDefault("allow_partial"),
+                        out var partial) && partial,
+                    message.Payload.GetValueOrDefault("reason_code") ?? "",
+                    message.CycleId,
+                    message.Timestamp,
+                    strategy.Mode);
+                _services.StrategyIntentRouter.Route(
+                    strategy.Mode,
+                    intent,
+                    _services.LiveBrokerAdapter);
+                strategy.Intents.Insert(0, intent);
+                break;
+            case "cycle_complete":
+                strategy.RuntimeState = StrategyRuntimeState.Running;
+                strategy.Cycles.Insert(0, new StrategyCycleSummary(
+                    message.CycleId,
+                    message.Timestamp,
+                    strategy.Signals.Count,
+                    strategy.Targets.Count,
+                    strategy.Intents.Count,
+                    message.Payload.GetValueOrDefault(
+                        "result",
+                        "Completed")));
+                break;
+            case "error":
+                strategy.RuntimeState = StrategyRuntimeState.Unhealthy;
+                strategy.Health = HealthState.Unhealthy;
+                strategy.BlocksNewRisk = true;
+                LatestStrategyAlert =
+                    SensitiveDataRedactor.Redact(
+                        message.Payload.GetValueOrDefault(
+                            "message",
+                            "Strategy runtime error."));
+                break;
+        }
+        SaveStrategy(strategy);
+    }
+
+    private static ApplicationLogLevel ParseLogLevel(
+        IReadOnlyDictionary<string, string> payload)
+    {
+        return Enum.TryParse<ApplicationLogLevel>(
+            payload.GetValueOrDefault("level"),
+            true,
+            out var level)
+            ? level
+            : ApplicationLogLevel.Info;
+    }
+
+    private void AppendModeAudit(
+        StrategyItemViewModel strategy,
+        ModeSelectionResult result)
+    {
+        AppendAudit(
+            "StrategyModeSelection",
+            new Dictionary<string, string>
+            {
+                ["strategy_id"] = strategy.StrategyId,
+                ["accepted"] = result.Accepted ? "true" : "false",
+                ["mode"] = result.Mode.ToString(),
+                ["live_lock"] = GlobalLiveLock ? "true" : "false",
+                ["live_submission_available"] = "false",
+                ["transition"] =
+                    strategy.LiveToPaperTransition.ToString()
+            },
+            result.Accepted
+                ? AuditEventCategory.StrategyLifecycle
+                : AuditEventCategory.RiskRejection);
+    }
+
+    private void RaiseDashboard()
+    {
+        Raise(nameof(PaperStrategyCount));
+        Raise(nameof(LiveStrategyCount));
+        Raise(nameof(HealthyStrategyCount));
+        Raise(nameof(LatestCycleDisplay));
+        Raise(nameof(CurrentStrategyMode));
+    }
+
+    private static void ReplaceCollection<T>(
+        ObservableCollection<T> collection,
+        IEnumerable<T> values)
+    {
+        collection.Clear();
+        foreach (var value in values)
+        {
+            collection.Add(value);
+        }
+    }
+
+    private static JsonSerializerOptions StrategyJsonOptions()
+    {
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+            PropertyNameCaseInsensitive = true
+        };
+        options.Converters.Add(new JsonStringEnumConverter());
+        return options;
     }
 }

@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/KDTikkly/Cytisus-Trading/schemas/parameter-change.schema.json",
+  "title": "Cytisus Parameter Change",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "change_id",
+    "strategy_id",
+    "parameter_key",
+    "old_value",
+    "new_value",
+    "requested_at",
+    "requested_by",
+    "risk_tier",
+    "parameter_version",
+    "activation_mode",
+    "result",
+    "rollback_version"
+  ],
+  "properties": {
+    "change_id": {
+      "type": "string"
+    },
+    "strategy_id": {
+      "type": "string"
+    },
+    "parameter_key": {
+      "type": "string"
+    },
+    "old_value": {
+      "type": "string"
+    },
+    "new_value": {
+      "type": "string"
+    },
+    "requested_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "effective_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "requested_by": {
+      "type": "string"
+    },
+    "risk_tier": {
+      "enum": [
+        "Low",
+        "Medium",
+        "High"
+      ]
+    },
+    "parameter_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "activation_mode": {
+      "enum": [
+        "Immediate",
+        "NextCycle",
+        "SafeBoundary"
+      ]
+    },
+    "result": {
+      "enum": [
+        "Applied",
+        "PendingCycle",
+        "PendingConfirmation",
+        "PendingSafeBoundary",
+        "Rejected"
+      ]
+    },
+    "rollback_version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

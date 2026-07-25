@@ -2,7 +2,7 @@ namespace CytisusTrading.Windows;
 
 public sealed record StoreSchemaVersion(int Version)
 {
-    public static StoreSchemaVersion Current { get; } = new(2);
+    public static StoreSchemaVersion Current { get; } = new(3);
 }
 
 public sealed record MigrationRecord(
@@ -55,4 +55,18 @@ public interface IMarketDataCache
         DateTimeOffset end);
     UniverseSnapshot? LoadUniverseSnapshot(string date);
     long CacheSizeBytes();
+}
+
+public interface IStrategyStateStore
+{
+    IReadOnlyList<StrategyManifest> LoadStrategyManifests();
+    void SaveStrategyManifest(StrategyManifest manifest);
+    IReadOnlyList<StrategyPersistentState> LoadStrategyStates();
+    void SaveStrategyState(StrategyPersistentState state);
+    IReadOnlyList<StrategyParameterChange> LoadParameterChanges(
+        string strategyId,
+        int limit);
+    void AppendParameterChange(StrategyParameterChange change);
+    IReadOnlyList<LiveAuthorization> LoadLiveAuthorizations();
+    void SaveLiveAuthorization(LiveAuthorization authorization);
 }

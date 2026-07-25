@@ -12,6 +12,14 @@ struct AppServices {
     let fixtureDataService: LongbridgeDataServicing
     let cliAdapter: LongbridgeCLIAdapting
     let marketDataClient: LongbridgeMarketDataClient
+    let strategyStore: StrategyStateStore
+    let strategyRegistry: StrategyRegistryServicing
+    let parameterGovernance: ParameterGovernanceServicing
+    let strategyModeService: StrategyModeServicing
+    let strategyMessageCodec: StrategyMessageCodec
+    let liveBrokerAdapter: LiveBrokerAdapting
+    let strategyIntentRouter: StrategyIntentRouter
+    let officialStrategyRuntime: OfficialStrategyRuntimeServicing
 
     static func offlineFixture() -> AppServices {
         let store = JSONFilePersistentStore(rootURL: JSONFilePersistentStore.defaultRootURL())
@@ -23,6 +31,9 @@ struct AppServices {
         let cache = JSONMarketDataCache(rootURL: cacheURL)
         let universeService = UniverseService()
         let cliAdapter = LongbridgeCLIAdapter(runner: LongbridgeProcessRunner())
+        let strategyCodec = StrategyMessageCodec()
+        let liveAdapter = RejectingLiveBrokerAdapter()
+        let router = StrategyIntentRouter()
 
         return AppServices(
             factorRepository: FixtureFactorRepository(),
@@ -38,7 +49,19 @@ struct AppServices {
                 universeService: universeService
             ),
             cliAdapter: cliAdapter,
-            marketDataClient: CLILongbridgeMarketDataClient(adapter: cliAdapter)
+            marketDataClient: CLILongbridgeMarketDataClient(adapter: cliAdapter),
+            strategyStore: store,
+            strategyRegistry: StrategyRegistryService(),
+            parameterGovernance: ParameterGovernanceService(),
+            strategyModeService: StrategyModeService(),
+            strategyMessageCodec: strategyCodec,
+            liveBrokerAdapter: liveAdapter,
+            strategyIntentRouter: router,
+            officialStrategyRuntime: OfficialFixtureStrategyRuntime(
+                codec: strategyCodec,
+                router: router,
+                liveAdapter: liveAdapter
+            )
         )
     }
 }

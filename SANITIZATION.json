@@ -1,7 +1,7 @@
 {
   "artifact": "Cytisus-Trading",
   "version": "1.1.0",
-  "implementation_stage": "Prompt 2 Longbridge data and universe foundation",
+  "implementation_stage": "Prompt 3 strategy runtime and parameter governance",
   "implementation_in_progress": true,
   "language": "en",
   "platforms": [
@@ -13,7 +13,11 @@
   "fixture_network_access": false,
   "local_cli_process_access": true,
   "longbridge_integration": "read-only data",
-  "strategy_execution": false,
+  "strategy_execution": true,
+  "strategy_execution_scope": "local governed processes and deterministic Paper intents",
+  "strategy_direct_cli_access": false,
+  "global_live_lock_default": false,
+  "live_adapter": "rejecting stub",
   "factor_search": false,
   "portfolio_allocation": false,
   "broker_integrations": [
@@ -32,6 +36,9 @@
     "schema and migration versions",
     "market-data cache",
     "universe snapshots",
+    "strategy manifests and state",
+    "parameter change history",
+    "bounded Live authorizations without credentials",
     "application logs",
     "audit events"
   ]

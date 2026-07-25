@@ -119,7 +119,7 @@
                                                VerticalAlignment="Center" />
                                 </Border>
                                 <TextBlock Grid.Column="1"
-                                           Text="Overview"
+                                           Text="Dashboard"
                                            VerticalAlignment="Center" />
                             </Grid>
                         </Button>
@@ -175,7 +175,7 @@
                                                VerticalAlignment="Center" />
                                 </Border>
                                 <TextBlock Grid.Column="1"
-                                           Text="Strategy Lab"
+                                           Text="Strategies"
                                            VerticalAlignment="Center" />
                             </Grid>
                         </Button>
@@ -332,17 +332,17 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="OPERATIONS FOUNDATION"
+                                <TextBlock Text="AUTOMATED OPERATIONS"
                                            Style="{StaticResource EyebrowText}" />
-                                <TextBlock Text="Paper-only operations foundation"
+                                <TextBlock Text="Dashboard"
                                            Style="{StaticResource PageTitle}" />
-                                <TextBlock Text="v1.1 implementation is in progress. Live execution is unavailable."
+                                <TextBlock Text="Strategy runtime health, bounded modes, and deterministic Paper activity. Live broker submission is unavailable."
                                            Style="{StaticResource BodySecondary}" />
                             </StackPanel>
                             <Button Grid.Column="1"
-                                    Content="Run Sample Review"
+                                    Content="Run Paper Cycle"
                                     Style="{StaticResource PrimaryButton}"
-                                    Click="RunReview_Click"
+                                    Click="RunPaperCycle_Click"
                                     VerticalAlignment="Bottom"
                                     Margin="24,0,0,2" />
                         </Grid>
@@ -350,15 +350,15 @@
                         <UniformGrid Columns="4" Margin="0,0,0,18">
                             <Border Style="{StaticResource CardBorder}" Margin="0,0,12,0">
                                 <StackPanel>
-                                    <TextBlock Text="RUN MODE"
+                                    <TextBlock Text="PAPER STRATEGIES"
                                                Foreground="{StaticResource SecondaryTextBrush}"
                                                FontSize="10"
                                                FontWeight="Bold" />
-                                    <TextBlock Text="Paper Only"
+                                    <TextBlock Text="{Binding PaperStrategyCount}"
                                                FontSize="24"
                                                FontWeight="SemiBold"
                                                Margin="0,12,0,4" />
-                                    <TextBlock Text="Offline fixtures"
+                                    <TextBlock Text="Safe default"
                                                Style="{StaticResource BodySecondary}"
                                                FontSize="11" />
                                 </StackPanel>
@@ -366,15 +366,15 @@
 
                             <Border Style="{StaticResource CardBorder}" Margin="4,0,8,0">
                                 <StackPanel>
-                                    <TextBlock Text="ACTIVE FACTORS"
+                                    <TextBlock Text="LIVE SELECTED"
                                                Foreground="{StaticResource SecondaryTextBrush}"
                                                FontSize="10"
                                                FontWeight="Bold" />
-                                    <TextBlock Text="{Binding ActiveFactorCount}"
+                                    <TextBlock Text="{Binding LiveStrategyCount}"
                                                FontSize="24"
                                                FontWeight="SemiBold"
                                                Margin="0,12,0,4" />
-                                    <TextBlock Text="Independent risk gates"
+                                    <TextBlock Text="Submission disabled"
                                                Style="{StaticResource BodySecondary}"
                                                FontSize="11" />
                                 </StackPanel>
@@ -382,15 +382,15 @@
 
                             <Border Style="{StaticResource CardBorder}" Margin="8,0,4,0">
                                 <StackPanel>
-                                    <TextBlock Text="WEIGHTED COVERAGE"
+                                    <TextBlock Text="HEALTHY RUNTIMES"
                                                Foreground="{StaticResource SecondaryTextBrush}"
                                                FontSize="10"
                                                FontWeight="Bold" />
-                                    <TextBlock Text="{Binding WeightedCoverage}"
+                                    <TextBlock Text="{Binding HealthyStrategyCount}"
                                                FontSize="24"
                                                FontWeight="SemiBold"
                                                Margin="0,12,0,4" />
-                                    <TextBlock Text="Minimum gate: 80%"
+                                    <TextBlock Text="Heartbeat observed"
                                                Style="{StaticResource BodySecondary}"
                                                FontSize="11" />
                                 </StackPanel>
@@ -398,15 +398,15 @@
 
                             <Border Style="{StaticResource CardBorder}" Margin="12,0,0,0">
                                 <StackPanel>
-                                    <TextBlock Text="SHADOW QUEUE"
+                                    <TextBlock Text="GLOBAL LIVE LOCK"
                                                Foreground="{StaticResource SecondaryTextBrush}"
                                                FontSize="10"
                                                FontWeight="Bold" />
-                                    <TextBlock Text="{Binding ShadowQueueCount}"
+                                    <TextBlock Text="{Binding GlobalLiveLockLabel}"
                                                FontSize="24"
                                                FontWeight="SemiBold"
                                                Margin="0,12,0,4" />
-                                    <TextBlock Text="Awaiting OOS evidence"
+                                    <TextBlock Text="OFF by default"
                                                Style="{StaticResource BodySecondary}"
                                                FontSize="11" />
                                 </StackPanel>
@@ -563,6 +563,25 @@
                                 </StackPanel>
                             </Border>
                         </Grid>
+                        <Border Style="{StaticResource CardBorder}"
+                                Margin="0,18,0,0">
+                            <Grid>
+                                <StackPanel>
+                                    <TextBlock Text="Latest Strategy Cycle"
+                                               FontSize="14"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding LatestCycleDisplay}"
+                                               Style="{StaticResource BodySecondary}"
+                                               Margin="0,5,0,0" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding LatestStrategyAlert}"
+                                           Foreground="#FFF7B955"
+                                           FontSize="11"
+                                           TextWrapping="Wrap"
+                                           HorizontalAlignment="Right"
+                                           MaxWidth="520" />
+                            </Grid>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
 
@@ -771,176 +790,265 @@
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="34,30,34,38">
-                        <TextBlock Text="POLICY LAB"
+                        <TextBlock Text="LOCAL STRATEGY RUNTIME"
                                    Style="{StaticResource EyebrowText}" />
-                        <TextBlock Text="Strategy Lab"
+                        <TextBlock Text="Strategies"
                                    Style="{StaticResource PageTitle}" />
-                        <TextBlock Text="Adjust demo thresholds and observe how governance rules constrain factors."
+                        <TextBlock Text="Register governed strategy processes, edit schema-defined parameters, and inspect Paper outcomes. No manual order entry is provided."
                                    Style="{StaticResource BodySecondary}"
                                    Margin="0,0,0,22" />
 
                         <Grid>
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="330" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="370" />
                             </Grid.ColumnDefinitions>
 
                             <Border Grid.Column="0"
                                     Style="{StaticResource CardBorder}"
                                     Margin="0,0,16,0">
                                 <StackPanel>
-                                    <TextBlock Text="Governance Parameters"
+                                    <TextBlock Text="Strategy Registry"
                                                FontSize="15"
                                                FontWeight="SemiBold"
-                                               Margin="0,0,0,22" />
-
-                                    <Grid Margin="0,0,0,24">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="72" />
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel>
-                                            <TextBlock Text="Per-Trade Risk Budget"
-                                                       FontSize="12"
-                                                       FontWeight="SemiBold" />
-                                            <TextBlock Text="Interface demonstration only"
-                                                       Style="{StaticResource BodySecondary}"
-                                                       FontSize="10"
-                                                       Margin="0,3,0,0" />
-                                        </StackPanel>
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding RiskBudgetDisplay}"
-                                                   Foreground="{StaticResource AccentBrush}"
-                                                   FontFamily="Cascadia Mono, Consolas"
-                                                   FontSize="12"
-                                                   FontWeight="SemiBold"
-                                                   HorizontalAlignment="Right" />
-                                        <Slider Grid.ColumnSpan="2"
-                                                Minimum="0.25"
-                                                Maximum="0.75"
-                                                Value="{Binding RiskBudget, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                Margin="0,48,0,0" />
-                                    </Grid>
-
-                                    <Grid Margin="0,0,0,24">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="72" />
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel>
-                                            <TextBlock Text="Minimum Data Coverage"
-                                                       FontSize="12"
-                                                       FontWeight="SemiBold" />
-                                            <TextBlock Text="No new risk below the gate"
-                                                       Style="{StaticResource BodySecondary}"
-                                                       FontSize="10"
-                                                       Margin="0,3,0,0" />
-                                        </StackPanel>
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding CoverageGateDisplay}"
-                                                   Foreground="{StaticResource AccentBrush}"
-                                                   FontFamily="Cascadia Mono, Consolas"
-                                                   FontSize="12"
-                                                   FontWeight="SemiBold"
-                                                   HorizontalAlignment="Right" />
-                                        <Slider Grid.ColumnSpan="2"
-                                                Minimum="0.70"
-                                                Maximum="0.95"
-                                                Value="{Binding CoverageGate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                Margin="0,48,0,0" />
-                                    </Grid>
-
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="72" />
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel>
-                                            <TextBlock Text="Single-Factor Weight Cap"
-                                                       FontSize="12"
-                                                       FontWeight="SemiBold" />
-                                            <TextBlock Text="New factors still start at no more than 5%"
-                                                       Style="{StaticResource BodySecondary}"
-                                                       FontSize="10"
-                                                       Margin="0,3,0,0" />
-                                        </StackPanel>
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding MaxFactorWeightDisplay}"
-                                                   Foreground="{StaticResource AccentBrush}"
-                                                   FontFamily="Cascadia Mono, Consolas"
-                                                   FontSize="12"
-                                                   FontWeight="SemiBold"
-                                                   HorizontalAlignment="Right" />
-                                        <Slider Grid.ColumnSpan="2"
-                                                Minimum="0.10"
-                                                Maximum="0.35"
-                                                Value="{Binding MaxFactorWeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                Margin="0,48,0,0" />
-                                    </Grid>
+                                               Margin="0,0,0,14" />
+                                    <ComboBox ItemsSource="{Binding Strategies}"
+                                              SelectedItem="{Binding SelectedStrategy, Mode=TwoWay}"
+                                              DisplayMemberPath="Name"
+                                              Margin="0,0,0,12" />
+                                    <TextBlock Text="{Binding SelectedStrategy.SourceLabel, StringFormat=Source: {0}}"
+                                               Style="{StaticResource BodySecondary}" />
+                                    <TextBlock Text="{Binding SelectedStrategy.Version, StringFormat=Version: {0}}"
+                                               Style="{StaticResource BodySecondary}"
+                                               Margin="0,3,0,0" />
+                                    <TextBlock Text="{Binding SelectedStrategy.RuntimeState, StringFormat=Runtime: {0}}"
+                                               Style="{StaticResource BodySecondary}"
+                                               Margin="0,3,0,0" />
+                                    <TextBlock Text="{Binding SelectedStrategy.Health, StringFormat=Health: {0}}"
+                                               Style="{StaticResource BodySecondary}"
+                                               Margin="0,3,0,0" />
+                                    <TextBlock Text="{Binding SelectedStrategy.LastHeartbeatDisplay}"
+                                               Style="{StaticResource BodySecondary}"
+                                               Margin="0,3,0,14" />
+                                    <WrapPanel Margin="0,0,0,14">
+                                        <Button Content="Start"
+                                                Style="{StaticResource PrimaryButton}"
+                                                Click="StartStrategy_Click"
+                                                Margin="0,0,7,7" />
+                                        <Button Content="Pause"
+                                                Style="{StaticResource SecondaryButton}"
+                                                Click="PauseStrategy_Click"
+                                                Margin="0,0,7,7" />
+                                        <Button Content="Resume"
+                                                Style="{StaticResource SecondaryButton}"
+                                                Click="ResumeStrategy_Click"
+                                                Margin="0,0,7,7" />
+                                        <Button Content="Stop"
+                                                Style="{StaticResource SecondaryButton}"
+                                                Click="StopStrategy_Click"
+                                                Margin="0,0,7,7" />
+                                    </WrapPanel>
+                                    <Button Content="Run Deterministic Paper Cycle"
+                                            Style="{StaticResource PrimaryButton}"
+                                            Click="RunPaperCycle_Click"
+                                            Margin="0,0,0,16" />
+                                    <TextBlock Text="Register Third-Party Manifest"
+                                               FontSize="11"
+                                               FontWeight="SemiBold" />
+                                    <TextBox Text="{Binding StrategyManifestPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             Margin="0,6,0,7"
+                                             ToolTip="Enter the local manifest JSON path." />
+                                    <Button Content="Validate and Register"
+                                            Style="{StaticResource SecondaryButton}"
+                                            Click="RegisterStrategy_Click" />
                                 </StackPanel>
                             </Border>
 
                             <Border Grid.Column="1" Style="{StaticResource CardBorder}">
                                 <StackPanel>
-                                    <TextBlock Text="Non-Negotiable Boundaries"
+                                    <TextBlock Text="Mode Governance"
                                                FontSize="15"
                                                FontWeight="SemiBold"
-                                               Margin="0,0,0,18" />
-
-                                    <TextBlock Text="[OK] At least 252 time-series observations"
-                                               FontSize="11"
                                                Margin="0,0,0,12" />
-                                    <TextBlock Text="[OK] At least 6 frozen OOS windows"
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Content="Use Paper Only"
+                                                Style="{StaticResource PrimaryButton}"
+                                                Click="UsePaper_Click"
+                                                Margin="0,0,8,0" />
+                                        <Button Content="Request Live"
+                                                Style="{StaticResource SecondaryButton}"
+                                                Click="RequestLive_Click" />
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding GlobalLiveLockStatus}"
+                                               Style="{StaticResource BodySecondary}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,12,0,0" />
+                                    <TextBlock Text="{Binding LiveAuthorizationSummary}"
+                                               Style="{StaticResource BodySecondary}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,5,0,0" />
+                                    <TextBlock Text="Live-to-Paper transition"
                                                FontSize="11"
-                                               Margin="0,0,0,12" />
-                                    <TextBlock Text="[OK] OOS degradation must remain controlled"
-                                               FontSize="11"
-                                               Margin="0,0,0,12" />
-                                    <TextBlock Text="[OK] Positive contribution after costs"
-                                               FontSize="11"
-                                               Margin="0,0,0,12" />
-                                    <TextBlock Text="[OK] Missing values are not neutral zero"
-                                               FontSize="11"
-                                               Margin="0,0,0,12" />
-                                    <TextBlock Text="[OK] Risk gates stay separate from alpha weights"
-                                               FontSize="11"
-                                               Margin="0,0,0,18" />
-
-                                    <Border Height="1" Background="#22FFFFFF" Margin="0,0,0,14" />
-                                    <TextBlock Text="This app does not execute trades"
+                                               FontWeight="SemiBold"
+                                               Margin="0,15,0,6" />
+                                    <StackPanel Orientation="Horizontal">
+                                        <RadioButton Content="Stop opening risk"
+                                                     GroupName="Transition"
+                                                     IsChecked="True"
+                                                     Checked="StopRiskTransition_Checked"
+                                                     Margin="0,0,12,0" />
+                                        <RadioButton Content="Freeze"
+                                                     GroupName="Transition"
+                                                     Checked="FreezeTransition_Checked"
+                                                     Margin="0,0,12,0" />
+                                        <RadioButton Content="Controlled exit"
+                                                     GroupName="Transition"
+                                                     Checked="ControlledExitTransition_Checked" />
+                                    </StackPanel>
+                                    <Border Height="1"
+                                            Background="#22FFFFFF"
+                                            Margin="0,16,0,13" />
+                                    <TextBlock Text="{Binding StrategyStatusMessage}"
                                                Foreground="#FFF7B955"
                                                FontSize="11"
-                                               FontWeight="SemiBold" />
+                                               FontWeight="SemiBold"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding LatestStrategyAlert}"
+                                               Style="{StaticResource BodySecondary}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,6,0,0" />
                                 </StackPanel>
                             </Border>
                         </Grid>
 
-                        <Border Style="{StaticResource CardBorder}" Margin="0,18,0,0">
-                            <Grid>
+                        <Border Style="{StaticResource CardBorder}"
+                                Margin="0,18,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Schema-Generated Parameters"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,12" />
+                                <ItemsControl ItemsSource="{Binding SelectedStrategy.Parameters}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="#22FFFFFF"
+                                                    BorderThickness="0,0,0,1"
+                                                    Padding="0,10">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="240" />
+                                                        <ColumnDefinition Width="150" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="130" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Label}"
+                                                                   FontWeight="SemiBold" />
+                                                        <TextBlock Text="{Binding Description}"
+                                                                   Style="{StaticResource BodySecondary}"
+                                                                   FontSize="10"
+                                                                   TextWrapping="Wrap" />
+                                                        <TextBlock Text="{Binding RangeLabel}"
+                                                                   Style="{StaticResource BodySecondary}"
+                                                                   FontSize="10" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1"
+                                                                Margin="14,0">
+                                                        <TextBlock Text="{Binding RiskTierLabel, StringFormat=Risk: {0}}"
+                                                                   FontSize="10" />
+                                                        <TextBlock Text="{Binding ActivationLabel, StringFormat=Apply: {0}}"
+                                                                   Style="{StaticResource BodySecondary}"
+                                                                   FontSize="10" />
+                                                        <TextBlock Text="{Binding Status, StringFormat=Status: {0}}"
+                                                                   Style="{StaticResource BodySecondary}"
+                                                                   FontSize="10" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="2"
+                                                                Margin="0,0,14,0">
+                                                        <TextBox Text="{Binding DraftValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                        <CheckBox Content="Confirm high-risk change"
+                                                                  IsChecked="{Binding ConfirmationChecked, Mode=TwoWay}"
+                                                                  Margin="0,7,0,0" />
+                                                        <TextBlock Text="{Binding PreviewText}"
+                                                                   Style="{StaticResource BodySecondary}"
+                                                                   FontSize="10"
+                                                                   TextWrapping="Wrap"
+                                                                   Margin="0,5,0,0" />
+                                                    </StackPanel>
+                                                    <Button Grid.Column="3"
+                                                            Content="Apply Change"
+                                                            Style="{StaticResource SecondaryButton}"
+                                                            Click="ApplyParameter_Click"
+                                                            VerticalAlignment="Top" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <Grid Margin="0,18,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0"
+                                    Style="{StaticResource CardBorder}"
+                                    Margin="0,0,8,0">
                                 <StackPanel>
-                                    <TextBlock Text="Current Parameter Proposal"
+                                    <TextBlock Text="Signals"
                                                FontSize="14"
                                                FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding CurrentProposal}"
-                                               Style="{StaticResource BodySecondary}"
-                                               Margin="0,6,0,0" />
+                                    <ItemsControl ItemsSource="{Binding SelectedStrategy.Signals}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Symbol, StringFormat={}{0} signal}"
+                                                           Style="{StaticResource BodySecondary}"
+                                                           Margin="0,6,0,0" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                 </StackPanel>
-                                <Border Width="36"
-                                        Height="36"
-                                        Background="#2254D38A"
-                                        BorderBrush="#5554D38A"
-                                        BorderThickness="1"
-                                        CornerRadius="18"
-                                        HorizontalAlignment="Right">
-                                    <TextBlock Text="OK"
-                                               Foreground="#FF54D38A"
-                                               FontSize="10"
-                                               FontWeight="Bold"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center" />
-                                </Border>
-                            </Grid>
-                        </Border>
+                            </Border>
+                            <Border Grid.Column="1"
+                                    Style="{StaticResource CardBorder}"
+                                    Margin="8,0">
+                                <StackPanel>
+                                    <TextBlock Text="Targets"
+                                               FontSize="14"
+                                               FontWeight="SemiBold" />
+                                    <ItemsControl ItemsSource="{Binding SelectedStrategy.Targets}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Symbol, StringFormat={}{0} target position}"
+                                                           Style="{StaticResource BodySecondary}"
+                                                           Margin="0,6,0,0" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="2"
+                                    Style="{StaticResource CardBorder}"
+                                    Margin="8,0,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Intent History"
+                                               FontSize="14"
+                                               FontWeight="SemiBold" />
+                                    <ItemsControl ItemsSource="{Binding SelectedStrategy.Intents}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding ReasonCode}"
+                                                           Style="{StaticResource BodySecondary}"
+                                                           Margin="0,6,0,0" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                     </StackPanel>
                 </ScrollViewer>
 
@@ -1187,6 +1295,25 @@
                         </Grid>
 
                         <Border Style="{StaticResource CardBorder}" Margin="0,18,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Global Live Lock"
+                                           FontSize="15"
+                                           FontWeight="SemiBold" />
+                                <CheckBox Content="Enable bounded Live mode selection"
+                                          IsChecked="{Binding GlobalLiveLock, Mode=TwoWay}"
+                                          Margin="0,12,0,0" />
+                                <TextBlock Text="{Binding GlobalLiveLockStatus}"
+                                           Style="{StaticResource BodySecondary}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,6,0,0" />
+                                <TextBlock Text="Live broker submission remains disabled in this implementation pass."
+                                           Foreground="#FFF7B955"
+                                           FontSize="11"
+                                           Margin="0,5,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardBorder}" Margin="0,18,0,0">
                             <TextBlock Text="{Binding FixtureModeStatus}"
                                        Style="{StaticResource BodySecondary}"
                                        TextWrapping="Wrap" />
@@ -1206,8 +1333,20 @@
                         <TextBlock Text="CLI logs contain bounded outcomes and read-only categories, never raw authentication output."
                                    Style="{StaticResource BodySecondary}"
                                    Margin="0,0,0,22" />
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="180" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Text="{Binding LogSearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="Search message, module, strategy, correlation, or cycle." />
+                            <ComboBox Grid.Column="1"
+                                      ItemsSource="{Binding LogSeverityOptions}"
+                                      SelectedItem="{Binding SelectedLogSeverity, Mode=TwoWay}"
+                                      Margin="12,0,0,0" />
+                        </Grid>
                         <Border Style="{StaticResource CardBorder}" Padding="0">
-                            <ListView ItemsSource="{Binding ApplicationLogs}"
+                            <ListView ItemsSource="{Binding FilteredApplicationLogs}"
                                       Background="Transparent"
                                       BorderThickness="0"
                                       Foreground="{StaticResource PrimaryTextBrush}"
@@ -1222,10 +1361,19 @@
                                                         Width="80" />
                                         <GridViewColumn Header="Module"
                                                         DisplayMemberBinding="{Binding Module}"
-                                                        Width="140" />
+                                                        Width="120" />
+                                        <GridViewColumn Header="Strategy"
+                                                        DisplayMemberBinding="{Binding StrategyId}"
+                                                        Width="150" />
+                                        <GridViewColumn Header="Correlation"
+                                                        DisplayMemberBinding="{Binding CorrelationId}"
+                                                        Width="150" />
+                                        <GridViewColumn Header="Cycle"
+                                                        DisplayMemberBinding="{Binding CycleId}"
+                                                        Width="130" />
                                         <GridViewColumn Header="Message"
                                                         DisplayMemberBinding="{Binding Message}"
-                                                        Width="520" />
+                                                        Width="360" />
                                     </GridView>
                                 </ListView.View>
                             </ListView>

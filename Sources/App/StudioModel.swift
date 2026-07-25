@@ -2,9 +2,9 @@ import Foundation
 import SwiftUI
 
 enum StudioSection: String, CaseIterable, Identifiable {
-    case overview = "Overview"
+    case overview = "Dashboard"
     case factors = "Factor Lifecycle"
-    case lab = "Strategy Lab"
+    case lab = "Strategies"
     case data = "Data and Universe"
     case settings = "Settings"
     case logs = "Logs"
@@ -60,6 +60,25 @@ final class StudioModel: ObservableObject {
     @Published var logRetentionDays: Double {
         didSet { persistSettings() }
     }
+    @Published var globalLiveLock: Bool {
+        didSet {
+            if !globalLiveLock {
+                for strategy in strategies where strategy.mode == .live {
+                    strategy.mode = .paperOnly
+                    strategy.liveToPaperTransition = .stopOpeningRisk
+                    saveStrategy(strategy)
+                }
+                latestStrategyAlert =
+                    "Global Live Lock is OFF. All strategies are Paper Only."
+            }
+            persistSettings()
+            appendAudit(
+                action: "GlobalLiveLockChanged",
+                context: ["enabled": globalLiveLock ? "true" : "false"],
+                category: .settings
+            )
+        }
+    }
     @Published private(set) var factors: [FactorItem]
     @Published private(set) var universeEntries: [UniverseEntry] = []
     @Published private(set) var applicationLogs: [ApplicationLogEntry] = []
@@ -74,11 +93,21 @@ final class StudioModel: ObservableObject {
     @Published private(set) var cliStatusMessage =
         "Enable fixture mode or select an installed Longbridge CLI."
     @Published private(set) var cliPathDisplay = "Fixture mode (no executable)"
+    @Published private(set) var strategies: [StrategyItemModel] = []
+    @Published var selectedStrategyID = ""
+    @Published var strategyManifestPath = ""
+    @Published private(set) var strategyStatusMessage =
+        "Official fixture strategy is ready in Paper Only."
+    @Published private(set) var latestStrategyAlert =
+        "Live broker submission is disabled until Prompt 5."
+    @Published var selectedTransition: LiveToPaperTransition = .stopOpeningRisk
+    @Published var logSearchText = ""
+    @Published var selectedLogSeverity: ApplicationLogLevel?
 
-    let strategyMode: StrategyMode = .paperOnly
     let liveExecutionAvailable = false
 
     private let services: AppServices
+    private var externalRuntimes: [String: ExternalStrategyRuntime] = [:]
 
     init(services: AppServices = .offlineFixture()) {
         self.services = services
@@ -96,8 +125,10 @@ final class StudioModel: ObservableObject {
         processTimeoutSeconds = Double(max(2, settings.processTimeoutSeconds))
         dataRetentionDays = Double(max(7, settings.dataRetentionDays))
         logRetentionDays = Double(max(7, settings.logRetentionDays))
+        globalLiveLock = settings.globalLiveLock
         factors = (try? services.factorRepository.loadFactors()) ?? []
         applicationLogs = (try? services.logStore.loadLogs(limit: 50)) ?? []
+        initializeStrategies()
 
         appendLog(
             level: .info,
@@ -127,6 +158,75 @@ final class StudioModel: ObservableObject {
         return active.reduce(0) { $0 + $1.coverage * $1.weight } / totalWeight
     }
 
+    var selectedStrategy: StrategyItemModel? {
+        strategies.first { $0.strategyId == selectedStrategyID }
+    }
+
+    var strategyMode: StrategyMode {
+        selectedStrategy?.mode ?? .paperOnly
+    }
+
+    var paperStrategyCount: Int {
+        strategies.filter { $0.mode == .paperOnly }.count
+    }
+
+    var liveStrategyCount: Int {
+        strategies.filter { $0.mode == .live }.count
+    }
+
+    var healthyStrategyCount: Int {
+        strategies.filter { $0.health == .healthy }.count
+    }
+
+    var globalLiveLockStatus: String {
+        globalLiveLock
+            ? "ON: authorized strategies may select Live mode"
+            : "OFF: every strategy remains Paper Only"
+    }
+
+    var latestCycleDisplay: String {
+        guard let cycle = strategies
+            .flatMap(\.cycles)
+            .max(by: { $0.completedAt < $1.completedAt }) else {
+            return "No completed strategy cycle"
+        }
+        return "\(cycle.cycleId) | \(cycle.intentCount) intent"
+    }
+
+    var liveAuthorizationSummary: String {
+        guard let strategy = selectedStrategy else {
+            return "No strategy selected."
+        }
+        let authorization = try? services.strategyStore
+            .loadLiveAuthorizations()
+            .first { $0.strategyId == strategy.strategyId }
+        guard let authorization else {
+            return "No Live authorization is stored."
+        }
+        return "Authorization expires \(authorization.expiresAt.formatted(date: .abbreviated, time: .shortened)) | Capital \(authorization.maximumCapital) | Orders \(authorization.maximumOrderFrequency)/period"
+    }
+
+    var filteredApplicationLogs: [ApplicationLogEntry] {
+        Array(applicationLogs.filter { entry in
+            let matchesSeverity = selectedLogSeverity == nil ||
+                entry.severity == selectedLogSeverity
+            let query = logSearchText.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            )
+            let matchesQuery = query.isEmpty ||
+                entry.message.localizedCaseInsensitiveContains(query) ||
+                entry.module.localizedCaseInsensitiveContains(query) ||
+                (entry.strategyID?.localizedCaseInsensitiveContains(query) ??
+                    false) ||
+                (entry.correlationID?.localizedCaseInsensitiveContains(query) ??
+                    false) ||
+                (entry.cycleID?.localizedCaseInsensitiveContains(query) ??
+                    false)
+            return matchesSeverity && matchesQuery
+        }
+        .reversed())
+    }
+
     var fixtureModeStatus: String {
         fixtureMode
             ? "Fixture mode is ON. No CLI, account, or network is used."
@@ -143,6 +243,311 @@ final class StudioModel: ObservableObject {
 
     var logRetentionDisplay: String {
         "\(Int(logRetentionDays.rounded())) days"
+    }
+
+    func registerThirdPartyStrategy() {
+        do {
+            let registration = try services.strategyRegistry.loadThirdParty(
+                manifestPath: strategyManifestPath,
+                existingStrategyIds: Set(strategies.map(\.strategyId))
+            )
+            let state = defaultStrategyState(
+                manifest: registration.manifest,
+                parameters: registration.parameters
+            )
+            try services.strategyStore.saveStrategyManifest(
+                registration.manifest
+            )
+            try services.strategyStore.saveStrategyState(state)
+            let item = StrategyItemModel(
+                manifest: registration.manifest,
+                parameterSchema: registration.parameters,
+                state: state
+            )
+            strategies.append(item)
+            selectedStrategyID = item.strategyId
+            strategyStatusMessage =
+                "Registered third-party strategy \(item.name)."
+            appendAudit(
+                action: "ThirdPartyStrategyRegistered",
+                context: [
+                    "strategy_id": item.strategyId,
+                    "source": item.sourceLabel
+                ],
+                category: .strategyLifecycle
+            )
+        } catch {
+            strategyStatusMessage =
+                "Strategy registration rejected: \(SensitiveDataRedactor.redact(error.localizedDescription))"
+        }
+    }
+
+    func startSelectedStrategy() {
+        guard let strategy = selectedStrategy else { return }
+        if strategy.manifest.source == .official {
+            strategy.runtimeState = .ready
+            strategyStatusMessage =
+                "Official strategy is ready. Run a deterministic Paper cycle."
+            saveStrategy(strategy)
+            return
+        }
+        guard externalRuntimes[strategy.strategyId] == nil else {
+            strategyStatusMessage = "The strategy process is already running."
+            return
+        }
+        let runtime = ExternalStrategyRuntime(
+            manifest: strategy.manifest,
+            codec: services.strategyMessageCodec,
+            messageHandler: { [weak self, weak strategy] message in
+                DispatchQueue.main.async {
+                    guard let self, let strategy else { return }
+                    self.handleExternalMessage(message, strategy: strategy)
+                }
+            },
+            logHandler: { [weak self] entry in
+                DispatchQueue.main.async {
+                    self?.appendExistingLog(entry)
+                }
+            }
+        )
+        do {
+            try runtime.start(
+                initialize: coreMessage(
+                    strategy: strategy,
+                    cycleId: "runtime-start",
+                    type: "initialize",
+                    payload: [
+                        "mode": strategy.mode.rawValue,
+                        "parameter_version": String(
+                            strategy.parameterVersion
+                        )
+                    ]
+                )
+            )
+            externalRuntimes[strategy.strategyId] = runtime
+            strategy.runtimeState = .starting
+            strategyStatusMessage =
+                "Third-party strategy process started with NDJSON transport."
+        } catch {
+            strategy.runtimeState = .rejected
+            strategyStatusMessage =
+                "Strategy process rejected: \(SensitiveDataRedactor.redact(error.localizedDescription))"
+        }
+        saveStrategy(strategy)
+    }
+
+    func pauseSelectedStrategy() {
+        sendRuntimeControl(type: "pause", resultingState: .paused)
+    }
+
+    func resumeSelectedStrategy() {
+        sendRuntimeControl(type: "resume", resultingState: .running)
+    }
+
+    func stopSelectedStrategy() {
+        guard let strategy = selectedStrategy else { return }
+        if let runtime = externalRuntimes.removeValue(
+            forKey: strategy.strategyId
+        ) {
+            runtime.shutdown(
+                coreMessage(
+                    strategy: strategy,
+                    cycleId: "runtime-stop",
+                    type: "shutdown",
+                    payload: ["reason": "user_requested_strategy_shutdown"]
+                )
+            )
+        }
+        strategy.runtimeState = .stopped
+        strategyStatusMessage = "Strategy runtime stopped gracefully."
+        saveStrategy(strategy)
+    }
+
+    func runSelectedPaperCycle() {
+        guard let strategy = selectedStrategy else { return }
+        guard strategy.mode == .paperOnly else {
+            latestStrategyAlert =
+                "The fixture Paper cycle cannot run while Live mode is selected."
+            return
+        }
+        guard strategy.manifest.source == .official else {
+            latestStrategyAlert =
+                "Use Start, Pause, Resume, and Stop for third-party processes."
+            return
+        }
+        applyPendingParameterChanges(strategy)
+        do {
+            let result = try services.officialStrategyRuntime.runPaperCycle(
+                manifest: strategy.manifest,
+                parameterValues: Dictionary(
+                    uniqueKeysWithValues: strategy.parameters.map {
+                        ($0.key, $0.value)
+                    }
+                )
+            )
+            strategy.runtimeState = .running
+            strategy.health = result.health
+            strategy.lastHeartbeat = result.lastHeartbeat
+            strategy.signals = result.signals
+            strategy.targets = result.targets
+            strategy.intents = result.intents
+            strategy.cycles.insert(result.cycle, at: 0)
+            strategy.cycles = Array(strategy.cycles.prefix(20))
+            for message in result.messages where message.messageType == "log" {
+                appendLog(
+                    level: parseLogLevel(message.payload["level"]),
+                    module: message.payload["module"] ?? "OfficialStrategy",
+                    message: message.payload["message"] ??
+                        "Strategy log event.",
+                    strategyID: strategy.strategyId,
+                    correlationID: message.correlationId,
+                    cycleID: message.cycleId,
+                    context: [
+                        "message_type": message.messageType,
+                        "mode": StrategyMode.paperOnly.rawValue
+                    ]
+                )
+            }
+            strategyStatusMessage =
+                "Deterministic Paper cycle completed through the NDJSON protocol."
+            latestStrategyAlert =
+                "Paper intent recorded. No Live adapter was invoked."
+            appendAudit(
+                action: "PaperStrategyCycleCompleted",
+                context: [
+                    "strategy_id": strategy.strategyId,
+                    "cycle_id": result.cycle.cycleId,
+                    "intent_count": String(result.intents.count),
+                    "live_submission_attempts": String(
+                        services.liveBrokerAdapter.submissionAttempts
+                    )
+                ],
+                category: .strategyLifecycle
+            )
+        } catch {
+            strategy.runtimeState = .rejected
+            strategy.health = .unhealthy
+            strategy.blocksNewRisk = true
+            latestStrategyAlert =
+                "Paper cycle rejected: \(SensitiveDataRedactor.redact(error.localizedDescription))"
+        }
+        saveStrategy(strategy)
+    }
+
+    func applyParameterChange(_ parameter: StrategyParameterModel) {
+        guard let strategy = selectedStrategy else { return }
+        let decision = services.parameterGovernance.requestChange(
+            strategyId: strategy.strategyId,
+            definition: parameter.definition,
+            oldValue: parameter.value,
+            newValue: parameter.draftValue,
+            currentVersion: strategy.parameterVersion,
+            requestedBy: "local-user",
+            confirmed: parameter.confirmationChecked,
+            requestedAt: Date()
+        )
+        try? services.strategyStore.appendParameterChange(decision.change)
+        if parameter.confirmationChecked {
+            strategy.parameterChanges.removeAll {
+                $0.parameterKey == parameter.key &&
+                    $0.result == .pendingConfirmation
+            }
+        }
+        strategy.parameterChanges.insert(decision.change, at: 0)
+        parameter.previewText = decision.impactPreview
+        parameter.status = decision.change.result.rawValue
+        strategy.blocksNewRisk = decision.blocksNewRisk
+        if decision.change.result == .applied {
+            parameter.value = decision.change.newValue
+            strategy.parameterVersion = decision.change.parameterVersion
+        } else if decision.change.result == .pendingSafeBoundary {
+            strategy.runtimeState = .paused
+        }
+        parameter.confirmationChecked = false
+        saveStrategy(strategy)
+        appendAudit(
+            action: "StrategyParameterChange",
+            context: [
+                "change_id": decision.change.changeId,
+                "strategy_id": decision.change.strategyId,
+                "parameter_key": decision.change.parameterKey,
+                "old_value": decision.change.oldValue,
+                "new_value": decision.change.newValue,
+                "requested_at": ISO8601DateFormatter().string(
+                    from: decision.change.requestedAt
+                ),
+                "effective_at": decision.change.effectiveAt.map {
+                    ISO8601DateFormatter().string(from: $0)
+                } ?? "",
+                "requested_by": decision.change.requestedBy,
+                "risk_tier": decision.change.riskTier.rawValue,
+                "parameter_version": String(
+                    decision.change.parameterVersion
+                ),
+                "activation_mode":
+                    decision.change.activationMode.rawValue,
+                "result": decision.change.result.rawValue,
+                "rollback_version": String(
+                    decision.change.rollbackVersion
+                )
+            ],
+            category: .settings
+        )
+    }
+
+    func requestLiveMode() {
+        guard let strategy = selectedStrategy else { return }
+        let authorization = try? services.strategyStore
+            .loadLiveAuthorizations()
+            .first { $0.strategyId == strategy.strategyId }
+        let result = services.strategyModeService.selectMode(
+            requestedMode: .live,
+            globalLiveLock: globalLiveLock,
+            manifest: strategy.manifest,
+            parameterVersion: strategy.parameterVersion,
+            authorization: authorization,
+            market: defaultMarket,
+            now: Date()
+        )
+        strategy.mode = result.mode
+        strategyStatusMessage = result.message
+        latestStrategyAlert = result.accepted
+            ? "Live selected, but the broker adapter remains a rejecting stub."
+            : result.message
+        saveStrategy(strategy)
+        appendModeAudit(strategy: strategy, result: result)
+    }
+
+    func requestPaperMode() {
+        guard let strategy = selectedStrategy else { return }
+        let result = services.strategyModeService.selectMode(
+            requestedMode: .paperOnly,
+            globalLiveLock: globalLiveLock,
+            manifest: strategy.manifest,
+            parameterVersion: strategy.parameterVersion,
+            authorization: nil,
+            market: defaultMarket,
+            now: Date()
+        )
+        strategy.mode = .paperOnly
+        strategy.liveToPaperTransition = selectedTransition
+        if selectedTransition == .freeze {
+            strategy.runtimeState = .paused
+        }
+        switch selectedTransition {
+        case .stopOpeningRisk:
+            latestStrategyAlert =
+                "Paper Only: new real risk is blocked; existing-position management state is retained."
+        case .freeze:
+            latestStrategyAlert =
+                "Paper Only: strategy is frozen. No orders were generated."
+        case .controlledExit:
+            latestStrategyAlert =
+                "Paper Only: controlled automated exit is recorded as intent only; no real order was generated."
+        }
+        strategyStatusMessage = result.message
+        saveStrategy(strategy)
+        appendModeAudit(strategy: strategy, result: result)
     }
 
     func refreshLongbridge() {
@@ -385,6 +790,328 @@ final class StudioModel: ObservableObject {
             : String(format: "%.1f KB", Double(bytes) / 1024)
     }
 
+    private func initializeStrategies() {
+        do {
+            let official = try services.strategyRegistry.loadOfficial()
+            let states = Dictionary(
+                uniqueKeysWithValues: (
+                    try? services.strategyStore.loadStrategyStates()
+                )?.map { ($0.strategyId, $0) } ?? []
+            )
+            let officialState = states[official.manifest.strategyId] ??
+                defaultStrategyState(
+                    manifest: official.manifest,
+                    parameters: official.parameters
+                )
+            try services.strategyStore.saveStrategyManifest(
+                official.manifest
+            )
+            try services.strategyStore.saveStrategyState(officialState)
+            if (try services.strategyStore.loadLiveAuthorizations()).isEmpty {
+                let fixture = try services.strategyRegistry
+                    .loadAuthorizationFixture("valid-live-authorization")
+                try services.strategyStore.saveLiveAuthorization(fixture)
+            }
+            let officialItem = StrategyItemModel(
+                manifest: official.manifest,
+                parameterSchema: official.parameters,
+                state: officialState
+            )
+            officialItem.parameterChanges = (
+                try? services.strategyStore.loadParameterChanges(
+                    strategyId: officialItem.strategyId,
+                    limit: 50
+                )
+            ) ?? []
+            strategies = [officialItem]
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let manifests = (
+                try? services.strategyStore.loadStrategyManifests()
+            ) ?? []
+            for manifest in manifests
+                where manifest.source == .thirdParty {
+                let schemaURL = URL(fileURLWithPath: manifest.parameterSchema)
+                guard let parameters = try? decoder.decode(
+                    StrategyParameterSchema.self,
+                    from: Data(contentsOf: schemaURL)
+                ),
+                services.strategyRegistry.validate(
+                    manifest: manifest,
+                    parameters: parameters,
+                    existingStrategyIds: Set(strategies.map(\.strategyId)),
+                    manifestDirectory: schemaURL.deletingLastPathComponent()
+                ) == nil else {
+                    continue
+                }
+                let state = states[manifest.strategyId] ??
+                    defaultStrategyState(
+                        manifest: manifest,
+                        parameters: parameters
+                    )
+                let item = StrategyItemModel(
+                    manifest: manifest,
+                    parameterSchema: parameters,
+                    state: state
+                )
+                item.parameterChanges = (
+                    try? services.strategyStore.loadParameterChanges(
+                        strategyId: item.strategyId,
+                        limit: 50
+                    )
+                ) ?? []
+                strategies.append(item)
+            }
+            selectedStrategyID = strategies.first?.strategyId ?? ""
+        } catch {
+            strategyStatusMessage =
+                "Strategy registry initialization failed: \(SensitiveDataRedactor.redact(error.localizedDescription))"
+        }
+    }
+
+    private func defaultStrategyState(
+        manifest: StrategyManifest,
+        parameters: StrategyParameterSchema
+    ) -> StrategyPersistentState {
+        StrategyPersistentState(
+            strategyId: manifest.strategyId,
+            mode: .paperOnly,
+            runtimeState: .stopped,
+            health: .degraded,
+            lastHeartbeat: nil,
+            parameterVersion: 1,
+            parameterValues: Dictionary(
+                uniqueKeysWithValues: parameters.parameters.map {
+                    ($0.key, $0.defaultValue)
+                }
+            ),
+            blocksNewRisk: false,
+            liveToPaperTransition: .stopOpeningRisk
+        )
+    }
+
+    private func saveStrategy(_ strategy: StrategyItemModel) {
+        try? services.strategyStore.saveStrategyState(
+            strategy.persistentState()
+        )
+        objectWillChange.send()
+    }
+
+    private func applyPendingParameterChanges(
+        _ strategy: StrategyItemModel
+    ) {
+        let pending = strategy.parameterChanges.filter {
+            $0.result == .pendingCycle ||
+                $0.result == .pendingSafeBoundary
+        }
+        for change in pending.sorted(by: {
+            $0.requestedAt < $1.requestedAt
+        }) {
+            let applied = services.parameterGovernance.applyBoundary(
+                change,
+                effectiveAt: Date()
+            )
+            try? services.strategyStore.appendParameterChange(applied)
+            guard let parameter = strategy.parameters.first(where: {
+                $0.key == applied.parameterKey
+            }) else {
+                continue
+            }
+            parameter.value = applied.newValue
+            parameter.draftValue = applied.newValue
+            parameter.status = applied.result.rawValue
+            parameter.previewText =
+                "Applied at the next safe cycle boundary."
+            strategy.parameterVersion = max(
+                strategy.parameterVersion,
+                applied.parameterVersion
+            )
+            strategy.parameterChanges.removeAll { $0.id == change.id }
+            strategy.parameterChanges.insert(applied, at: 0)
+        }
+        strategy.blocksNewRisk = strategy.parameterChanges.contains {
+            $0.riskTier == .high &&
+                ($0.result == .pendingConfirmation ||
+                 $0.result == .pendingSafeBoundary)
+        }
+    }
+
+    private func sendRuntimeControl(
+        type: String,
+        resultingState: StrategyRuntimeState
+    ) {
+        guard let strategy = selectedStrategy,
+              let runtime = externalRuntimes[strategy.strategyId] else {
+            strategyStatusMessage =
+                "No third-party strategy process is running."
+            return
+        }
+        do {
+            try runtime.send(
+                coreMessage(
+                    strategy: strategy,
+                    cycleId: "runtime-\(type)",
+                    type: type,
+                    payload: ["reason": "local_runtime_control"]
+                )
+            )
+            strategy.runtimeState = resultingState
+            strategyStatusMessage =
+                "Strategy runtime received \(type)."
+        } catch {
+            strategy.runtimeState = .rejected
+            strategyStatusMessage =
+                "Runtime control failed: \(SensitiveDataRedactor.redact(error.localizedDescription))"
+        }
+        saveStrategy(strategy)
+    }
+
+    private func coreMessage(
+        strategy: StrategyItemModel,
+        cycleId: String,
+        type: String,
+        payload: [String: String]
+    ) -> StrategyMessageEnvelope {
+        StrategyMessageEnvelope(
+            schemaVersion: 1,
+            eventId: UUID().uuidString,
+            correlationId: UUID().uuidString,
+            strategyId: strategy.strategyId,
+            strategyVersion: strategy.manifest.version,
+            cycleId: cycleId,
+            timestamp: Date(),
+            messageType: type,
+            payload: payload
+        )
+    }
+
+    private func handleExternalMessage(
+        _ message: StrategyMessageEnvelope,
+        strategy: StrategyItemModel
+    ) {
+        switch message.messageType {
+        case "ready":
+            strategy.runtimeState = .ready
+        case "heartbeat":
+            strategy.lastHeartbeat = message.timestamp
+            strategy.health = .healthy
+        case "health":
+            strategy.health = HealthState(
+                rawValue: message.payload["state"] ?? ""
+            ) ?? .degraded
+        case "log":
+            appendLog(
+                level: parseLogLevel(message.payload["level"]),
+                module: message.payload["module"] ?? "ThirdPartyStrategy",
+                message: message.payload["message"] ??
+                    "Strategy log event.",
+                strategyID: strategy.strategyId,
+                correlationID: message.correlationId,
+                cycleID: message.cycleId,
+                context: ["message_type": message.messageType]
+            )
+        case "signal":
+            if let score = Double(message.payload["score"] ?? "") {
+                strategy.signals.insert(
+                    StrategySignal(
+                        symbol: message.payload["symbol"] ?? "",
+                        score: score,
+                        reason: message.payload["reason"] ?? "",
+                        timestamp: message.timestamp
+                    ),
+                    at: 0
+                )
+            }
+        case "target_position":
+            if let weight = Double(
+                message.payload["target_weight"] ?? ""
+            ) {
+                strategy.targets.insert(
+                    StrategyTarget(
+                        symbol: message.payload["symbol"] ?? "",
+                        targetWeight: weight,
+                        reason: message.payload["reason"] ?? "",
+                        timestamp: message.timestamp
+                    ),
+                    at: 0
+                )
+            }
+        case "trade_intent":
+            let intent = StrategyIntentRecord(
+                intentId: message.payload["intent_id"] ??
+                    message.eventId,
+                symbol: message.payload["symbol"] ?? "",
+                targetWeight: Double(
+                    message.payload["target_weight"] ?? ""
+                ) ?? 0,
+                priority: Int(message.payload["priority"] ?? "") ?? 0,
+                allowPartial: Bool(
+                    message.payload["allow_partial"] ?? ""
+                ) ?? false,
+                reasonCode: message.payload["reason_code"] ?? "",
+                cycleId: message.cycleId,
+                timestamp: message.timestamp,
+                mode: strategy.mode
+            )
+            _ = services.strategyIntentRouter.route(
+                mode: strategy.mode,
+                intent: intent,
+                liveAdapter: services.liveBrokerAdapter
+            )
+            strategy.intents.insert(intent, at: 0)
+        case "cycle_complete":
+            strategy.runtimeState = .running
+            strategy.cycles.insert(
+                StrategyCycleSummary(
+                    cycleId: message.cycleId,
+                    completedAt: message.timestamp,
+                    signalCount: strategy.signals.count,
+                    targetCount: strategy.targets.count,
+                    intentCount: strategy.intents.count,
+                    result: message.payload["result"] ?? "Completed"
+                ),
+                at: 0
+            )
+        case "error":
+            strategy.runtimeState = .unhealthy
+            strategy.health = .unhealthy
+            strategy.blocksNewRisk = true
+            latestStrategyAlert = SensitiveDataRedactor.redact(
+                message.payload["message"] ?? "Strategy runtime error."
+            )
+        default:
+            break
+        }
+        saveStrategy(strategy)
+    }
+
+    private func appendModeAudit(
+        strategy: StrategyItemModel,
+        result: ModeSelectionResult
+    ) {
+        appendAudit(
+            action: "StrategyModeSelection",
+            context: [
+                "strategy_id": strategy.strategyId,
+                "accepted": result.accepted ? "true" : "false",
+                "mode": result.mode.rawValue,
+                "live_lock": globalLiveLock ? "true" : "false",
+                "live_submission_available": "false",
+                "transition": strategy.liveToPaperTransition.rawValue
+            ],
+            category: result.accepted
+                ? .strategyLifecycle
+                : .riskRejection
+        )
+    }
+
+    private func parseLogLevel(_ raw: String?) -> ApplicationLogLevel {
+        guard let raw else { return .info }
+        return ApplicationLogLevel(rawValue: raw.capitalized) ?? .info
+    }
+
     private func persistSettings() {
         let settings = AppSettings(
             fixtureMode: fixtureMode,
@@ -398,7 +1125,8 @@ final class StudioModel: ObservableObject {
             cacheDirectory: cacheDirectory,
             processTimeoutSeconds: Int(processTimeoutSeconds.rounded()),
             dataRetentionDays: Int(dataRetentionDays.rounded()),
-            logRetentionDays: Int(logRetentionDays.rounded())
+            logRetentionDays: Int(logRetentionDays.rounded()),
+            globalLiveLock: globalLiveLock
         )
 
         do {
@@ -417,6 +1145,9 @@ final class StudioModel: ObservableObject {
         level: ApplicationLogLevel,
         module: String,
         message: String,
+        strategyID: String? = nil,
+        correlationID: String? = nil,
+        cycleID: String? = nil,
         context: [String: String]
     ) {
         let safeContext = context.mapValues {
@@ -428,9 +1159,19 @@ final class StudioModel: ObservableObject {
             severity: level,
             module: module,
             message: SensitiveDataRedactor.redact(message),
-            correlationID: nil,
+            correlationID: correlationID,
+            strategyID: strategyID,
+            cycleID: cycleID,
             context: safeContext
         )
+        try? services.logStore.appendLog(entry)
+        applicationLogs.append(entry)
+        if applicationLogs.count > 100 {
+            applicationLogs.removeFirst(applicationLogs.count - 100)
+        }
+    }
+
+    private func appendExistingLog(_ entry: ApplicationLogEntry) {
         try? services.logStore.appendLog(entry)
         applicationLogs.append(entry)
         if applicationLogs.count > 100 {
@@ -446,12 +1187,16 @@ final class StudioModel: ObservableObject {
         ]
     }
 
-    private func appendAudit(action: String, context: [String: String]) {
+    private func appendAudit(
+        action: String,
+        context: [String: String],
+        category: AuditEventCategory = .factorLifecycle
+    ) {
         let correlationID = UUID().uuidString
         let event = AuditEvent(
             id: UUID().uuidString,
             occurredAt: Date(),
-            category: .factorLifecycle,
+            category: category,
             action: action,
             result: .completed,
             actor: "local-user",

@@ -209,6 +209,7 @@ public sealed record AppSettings(
     public int ProcessTimeoutSeconds { get; init; } = 15;
     public int DataRetentionDays { get; init; } = 90;
     public int LogRetentionDays { get; init; } = 30;
+    public bool GlobalLiveLock { get; init; }
 
     public static AppSettings Default { get; } = new(
         true,

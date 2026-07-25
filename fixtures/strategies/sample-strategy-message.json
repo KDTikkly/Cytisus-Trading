@@ -2,7 +2,7 @@
   "schema_version": 1,
   "event_id": "evt-fixture-0001",
   "correlation_id": "corr-fixture-0001",
-  "strategy_id": "fixture-multifactor",
+  "strategy_id": "cross-sectional-multifactor",
   "strategy_version": "1.1.0",
   "cycle_id": "cycle-fixture-0001",
   "timestamp": "2026-01-01T00:00:00Z",

@@ -5,7 +5,7 @@ enum PersistentStoreError: Error {
     case invalidJSONLine
 }
 
-final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEventStore, MigrationStore {
+final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEventStore, MigrationStore, StrategyStateStore {
     private let rootURL: URL
     private let fileManager: FileManager
     private let encoder: JSONEncoder
@@ -17,6 +17,10 @@ final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEv
     private var migrationsURL: URL { rootURL.appendingPathComponent("migrations.json") }
     private var logsURL: URL { rootURL.appendingPathComponent("application-logs.ndjson") }
     private var auditURL: URL { rootURL.appendingPathComponent("audit-events.ndjson") }
+    private var manifestsURL: URL { rootURL.appendingPathComponent("strategy-manifests.json") }
+    private var strategyStatesURL: URL { rootURL.appendingPathComponent("strategy-states.json") }
+    private var parameterChangesURL: URL { rootURL.appendingPathComponent("strategy-parameter-changes.ndjson") }
+    private var liveAuthorizationsURL: URL { rootURL.appendingPathComponent("live-authorizations.json") }
 
     init(rootURL: URL, fileManager: FileManager = .default) {
         self.rootURL = rootURL
@@ -121,6 +125,70 @@ final class JSONFilePersistentStore: SettingsStore, ApplicationLogStore, AuditEv
             }
             return try decoder.decode(AuditEvent.self, from: data)
         }
+    }
+
+    func loadStrategyManifests() throws -> [StrategyManifest] {
+        guard fileManager.fileExists(atPath: manifestsURL.path) else { return [] }
+        return try read([StrategyManifest].self, from: manifestsURL)
+    }
+
+    func saveStrategyManifest(_ manifest: StrategyManifest) throws {
+        var values = try loadStrategyManifests()
+        values.removeAll { $0.strategyId == manifest.strategyId }
+        values.append(manifest)
+        try write(values.sorted { $0.strategyId < $1.strategyId }, to: manifestsURL)
+    }
+
+    func loadStrategyStates() throws -> [StrategyPersistentState] {
+        guard fileManager.fileExists(atPath: strategyStatesURL.path) else { return [] }
+        return try read([StrategyPersistentState].self, from: strategyStatesURL)
+    }
+
+    func saveStrategyState(_ state: StrategyPersistentState) throws {
+        var values = try loadStrategyStates()
+        values.removeAll { $0.strategyId == state.strategyId }
+        values.append(state)
+        try write(values.sorted { $0.strategyId < $1.strategyId }, to: strategyStatesURL)
+    }
+
+    func loadParameterChanges(
+        strategyId: String,
+        limit: Int
+    ) throws -> [StrategyParameterChange] {
+        guard fileManager.fileExists(atPath: parameterChangesURL.path) else {
+            return []
+        }
+        let content = try String(contentsOf: parameterChangesURL, encoding: .utf8)
+        return try content.split(separator: "\n").reversed().compactMap { line in
+            guard let data = String(line).data(using: .utf8) else {
+                throw PersistentStoreError.invalidJSONLine
+            }
+            return try decoder.decode(StrategyParameterChange.self, from: data)
+        }
+        .filter { $0.strategyId == strategyId }
+        .prefix(max(0, limit))
+        .map { $0 }
+    }
+
+    func appendParameterChange(_ change: StrategyParameterChange) throws {
+        try appendLine(change, to: parameterChangesURL)
+    }
+
+    func loadLiveAuthorizations() throws -> [LiveAuthorization] {
+        guard fileManager.fileExists(atPath: liveAuthorizationsURL.path) else {
+            return []
+        }
+        return try read([LiveAuthorization].self, from: liveAuthorizationsURL)
+    }
+
+    func saveLiveAuthorization(_ authorization: LiveAuthorization) throws {
+        var values = try loadLiveAuthorizations()
+        values.removeAll { $0.authorizationId == authorization.authorizationId }
+        values.append(authorization)
+        try write(
+            values.sorted { $0.authorizationId < $1.authorizationId },
+            to: liveAuthorizationsURL
+        )
     }
 
     private func read<T: Decodable>(_ type: T.Type, from url: URL) throws -> T {

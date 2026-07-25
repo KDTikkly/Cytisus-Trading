@@ -76,6 +76,7 @@ struct AppSettings: Codable, Equatable {
     var processTimeoutSeconds: Int = 15
     var dataRetentionDays: Int = 90
     var logRetentionDays: Int = 30
+    var globalLiveLock: Bool = false
 
     enum CodingKeys: String, CodingKey {
         case fixtureMode = "fixture_mode"
@@ -90,6 +91,7 @@ struct AppSettings: Codable, Equatable {
         case processTimeoutSeconds = "process_timeout_seconds"
         case dataRetentionDays = "data_retention_days"
         case logRetentionDays = "log_retention_days"
+        case globalLiveLock = "global_live_lock"
     }
 
     init(
@@ -104,7 +106,8 @@ struct AppSettings: Codable, Equatable {
         cacheDirectory: String = "",
         processTimeoutSeconds: Int = 15,
         dataRetentionDays: Int = 90,
-        logRetentionDays: Int = 30
+        logRetentionDays: Int = 30,
+        globalLiveLock: Bool = false
     ) {
         self.fixtureMode = fixtureMode
         self.strategyMode = strategyMode
@@ -118,6 +121,7 @@ struct AppSettings: Codable, Equatable {
         self.processTimeoutSeconds = processTimeoutSeconds
         self.dataRetentionDays = dataRetentionDays
         self.logRetentionDays = logRetentionDays
+        self.globalLiveLock = globalLiveLock
     }
 
     init(from decoder: Decoder) throws {
@@ -158,5 +162,9 @@ struct AppSettings: Codable, Equatable {
             Int.self,
             forKey: .logRetentionDays
         ) ?? 30
+        globalLiveLock = try values.decodeIfPresent(
+            Bool.self,
+            forKey: .globalLiveLock
+        ) ?? false
     }
 }

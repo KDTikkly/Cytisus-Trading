@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/KDTikkly/Cytisus-Trading/schemas/strategy-parameter-schema.schema.json",
+  "title": "Cytisus Strategy Parameter Schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "strategy_id",
+    "parameters"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "strategy_id": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 64
+    },
+    "parameters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/parameter"
+      }
+    }
+  },
+  "$defs": {
+    "parameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "label",
+        "description",
+        "type",
+        "default_value",
+        "recommended_min",
+        "recommended_max",
+        "recommended_activation_mode",
+        "safety_override"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{1,63}$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "type": {
+          "enum": [
+            "Number",
+            "Integer",
+            "Boolean",
+            "String"
+          ]
+        },
+        "default_value": {
+          "type": "string"
+        },
+        "recommended_min": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "recommended_max": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "recommended_activation_mode": {
+          "enum": [
+            "Immediate",
+            "NextCycle",
+            "SafeBoundary"
+          ]
+        },
+        "safety_override": {
+          "$ref": "#/$defs/safety_override"
+        }
+      }
+    },
+    "safety_override": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hard_min",
+        "hard_max",
+        "risk_tier",
+        "live_mutable",
+        "requires_preview",
+        "requires_pause",
+        "requires_confirmation",
+        "activation_mode",
+        "rollback_required"
+      ],
+      "properties": {
+        "hard_min": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "hard_max": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "risk_tier": {
+          "enum": [
+            "Low",
+            "Medium",
+            "High"
+          ]
+        },
+        "live_mutable": {
+          "type": "boolean"
+        },
+        "requires_preview": {
+          "type": "boolean"
+        },
+        "requires_pause": {
+          "type": "boolean"
+        },
+        "requires_confirmation": {
+          "type": "boolean"
+        },
+        "activation_mode": {
+          "enum": [
+            "Immediate",
+            "NextCycle",
+            "SafeBoundary"
+          ]
+        },
+        "rollback_required": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}
